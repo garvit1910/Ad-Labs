@@ -1,1 +1,1395 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --color-background: var(--background);
+    --color-foreground: var(--foreground);
+    --font-sans: var(--font-poppins), var(--font-geist-sans), sans-serif;
+    --font-mono: var(--font-geist-mono);
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-chart-5: var(--chart-5);
+    --color-chart-4: var(--chart-4);
+    --color-chart-3: var(--chart-3);
+    --color-chart-2: var(--chart-2);
+    --color-chart-1: var(--chart-1);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+
+    --color-brand-primary: var(--brand-primary);
+    --color-brand-primary-light: var(--brand-primary-light);
+    --color-brand-primary-dark: var(--brand-primary-dark);
+    --color-brand-secondary: var(--brand-secondary);
+    --color-brand-secondary-light: var(--brand-secondary-light);
+    --color-brand-secondary-dark: var(--brand-secondary-dark);
+    --color-brand-tertiary: var(--brand-tertiary);
+
+    /* Magenta & Charcoal roles. Values live in :root / .light / .dark below. */
+    --color-brand: var(--brand);
+    --color-brand-ink: var(--brand-ink);
+    --color-brand-soft: var(--brand-soft);
+    --color-brand-text: var(--brand-text);
+    --color-status-success: var(--status-success);
+    --color-status-success-soft: var(--status-success-soft);
+    --color-status-warning: var(--status-warning);
+    --color-status-warning-soft: var(--status-warning-soft);
+    --color-status-error: var(--status-error);
+    --color-status-error-soft: var(--status-error-soft);
+    --color-platform-meta: var(--platform-meta);
+    --color-platform-meta-ink: var(--platform-meta-ink);
+    --color-platform-google: var(--platform-google);
+    --color-platform-google-ink: var(--platform-google-ink);
+    --color-platform-tiktok: var(--platform-tiktok);
+    --color-platform-tiktok-ink: var(--platform-tiktok-ink);
+    --color-platform-linkedin: var(--platform-linkedin);
+    --color-platform-linkedin-ink: var(--platform-linkedin-ink);
+    --color-platform-twitter: var(--platform-twitter);
+    --color-platform-twitter-ink: var(--platform-twitter-ink);
+    --color-platform-twitter-series: var(--platform-twitter-series);
+    --color-platform-twitter-ring: var(--platform-twitter-ring);
+    --color-platform-pinterest: var(--platform-pinterest);
+    --color-platform-pinterest-ink: var(--platform-pinterest-ink);
+    --shadow-surface: var(--surface-shadow);
+
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+    --radius: 0.625rem;
+    --background: #F8F8F7;
+    --foreground: #1F1E21;
+    --card: #FFFFFF;
+    --card-foreground: #1F1E21;
+    --popover: #FFFFFF;
+    --popover-foreground: #1F1E21;
+    --primary: #1F1E21;
+    --primary-foreground: #FFFFFF;
+    --secondary: #F1F0EE;
+    --secondary-foreground: #1F1E21;
+    --muted: #F1F0EE;
+    --muted-foreground: #6B6A6E;
+    --accent: #F1F0EE;
+    --accent-foreground: #1F1E21;
+    --destructive: #B91C1C;
+    --border: #E6E5E3;
+    --input: #E6E5E3;
+    --ring: #A3A1A6;
+    --chart-1: #C8177A;
+    --chart-2: #6B3FA0;
+    --chart-3: #2F7D74;
+    --chart-4: #A8721F;
+    --chart-5: #8A888E;
+    --sidebar: #FFFFFF;
+    --sidebar-foreground: #1F1E21;
+    --sidebar-primary: #C8177A;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #F1F0EE;
+    --sidebar-accent-foreground: #1F1E21;
+    --sidebar-border: #E6E5E3;
+    --sidebar-ring: #A3A1A6;
+
+    --brand-primary: #C8177A;
+    --brand-primary-light: #E07AAE;
+    --brand-primary-dark: #A3105F;
+    /* Retired (violet, cyan): no call site uses them; they alias the accent so a stray use stays on palette. */
+    --brand-secondary: var(--brand-primary);
+    --brand-secondary-light: var(--brand-primary-light);
+    --brand-secondary-dark: var(--brand-primary-dark);
+    --brand-tertiary: var(--brand-primary);
+
+    /* Magenta & Charcoal palette (tasks/magenta-charcoal-palette-plan.md): one accent,
+       one colour per ad platform, status kept separate from both. The same tokens are
+       re-declared in `.light` and `.dark` below; keep all three in sync. */
+    --brand: #C8177A;
+    --brand-ink: #FFFFFF;
+    --brand-soft: #F8E3EE;
+    --brand-text: #C8177A;
+    --surface-shadow: 0 12px 32px -18px rgba(31, 30, 33, 0.28);
+    --status-success: #2E7D32;
+    --status-success-soft: #E5F1E6;
+    --status-warning: #B45309;
+    --status-warning-soft: #FBEBDC;
+    --status-error: #B91C1C;
+    --status-error-soft: #FBE5E5;
+    /* Ad platform identity colours. `-ink` is the glyph colour on a solid platform tile.
+       X is black in both themes: `-series` is X on charts (black vanishes on dark cards)
+       and `-ring` outlines X dots and tiles on dark surfaces. */
+    --platform-meta: #0064E0;
+    --platform-meta-ink: #FFFFFF;
+    --platform-google: #C28A00;
+    --platform-google-ink: #1F1E21;
+    --platform-tiktok: #00A2B0;
+    --platform-tiktok-ink: #FFFFFF;
+    --platform-linkedin: #0B3C73;
+    --platform-linkedin-ink: #FFFFFF;
+    --platform-twitter: #000000;
+    --platform-twitter-ink: #FFFFFF;
+    --platform-twitter-series: #000000;
+    --platform-twitter-ring: transparent;
+    --platform-pinterest: #E60023;
+    --platform-pinterest-ink: #FFFFFF;
+
+    /* Variables for audience definition sidebar glow */
+    --red-500-rgb: 239, 68, 68;
+    --yellow-500-rgb: 234, 179, 8;
+    --emerald-600-rgb: 5, 150, 105;
+}
+
+/* Localized light scope. The root `<html>` is forced to `.dark`, so any subtree that
+   must render light (e.g. the signed-out login screen) opts in with `class="light"`.
+   This re-declares the core `:root` tokens on the scope element so they override the
+   dark values inherited from the `.dark` ancestor for that subtree only. Keep in sync
+   with `:root` above. */
+.light {
+    --radius: 0.625rem;
+    --background: #F8F8F7;
+    --foreground: #1F1E21;
+    --card: #FFFFFF;
+    --card-foreground: #1F1E21;
+    --popover: #FFFFFF;
+    --popover-foreground: #1F1E21;
+    --primary: #1F1E21;
+    --primary-foreground: #FFFFFF;
+    --secondary: #F1F0EE;
+    --secondary-foreground: #1F1E21;
+    --muted: #F1F0EE;
+    --muted-foreground: #6B6A6E;
+    --accent: #F1F0EE;
+    --accent-foreground: #1F1E21;
+    --destructive: #B91C1C;
+    --destructive-foreground: oklch(0.985 0.001 106.423);
+    --border: #E6E5E3;
+    --input: #E6E5E3;
+    --ring: #A3A1A6;
+    --chart-1: #C8177A;
+    --chart-2: #6B3FA0;
+    --chart-3: #2F7D74;
+    --chart-4: #A8721F;
+    --chart-5: #8A888E;
+    --sidebar: #FFFFFF;
+    --sidebar-foreground: #1F1E21;
+    --sidebar-primary: #C8177A;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #F1F0EE;
+    --sidebar-accent-foreground: #1F1E21;
+    --sidebar-border: #E6E5E3;
+    --sidebar-ring: #A3A1A6;
+
+    --brand-primary: #C8177A;
+    --brand-primary-light: #E07AAE;
+    --brand-primary-dark: #A3105F;
+    /* Retired (violet, cyan): no call site uses them; they alias the accent so a stray use stays on palette. */
+    --brand-secondary: var(--brand-primary);
+    --brand-secondary-light: var(--brand-primary-light);
+    --brand-secondary-dark: var(--brand-primary-dark);
+    --brand-tertiary: var(--brand-primary);
+
+    --brand: #C8177A;
+    --brand-ink: #FFFFFF;
+    --brand-soft: #F8E3EE;
+    --brand-text: #C8177A;
+    --surface-shadow: 0 12px 32px -18px rgba(31, 30, 33, 0.28);
+    --status-success: #2E7D32;
+    --status-success-soft: #E5F1E6;
+    --status-warning: #B45309;
+    --status-warning-soft: #FBEBDC;
+    --status-error: #B91C1C;
+    --status-error-soft: #FBE5E5;
+    --platform-meta: #0064E0;
+    --platform-meta-ink: #FFFFFF;
+    --platform-google: #C28A00;
+    --platform-google-ink: #1F1E21;
+    --platform-tiktok: #00A2B0;
+    --platform-tiktok-ink: #FFFFFF;
+    --platform-linkedin: #0B3C73;
+    --platform-linkedin-ink: #FFFFFF;
+    --platform-twitter: #000000;
+    --platform-twitter-ink: #FFFFFF;
+    --platform-twitter-series: #000000;
+    --platform-twitter-ring: transparent;
+    --platform-pinterest: #E60023;
+    --platform-pinterest-ink: #FFFFFF;
+}
+
+/* NOTE: do not add an un-layered `body` color/background rule here — it outranks the
+   @layer base `bg-background text-foreground` rule and breaks inherited text color
+   (dialog titles, chart currentColor ticks) in dark mode. */
+
+.dark {
+    /* Magenta & Charcoal dark theme (tasks/magenta-charcoal-palette-plan.md). Charcoal
+       neutrals: base #141414, surfaces one step lighter (#1E1D1F), hairline borders, warm
+       off-white text instead of pure white, a lighter magenta accent for dark surfaces. */
+    --background: #141414;
+    --foreground: #F2F1EF;
+    --card: #1E1D1F;
+    --card-foreground: #F2F1EF;
+    --popover: #1E1D1F;
+    --popover-foreground: #F2F1EF;
+    --primary: #F2F1EF;
+    --primary-foreground: #1F1E21;
+    --secondary: #29282B;
+    --secondary-foreground: #F2F1EF;
+    --muted: #29282B;
+    --muted-foreground: #A3A1A6;
+    --accent: #29282B;
+    --accent-foreground: #F2F1EF;
+    --destructive: #F26B6B;
+    --destructive-foreground: oklch(0.985 0.001 106.423);
+    --border: #2D2C2E;
+    --input: #333235;
+    --ring: #6B6A6E;
+
+    /* Chart series (per-metric charts): accent, violet, teal, ochre, baseline grey */
+    --chart-1: #F0559F;
+    --chart-2: #B79AE0;
+    --chart-3: #6BC2B8;
+    --chart-4: #E3B262;
+    --chart-5: #7E7C82;
+    --sidebar: #1E1D1F;
+    --sidebar-foreground: #F2F1EF;
+    --sidebar-primary: #F0559F;
+    --sidebar-primary-foreground: #FFFFFF;
+    --sidebar-accent: #29282B;
+    --sidebar-accent-foreground: #F2F1EF;
+    --sidebar-border: #2D2C2E;
+    --sidebar-ring: #6B6A6E;
+
+    /* Restore radius */
+    --radius: 0.625rem;
+
+    /* brand-primary is the magenta accent. */
+    --brand-primary: #F0559F;
+    --brand-primary-light: #F57AB3;
+    --brand-primary-dark: #D9438A;
+    /* Retired (violet, cyan): no call site uses them; they alias the accent so a stray use stays on palette. */
+    --brand-secondary: var(--brand-primary);
+    --brand-secondary-light: var(--brand-primary-light);
+    --brand-secondary-dark: var(--brand-primary-dark);
+    --brand-tertiary: var(--brand-primary);
+
+    /* Magenta & Charcoal palette, dark values */
+    --brand: #F0559F;
+    /* White on magenta in both themes (Chris, 2026-10-19). */
+    --brand-ink: #FFFFFF;
+    --brand-soft: #3A1A2C;
+    --brand-text: #F57AB3;
+    --surface-shadow: 0 12px 40px -16px rgba(0, 0, 0, 0.6);
+    --status-success: #6CC070;
+    --status-success-soft: #1C2B1D;
+    --status-warning: #F0A04B;
+    --status-warning-soft: #33240F;
+    --status-error: #F26B6B;
+    --status-error-soft: #361A1A;
+    --platform-meta: #5B95FF;
+    --platform-meta-ink: #141414;
+    --platform-google: #F7C430;
+    --platform-google-ink: #141414;
+    --platform-tiktok: #3FD7E2;
+    --platform-tiktok-ink: #141414;
+    --platform-linkedin: #3470BA;
+    --platform-linkedin-ink: #FFFFFF;
+    --platform-twitter: #000000;
+    --platform-twitter-ink: #FFFFFF;
+    --platform-twitter-series: #A3A1A6;
+    --platform-twitter-ring: rgba(255, 255, 255, 0.3);
+    --platform-pinterest: #FF6B57;
+    --platform-pinterest-ink: #141414;
+}
+
+/* Dark-optimized Tailwind palette overrides — generated, do not hand-edit individual values.
+   Tailwind v4 utilities resolve var(--color-*), so these re-tone every chromatic palette
+   utility rendered in dark mode (dark:border-amber-700, dark:text-rose-400, bg-emerald-600, …)
+   from this single block. Derivation (scripted from node_modules/tailwindcss/theme.css):
+   - 100–300 text tints: chroma ×0.65–0.7 (stop optical vibration on dark surfaces)
+   - 400–600 accents:    lightness lifted toward the 300-tone, chroma ×0.5–0.55 (WCAG on dark)
+   - 700–800 borders:    lightness ×0.75, chroma ×0.4 (muted borders, not saturated frames)
+   - 900–950 surfaces:   slight desaturation only (tinted fills stay quiet)
+   Gray scales (neutral/gray/slate/stone/zinc) are intentionally NOT overridden: they are used
+   for both light-on-dark text and dark fills, so re-toning them would break text contrast.
+   Regenerate with the script in design.md "Dark mode" if the Tailwind palette changes. */
+.dark {
+    --color-red-100: oklch(93.6% 0.022 17.717);
+    --color-red-200: oklch(88.5% 0.043 18.334);
+    --color-red-300: oklch(80.8% 0.074 19.571);
+    --color-red-400: oklch(74.6% 0.105 22.216);
+    --color-red-500: oklch(70.1% 0.118 25.331);
+    --color-red-600: oklch(62.3% 0.122 27.325);
+    --color-red-700: oklch(37.9% 0.085 27.518);
+    --color-red-800: oklch(33.3% 0.071 26.899);
+    --color-red-900: oklch(33.7% 0.078 25.723);
+    --color-red-950: oklch(23.7% 0.060 26.042);
+    --color-orange-100: oklch(95.4% 0.027 75.164);
+    --color-orange-200: oklch(90.1% 0.053 70.697);
+    --color-orange-300: oklch(83.7% 0.083 66.29);
+    --color-orange-400: oklch(79.5% 0.101 55.934);
+    --color-orange-500: oklch(77.5% 0.106 47.604);
+    --color-orange-600: oklch(69.8% 0.111 41.116);
+    --color-orange-700: oklch(41.5% 0.078 38.402);
+    --color-orange-800: oklch(35.3% 0.063 37.304);
+    --color-orange-900: oklch(34.7% 0.068 38.172);
+    --color-orange-950: oklch(24.5% 0.051 36.259);
+    --color-amber-100: oklch(96.2% 0.041 95.617);
+    --color-amber-200: oklch(92.4% 0.084 95.746);
+    --color-amber-300: oklch(87.9% 0.110 91.605);
+    --color-amber-400: oklch(87.8% 0.104 84.429);
+    --color-amber-500: oklch(84.6% 0.094 70.08);
+    --color-amber-600: oklch(71.9% 0.089 58.318);
+    --color-amber-700: oklch(41.6% 0.065 48.998);
+    --color-amber-800: oklch(35.5% 0.055 46.201);
+    --color-amber-900: oklch(35.2% 0.062 45.904);
+    --color-amber-950: oklch(25.7% 0.050 45.635);
+    --color-yellow-100: oklch(97.3% 0.050 103.193);
+    --color-yellow-200: oklch(94.5% 0.090 101.54);
+    --color-yellow-300: oklch(90.5% 0.118 98.111);
+    --color-yellow-400: oklch(90.3% 0.109 91.936);
+    --color-yellow-500: oklch(87.5% 0.092 86.047);
+    --color-yellow-600: oklch(73.5% 0.081 75.834);
+    --color-yellow-700: oklch(41.5% 0.054 66.442);
+    --color-yellow-800: oklch(35.7% 0.046 61.907);
+    --color-yellow-900: oklch(35.8% 0.052 57.708);
+    --color-yellow-950: oklch(26.3% 0.043 53.813);
+    --color-lime-100: oklch(96.7% 0.047 122.328);
+    --color-lime-200: oklch(93.8% 0.089 124.321);
+    --color-lime-300: oklch(89.7% 0.127 126.665);
+    --color-lime-400: oklch(89.1% 0.131 128.85);
+    --color-lime-500: oklch(84.5% 0.117 130.85);
+    --color-lime-600: oklch(70.0% 0.100 131.684);
+    --color-lime-700: oklch(39.9% 0.063 131.589);
+    --color-lime-800: oklch(34.0% 0.050 130.933);
+    --color-lime-900: oklch(34.4% 0.056 131.063);
+    --color-lime-950: oklch(25.2% 0.047 132.109);
+    --color-green-100: oklch(96.2% 0.031 156.743);
+    --color-green-200: oklch(92.5% 0.059 155.995);
+    --color-green-300: oklch(87.1% 0.098 154.449);
+    --color-green-400: oklch(84.0% 0.115 151.711);
+    --color-green-500: oklch(79.5% 0.110 149.579);
+    --color-green-600: oklch(67.7% 0.097 149.214);
+    --color-green-700: oklch(39.5% 0.062 150.069);
+    --color-green-800: oklch(33.6% 0.048 151.328);
+    --color-green-900: oklch(33.4% 0.052 152.535);
+    --color-green-950: oklch(24.5% 0.042 152.934);
+    --color-emerald-100: oklch(95.0% 0.036 163.051);
+    --color-emerald-200: oklch(90.5% 0.065 164.15);
+    --color-emerald-300: oklch(84.5% 0.093 164.978);
+    --color-emerald-400: oklch(81.1% 0.097 163.223);
+    --color-emerald-500: oklch(76.6% 0.085 162.48);
+    --color-emerald-600: oklch(64.4% 0.072 163.225);
+    --color-emerald-700: oklch(38.1% 0.047 165.612);
+    --color-emerald-800: oklch(32.4% 0.038 166.913);
+    --color-emerald-900: oklch(32.1% 0.042 168.94);
+    --color-emerald-950: oklch(24.1% 0.033 172.552);
+    --color-teal-100: oklch(95.3% 0.036 180.801);
+    --color-teal-200: oklch(91.0% 0.067 180.426);
+    --color-teal-300: oklch(85.5% 0.090 181.071);
+    --color-teal-400: oklch(82.4% 0.084 181.912);
+    --color-teal-500: oklch(77.4% 0.070 182.503);
+    --color-teal-600: oklch(64.8% 0.059 184.704);
+    --color-teal-700: oklch(38.3% 0.038 186.391);
+    --color-teal-800: oklch(32.8% 0.031 188.216);
+    --color-teal-900: oklch(32.8% 0.035 188.416);
+    --color-teal-950: oklch(25.5% 0.030 192.524);
+    --color-cyan-100: oklch(95.6% 0.032 203.388);
+    --color-cyan-200: oklch(91.7% 0.056 205.041);
+    --color-cyan-300: oklch(86.5% 0.083 207.078);
+    --color-cyan-400: oklch(83.6% 0.085 211.53);
+    --color-cyan-500: oklch(78.6% 0.071 215.221);
+    --color-cyan-600: oklch(65.8% 0.063 221.723);
+    --color-cyan-700: oklch(39.0% 0.042 223.128);
+    --color-cyan-800: oklch(33.8% 0.034 224.283);
+    --color-cyan-900: oklch(33.8% 0.039 227.392);
+    --color-cyan-950: oklch(27.8% 0.036 229.695);
+    --color-sky-100: oklch(95.1% 0.018 236.824);
+    --color-sky-200: oklch(90.1% 0.041 230.902);
+    --color-sky-300: oklch(82.8% 0.072 230.318);
+    --color-sky-400: oklch(79.1% 0.088 232.661);
+    --color-sky-500: oklch(75.4% 0.085 237.323);
+    --color-sky-600: oklch(63.5% 0.079 241.966);
+    --color-sky-700: oklch(37.5% 0.054 242.749);
+    --color-sky-800: oklch(33.2% 0.044 240.79);
+    --color-sky-900: oklch(33.2% 0.050 240.876);
+    --color-sky-950: oklch(27.0% 0.043 243.157);
+    --color-blue-100: oklch(93.2% 0.022 255.585);
+    --color-blue-200: oklch(88.2% 0.041 254.128);
+    --color-blue-300: oklch(80.9% 0.068 251.813);
+    --color-blue-400: oklch(74.9% 0.091 254.624);
+    --color-blue-500: oklch(68.5% 0.107 259.815);
+    --color-blue-600: oklch(59.0% 0.122 262.881);
+    --color-blue-700: oklch(36.6% 0.097 264.376);
+    --color-blue-800: oklch(31.8% 0.080 265.638);
+    --color-blue-900: oklch(32.2% 0.080 265.522);
+    --color-blue-950: oklch(25.9% 0.059 267.935);
+    --color-indigo-100: oklch(93.0% 0.024 272.788);
+    --color-indigo-200: oklch(87.0% 0.045 274.039);
+    --color-indigo-300: oklch(78.5% 0.075 274.713);
+    --color-indigo-400: oklch(71.3% 0.100 276.935);
+    --color-indigo-500: oklch(64.3% 0.117 277.117);
+    --color-indigo-600: oklch(55.2% 0.131 276.966);
+    --color-indigo-700: oklch(34.3% 0.096 277.023);
+    --color-indigo-800: oklch(29.8% 0.078 277.366);
+    --color-indigo-900: oklch(30.5% 0.079 278.697);
+    --color-indigo-950: oklch(23.6% 0.058 281.288);
+    --color-violet-100: oklch(94.3% 0.020 294.588);
+    --color-violet-200: oklch(89.4% 0.040 293.283);
+    --color-violet-300: oklch(81.1% 0.072 293.571);
+    --color-violet-400: oklch(74.4% 0.101 293.541);
+    --color-violet-500: oklch(66.7% 0.125 292.717);
+    --color-violet-600: oklch(58.4% 0.141 293.009);
+    --color-violet-700: oklch(36.8% 0.108 292.581);
+    --color-violet-800: oklch(32.4% 0.093 292.759);
+    --color-violet-900: oklch(32.3% 0.104 293.745);
+    --color-violet-950: oklch(26.0% 0.092 291.089);
+    --color-purple-100: oklch(94.6% 0.023 307.174);
+    --color-purple-200: oklch(90.2% 0.044 306.703);
+    --color-purple-300: oklch(82.7% 0.077 306.383);
+    --color-purple-400: oklch(75.7% 0.112 305.504);
+    --color-purple-500: oklch(69.0% 0.133 303.9);
+    --color-purple-600: oklch(60.3% 0.144 302.321);
+    --color-purple-700: oklch(37.2% 0.106 301.924);
+    --color-purple-800: oklch(32.8% 0.087 303.724);
+    --color-purple-900: oklch(32.4% 0.097 304.987);
+    --color-purple-950: oklch(26.8% 0.097 302.717);
+    --color-fuchsia-100: oklch(95.2% 0.026 318.852);
+    --color-fuchsia-200: oklch(90.3% 0.053 319.62);
+    --color-fuchsia-300: oklch(83.3% 0.094 321.434);
+    --color-fuchsia-400: oklch(78.4% 0.131 322.16);
+    --color-fuchsia-500: oklch(73.4% 0.147 322.15);
+    --color-fuchsia-600: oklch(63.8% 0.146 322.896);
+    --color-fuchsia-700: oklch(38.9% 0.101 323.949);
+    --color-fuchsia-800: oklch(33.9% 0.084 324.591);
+    --color-fuchsia-900: oklch(34.1% 0.094 325.612);
+    --color-fuchsia-950: oklch(27.0% 0.088 325.661);
+    --color-pink-100: oklch(94.8% 0.020 342.258);
+    --color-pink-200: oklch(89.9% 0.043 343.231);
+    --color-pink-300: oklch(82.3% 0.078 346.018);
+    --color-pink-400: oklch(76.1% 0.111 349.761);
+    --color-pink-500: oklch(72.2% 0.120 354.308);
+    --color-pink-600: oklch(63.9% 0.124 0.584);
+    --color-pink-700: oklch(39.4% 0.089 3.958);
+    --color-pink-800: oklch(34.4% 0.075 3.815);
+    --color-pink-900: oklch(34.7% 0.084 2.432);
+    --color-pink-950: oklch(26.1% 0.071 3.907);
+    --color-rose-100: oklch(94.1% 0.021 12.58);
+    --color-rose-200: oklch(89.2% 0.041 10.001);
+    --color-rose-300: oklch(81.0% 0.076 11.638);
+    --color-rose-400: oklch(75.5% 0.107 13.428);
+    --color-rose-500: oklch(71.0% 0.123 16.439);
+    --color-rose-600: oklch(63.3% 0.127 17.585);
+    --color-rose-700: oklch(38.6% 0.089 16.935);
+    --color-rose-800: oklch(34.1% 0.075 13.697);
+    --color-rose-900: oklch(34.8% 0.087 10.272);
+    --color-rose-950: oklch(24.9% 0.068 12.094);
+}
+
+
+@layer base {
+    * {
+        @apply border-border outline-ring/50;
+    }
+    body {
+        @apply bg-background text-foreground font-sans;
+    }
+    a {
+        @apply text-foreground hover:text-foreground hover:underline;
+    }
+}
+
+@layer components {
+    .section-card {
+        @apply p-6 border rounded-lg bg-muted/50 shadow-sm;
+    }
+
+    /* ============================================================================
+       Flat surface recipes (Magenta & Charcoal, tasks/magenta-charcoal-palette-plan.md).
+       These class names used to be the frost/glass library (purple hairlines, gradient
+       washes, backdrop blur, ambient orbs). They are kept so ~430 call sites keep
+       working, but every recipe is now a flat token surface: hairline `border-border`,
+       `bg-card`, the quiet neutral `shadow-surface`, no gradients, no blur, no glow.
+       Tokens flip with the theme, so no `.dark` overrides are needed.
+       ============================================================================ */
+
+    /* Section card. Does NOT set border-radius, so each surface keeps its own. */
+    .frost-card {
+        @apply relative border border-border bg-card text-card-foreground shadow-surface;
+    }
+    /* Quieter section card for dense data sections: no shadow. */
+    .frost-card-subtle {
+        @apply border border-border bg-card text-card-foreground;
+    }
+    .page-card-surface {
+        @apply relative rounded-2xl border border-border bg-card text-card-foreground shadow-surface;
+    }
+
+    /* panel-frost: outer page/workflow container (FrostPanel). */
+    .panel-frost {
+        @apply relative min-w-0 overflow-hidden rounded-3xl border border-border bg-card text-card-foreground shadow-surface;
+    }
+    /* Ambient orbs are retired. The class stays so existing markup is harmless. */
+    .panel-frost-orbs::before,
+    .panel-frost-orbs::after {
+        content: none;
+    }
+
+    /* section-frost: category accordion / sub-card inside a panel (open state). */
+    .section-frost {
+        @apply overflow-hidden rounded-2xl border border-border bg-card transition-colors;
+    }
+    /* closed/inactive variant */
+    .section-frost-closed {
+        @apply overflow-hidden rounded-2xl border border-border bg-transparent transition-colors
+            hover:border-foreground/25 hover:bg-secondary/60;
+    }
+
+    /* rail-frost: sticky right-rail companion (360px). */
+    .rail-frost {
+        @apply relative flex max-h-[calc(100vh-3rem)] flex-col overflow-hidden rounded-3xl
+            border border-border bg-card text-card-foreground shadow-surface;
+    }
+
+    /* banner-resume: paused/resumable workflow banner, on the status warning tokens. */
+    .banner-resume {
+        @apply relative overflow-hidden rounded-2xl border border-status-warning/30 bg-status-warning-soft;
+    }
+
+    /* glass-surface / glass-pill: small flat surfaces and pills. */
+    .glass-surface {
+        @apply rounded-xl border border-border bg-card;
+    }
+    .glass-pill {
+        @apply rounded-full border border-border bg-card;
+    }
+
+    /* eyebrow-chip: header counter chip. Accent-soft fill with accent text. */
+    .eyebrow-chip {
+        @apply inline-flex items-center gap-1.5 whitespace-nowrap rounded-full
+            border border-transparent bg-brand-soft px-3.5 py-1.5 text-xs font-semibold text-brand-text;
+    }
+
+    /* Buttons. Primary is the solid accent; soft is the secondary button
+       (transparent, hairline border, border goes to the foreground on hover). */
+    .btn-frost-primary {
+        @apply h-9 rounded-lg border border-brand bg-brand px-5 text-sm font-semibold text-brand-ink
+            transition-colors hover:bg-brand/90 disabled:opacity-60;
+    }
+    .btn-frost-warn {
+        @apply h-9 rounded-full bg-status-warning px-4 text-sm font-semibold text-background
+            transition-colors hover:bg-status-warning/90;
+    }
+    .btn-frost-soft {
+        @apply inline-flex items-center justify-center h-8 rounded-full border border-border bg-transparent px-3
+            text-xs font-semibold text-foreground transition-colors hover:border-foreground;
+    }
+
+    .custom-dropdown-trigger {
+        @apply truncate cursor-pointer hover:bg-accent/5;
+        /* w-full or other width specific classes should be applied directly to the component */
+    }
+
+    .custom-dropdown-item {
+        @apply hover:bg-accent hover:text-accent-foreground !cursor-pointer;
+    }
+
+    .link-primary {
+        @apply text-primary hover:underline cursor-pointer;
+    }
+
+    .toggle-container {
+        @apply flex items-center space-x-2;
+    }
+
+    .toggle-label {
+        @apply text-sm text-muted-foreground;
+    }
+
+    .section-title {
+        @apply text-lg font-semibold;
+    }
+
+    .dropdown-content-max-width {
+        @apply max-w-[765px] w-[--radix-popover-trigger-width] md:w-auto;
+    }
+
+    .checkbox-hover-effect {
+        @apply hover:!border-primary cursor-pointer;
+    }
+
+    .objective-bubble {
+        @apply inline-flex items-center px-2 py-0 bg-gray-200 text-gray-700 rounded-full text-xs font-medium leading-tight align-middle h-4 dark:bg-white/10 dark:text-foreground;
+    }
+
+    .info-modal-container {
+        @apply rounded-xl bg-background text-foreground p-8 shadow-2xl max-w-lg w-full;
+    }
+    .info-modal-title {
+        @apply text-2xl font-bold mb-4 text-foreground;
+    }
+    .info-modal-section-title {
+        @apply text-lg font-semibold mt-6 mb-2 text-foreground;
+    }
+    .info-modal-body {
+        @apply text-base text-foreground mb-2;
+    }
+    .info-modal-close-btn {
+        @apply mt-6 rounded-lg bg-muted text-foreground px-6 py-2 font-medium shadow hover:bg-muted/80 transition cursor-pointer;
+    }
+
+    /* Target the default X button specifically within our styled info modals */
+    .has-custom-styled-x > button[type='button'] svg {
+        @apply hover:opacity-80 transition;
+    }
+    /* Attempt to remove background from the default X button's immediate parent if it's a button, and ensure cursor pointer */
+    .has-custom-styled-x > button[type='button'] {
+        @apply bg-transparent hover:bg-transparent p-0 !cursor-pointer;
+    }
+
+    /* Global sticky modal close button class */
+    .modal-close-sticky {
+        @apply fixed top-4 right-4 z-50 !cursor-pointer;
+    }
+    .modal-close-sticky svg {
+        @apply hover:opacity-80 transition-opacity duration-200;
+    }
+    .modal-close-sticky:hover {
+        @apply bg-muted/20 rounded-full;
+    }
+
+    .force-sequential-list {
+        @apply list-none p-0 m-0; /* Reset browser default list styles */
+        counter-reset: custom-list-counter;
+    }
+
+    .force-sequential-list > li {
+        @apply relative pl-[1.8em]; /* Space for the counter */
+        counter-increment: custom-list-counter;
+    }
+
+    .force-sequential-list > li::before {
+        content: counter(custom-list-counter) '.';
+        @apply absolute left-0 w-[1.5em] text-right pr-1;
+    }
+
+    .radio-dropdown {
+        @apply p-0;
+    }
+    .radio-dropdown .custom-dropdown-item {
+        @apply flex items-center w-full !py-2.5;
+    }
+    .radio-dropdown .custom-dropdown-item .radio-indicator {
+        @apply w-4 h-4 rounded-full border mr-3 flex-shrink-0 flex items-center justify-center;
+    }
+    .radio-dropdown .custom-dropdown-item .radio-indicator.selected {
+        @apply border-primary bg-primary;
+    }
+    .radio-dropdown .custom-dropdown-item .radio-indicator:not(.selected) {
+        @apply border-muted-foreground;
+    }
+    .radio-dropdown .custom-dropdown-item .radio-dot {
+        @apply w-2 h-2 rounded-full bg-primary-foreground;
+    }
+
+    /* New class for white form field backgrounds */
+    .form-field-white-bg {
+        @apply bg-white; /* Light mode: white background */
+        @apply dark:bg-[var(--input)] dark:text-foreground; /* Dark mode: use theme variables */
+    }
+
+    /* Attempt to hide native time input picker indicator in WebKit browsers */
+    input[type='time']::-webkit-calendar-picker-indicator {
+        display: none;
+        -webkit-appearance: none;
+    }
+
+    .toggle-button {
+        @apply cursor-pointer hover:opacity-80;
+    }
+
+    /* App sidebar: a translucent wash of the selected platform colour over the flat
+       sidebar surface. components/sidebar sets --sidebar-tint from PLATFORM_COLORS. */
+    .sidebar-platform-tint {
+        background-color: color-mix(in oklab, var(--sidebar-tint, var(--platform-meta)) 6%, var(--sidebar));
+        border-color: color-mix(in oklab, var(--sidebar-tint, var(--platform-meta)) 18%, var(--sidebar-border));
+    }
+    .dark .sidebar-platform-tint {
+        background-color: color-mix(in oklab, var(--sidebar-tint, var(--platform-meta)) 12%, var(--sidebar));
+        border-color: color-mix(in oklab, var(--sidebar-tint, var(--platform-meta)) 28%, var(--sidebar-border));
+    }
+
+    /* Platform-scoped card (e.g. the dashboard platform rows): the same translucent
+       platform wash as the sidebar, over the card surface. Set --platform-tint to the
+       platform colour (PLATFORM_COLORS[platform].series). Declared after .frost-card so
+       it wins over the Card primitive's default surface. */
+    .platform-tint-card {
+        background-color: color-mix(in oklab, var(--platform-tint, var(--platform-meta)) 5%, var(--card));
+        border-color: color-mix(in oklab, var(--platform-tint, var(--platform-meta)) 22%, var(--border));
+    }
+    .dark .platform-tint-card {
+        background-color: color-mix(in oklab, var(--platform-tint, var(--platform-meta)) 10%, var(--card));
+        border-color: color-mix(in oklab, var(--platform-tint, var(--platform-meta)) 32%, var(--border));
+    }
+
+    /* Formerly the violet gradient button; now the solid accent. */
+    .adcero-gradient-btn {
+        @apply bg-brand text-brand-ink;
+    }
+    .adcero-gradient-btn:hover {
+        @apply bg-brand/90;
+    }
+
+    /* Key attribution figures. Formerly tricolour gradient text; now the solid
+       accent text colour (one key figure per screen). */
+    .adcero-gradient-text {
+        color: var(--brand-text);
+    }
+
+    /* Active tab: flat neutral selection, no gradient, blur or glow. */
+    .tab-glass {
+        &[data-state="active"] {
+            @apply bg-card !text-foreground border border-border shadow-xs;
+        }
+    }
+
+    /* Global radio button styles */
+    .radio-option {
+        @apply flex items-start p-3 border rounded-md hover:bg-muted/80 has-[input:checked]:border-primary has-[input:checked]:bg-primary/5 transition-colors;
+    }
+
+    .radio-option.cursor-pointer {
+        @apply cursor-pointer;
+    }
+
+    .radio-item {
+        @apply mr-3 mt-1;
+    }
+
+    .radio-content {
+        @apply flex-grow;
+    }
+
+    .radio-label {
+        @apply font-medium;
+    }
+
+    .radio-description {
+        @apply text-sm text-muted-foreground mt-1;
+    }
+
+    /* Hidden scrollbar (keeps scroll functionality) */
+    .scrollbar-hide {
+        scrollbar-width: none;
+    }
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Custom scrollbar for location dropdown */
+    .location-dropdown-scroll {
+        scrollbar-width: auto;
+        scrollbar-color: #cbd5e1 #f1f5f9;
+    }
+
+    .location-dropdown-scroll::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    .location-dropdown-scroll::-webkit-scrollbar-track {
+        background: #f1f5f9;
+        border-radius: 4px;
+    }
+
+    .location-dropdown-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 4px;
+    }
+
+    .location-dropdown-scroll::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+
+    /* Auto-hiding scrollbar like modal */
+    .webkit-scrollbar-visible {
+        scrollbar-width: thin !important;
+        scrollbar-color: transparent transparent !important;
+        -webkit-overflow-scrolling: touch !important;
+        scroll-behavior: smooth !important;
+        touch-action: pan-y !important;
+        transition: scrollbar-color 0.3s ease !important;
+    }
+
+    .webkit-scrollbar-visible:hover {
+        scrollbar-color: rgba(148, 163, 184, 0.5) transparent !important;
+    }
+
+    .webkit-scrollbar-visible::-webkit-scrollbar {
+        width: 8px !important;
+        height: 8px !important;
+    }
+
+    .webkit-scrollbar-visible::-webkit-scrollbar-track {
+        background: transparent !important;
+    }
+
+    .webkit-scrollbar-visible::-webkit-scrollbar-thumb {
+        background: transparent !important;
+        border-radius: 4px !important;
+        transition: background 0.3s ease !important;
+    }
+
+    .webkit-scrollbar-visible:hover::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.5) !important;
+    }
+
+    .webkit-scrollbar-visible::-webkit-scrollbar-thumb:hover {
+        background: rgba(148, 163, 184, 0.8) !important;
+    }
+
+    /* Permanent (non-hover-gated) scrollbar. Pair with overflow-x/y-auto so the
+       bar only appears when content actually overflows, then stays visible —
+       signalling scrollability. Styling ::-webkit-scrollbar with a solid thumb
+       also forces macOS out of fade-away overlay mode. */
+    .scrollbar-persistent {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(148, 163, 184, 0.6) transparent;
+    }
+
+    .scrollbar-persistent::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+    }
+
+    .scrollbar-persistent::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .scrollbar-persistent::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.6);
+        border-radius: 4px;
+    }
+
+    .scrollbar-persistent::-webkit-scrollbar-thumb:hover {
+        background: rgba(148, 163, 184, 0.85);
+    }
+
+    .dark .scrollbar-persistent {
+        scrollbar-color: rgba(148, 163, 184, 0.45) transparent;
+    }
+
+    .dark .scrollbar-persistent::-webkit-scrollbar-thumb {
+        background: rgba(148, 163, 184, 0.45);
+    }
+
+    .dark .scrollbar-persistent::-webkit-scrollbar-thumb:hover {
+        background: rgba(148, 163, 184, 0.7);
+    }
+
+    /* ============================================================================
+       Create-modal step rails (.sidebar-glass) — flat platform tint, same recipe as
+       .sidebar-platform-tint. .sidebar-glass-{platform} sets --sidebar-tint; the rail
+       tokens below drive .sidebar-step / .sidebar-substep. No blur, gradient or glow.
+       ============================================================================ */
+    .sidebar-glass {
+        position: relative;
+        --sidebar-tint: transparent;
+        --sidebar-accent: var(--brand);
+        --sidebar-accent-light: color-mix(in oklab, var(--sidebar-accent) 12%, transparent);
+        --sidebar-accent-muted: color-mix(in oklab, var(--sidebar-accent) 6%, transparent);
+        --sidebar-glow-color: transparent;
+        --sidebar-done: var(--status-success);
+        --sidebar-error: var(--status-error);
+        --sidebar-optional: var(--muted-foreground);
+        background-color: color-mix(in oklab, var(--sidebar-tint) 6%, var(--sidebar));
+        border-right: 1px solid color-mix(in oklab, var(--sidebar-tint) 18%, var(--sidebar-border));
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    .dark .sidebar-glass {
+        background-color: color-mix(in oklab, var(--sidebar-tint) 12%, var(--sidebar));
+        border-right-color: color-mix(in oklab, var(--sidebar-tint) 28%, var(--sidebar-border));
+    }
+    .sidebar-glass-meta { --sidebar-tint: var(--platform-meta); --sidebar-accent: var(--platform-meta); }
+    .sidebar-glass-tiktok { --sidebar-tint: var(--platform-tiktok); --sidebar-accent: var(--platform-tiktok); }
+    .sidebar-glass-linkedin { --sidebar-tint: var(--platform-linkedin); --sidebar-accent: var(--platform-linkedin); }
+    .sidebar-glass-pinterest { --sidebar-tint: var(--platform-pinterest); --sidebar-accent: var(--platform-pinterest); }
+    .sidebar-glass-twitter { --sidebar-tint: var(--platform-twitter-series); --sidebar-accent: var(--foreground); }
+    /* Google yellow is too light for step text on its own wash; darken it toward the text colour. */
+    .sidebar-glass-google {
+        --sidebar-tint: var(--platform-google);
+        --sidebar-accent: color-mix(in oklab, var(--platform-google) 75%, var(--foreground));
+    }
+    .dark .sidebar-glass-google { --sidebar-accent: var(--platform-google); }
+
+    /* ============================================================================
+       Google Modal Design System — Single source of truth for all modal components
+       Apply .google-modal-theme on the DialogContent wrapper to activate these tokens.
+       ============================================================================ */
+    .google-modal-theme {
+        /* --- Brand / Primary (the magenta accent) --- */
+        --primary: var(--brand);
+        --primary-foreground: var(--brand-ink);
+        --color-primary: var(--primary);
+        --color-primary-foreground: var(--primary-foreground);
+
+        /* Override shadcn/ui ring color so all focus rings use the accent, not blue-gray */
+        --ring: var(--brand);
+        --color-ring: var(--ring);
+
+        /* --- Focus ring — matches primary, used by all inputs --- */
+        --gm-focus-ring: color-mix(in oklab, var(--brand) 45%, transparent);
+        --gm-focus-border: var(--brand);
+
+        /* --- Semantic status colors --- */
+        --gm-success: oklch(0.65 0.2 145);
+        --gm-success-bg: oklch(0.65 0.2 145 / 0.12);
+        --gm-success-border: oklch(0.65 0.2 145 / 0.3);
+        --gm-error: oklch(0.577 0.245 27.325);
+        --gm-error-bg: oklch(0.577 0.245 27.325 / 0.08);
+        --gm-error-border: oklch(0.577 0.245 27.325 / 0.3);
+        --gm-warning: oklch(0.72 0.19 78);
+        --gm-warning-bg: oklch(0.72 0.19 78 / 0.12);
+        --gm-warning-border: oklch(0.72 0.19 78 / 0.3);
+        --gm-info: var(--brand);
+        --gm-info-bg: color-mix(in oklab, var(--brand) 8%, transparent);
+        --gm-info-border: color-mix(in oklab, var(--brand) 20%, transparent);
+
+        /* --- Typography scale --- */
+        --gm-text-page-title: 1.25rem;       /* 20px — PageHeader title */
+        --gm-text-section-title: 1rem;        /* 16px — CollapsibleSection title */
+        --gm-text-label: 0.875rem;            /* 14px — form labels, radio labels */
+        --gm-text-body: 0.875rem;             /* 14px — body text, descriptions */
+        --gm-text-caption: 0.75rem;           /* 12px — helper text, counters */
+
+        /* --- Spacing scale (consistent gaps throughout modal) --- */
+        --gm-space-page: 1.5rem;              /* 24px — gap between page-level sections */
+        --gm-space-section: 1rem;             /* 16px — padding inside sections/cards */
+        --gm-space-field: 0.75rem;            /* 12px — gap between form fields */
+        --gm-space-inline: 0.5rem;            /* 8px  — small inline spacing */
+
+        /* --- Border radius --- */
+        --gm-radius-card: 0.5rem;             /* 8px  — section cards, collapsibles */
+        --gm-radius-input: 0.375rem;          /* 6px  — inputs, selects */
+        --gm-radius-badge: 0.25rem;           /* 4px  — badges, chips */
+
+        /* --- Preview mockup colors (phone preview, search result skeletons) --- */
+        --gm-preview-bg: oklch(0.96 0 0);           /* light gray bg for phone frame */
+        --gm-preview-surface: oklch(1 0 0);          /* white surface for card content */
+        --gm-preview-skeleton: oklch(0.92 0 0);      /* skeleton placeholder bars */
+        --gm-preview-skeleton-dark: oklch(0.88 0 0); /* darker skeleton (favicon circles) */
+        --gm-preview-border: oklch(0.9 0 0);         /* subtle borders in preview */
+        --gm-preview-text: oklch(0.4 0 0);           /* dark text in preview */
+        --gm-preview-text-muted: oklch(0.6 0 0);     /* muted text in preview */
+        --gm-preview-text-faint: oklch(0.7 0 0);     /* faint labels (Sponsored, Search) */
+
+        /* --- Layout --- */
+        --gm-content-max-w: 56rem;            /* max-w-4xl — main content max width */
+    }
+
+    /* Dark mode overrides for Google modal tokens */
+    .dark .google-modal-theme {
+        --gm-info-bg: color-mix(in oklab, var(--brand) 15%, transparent);
+        --gm-info-border: color-mix(in oklab, var(--brand) 30%, transparent);
+        --gm-error-bg: oklch(0.577 0.245 27.325 / 0.15);
+        --gm-error-border: oklch(0.577 0.245 27.325 / 0.4);
+        --gm-warning-bg: oklch(0.72 0.19 78 / 0.15);
+        --gm-warning-border: oklch(0.72 0.19 78 / 0.4);
+        --gm-success-bg: oklch(0.65 0.2 145 / 0.18);
+        --gm-success-border: oklch(0.65 0.2 145 / 0.4);
+        --gm-preview-bg: oklch(0.2 0 0);
+        --gm-preview-surface: oklch(0.15 0 0);
+        --gm-preview-skeleton: oklch(0.22 0 0);
+        --gm-preview-skeleton-dark: oklch(0.28 0 0);
+        --gm-preview-border: oklch(0.25 0 0);
+        --gm-preview-text: oklch(0.85 0 0);
+        --gm-preview-text-muted: oklch(0.6 0 0);
+        --gm-preview-text-faint: oklch(0.5 0 0);
+    }
+
+    /* Fix: native radio/checkbox buttons use the modal primary (purple) accent color */
+    .google-modal-theme input[type="radio"],
+    .google-modal-theme input[type="checkbox"] {
+        accent-color: var(--brand);
+    }
+
+    /* Utility: apply Google modal focus border to any input/select */
+    .google-modal-theme input:focus-visible,
+    .google-modal-theme textarea:focus-visible,
+    .google-modal-theme select:focus-visible,
+    .google-modal-theme [role="combobox"]:focus-visible {
+        border-color: var(--gm-focus-border) !important;
+        box-shadow: none !important;
+        outline: none !important;
+    }
+
+    /* ============================================================================
+       Sidebar Step & Substep Styling — Unified across TikTok / Google / Meta
+       Uses lucide Circle/CheckCircle icons for consistent feel
+       ============================================================================ */
+
+    .sidebar-step {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0.5rem;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .sidebar-step:not(.sidebar-step-disabled):hover {
+        background: var(--sidebar-accent-light);
+    }
+
+    .sidebar-step-current {
+        background: var(--sidebar-accent-light);
+    }
+
+    .sidebar-step-icon {
+        flex-shrink: 0;
+        width: 1.25rem;
+        height: 1.25rem;
+        transition: transform 0.2s ease, color 0.2s ease;
+    }
+
+    .sidebar-step:not(.sidebar-step-disabled):hover .sidebar-step-icon {
+        transform: scale(1.08);
+    }
+
+    .sidebar-step-icon-current {
+        color: var(--sidebar-accent);
+    }
+
+    .sidebar-step-icon-completed {
+        color: var(--gm-success);
+    }
+
+    .sidebar-step-label {
+        font-weight: 600;
+        font-size: 0.9375rem;
+        transition: color 0.2s ease;
+    }
+
+    .sidebar-step-label-current {
+        color: var(--sidebar-accent);
+    }
+
+    .sidebar-step-label-disabled {
+        text-decoration: line-through;
+        opacity: 0.5;
+    }
+
+    .sidebar-step-sublabel {
+        font-size: 0.75rem;
+        opacity: 0.6;
+        margin-top: 0.125rem;
+    }
+
+    /* Subsection — page list inside a step */
+    .sidebar-subsection {
+        margin-left: 0;
+        margin-top: 0.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    /* Substep — page row */
+    .sidebar-substep {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.3125rem 0.625rem;
+        border-radius: 0.375rem;
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+    }
+
+    .sidebar-substep:hover {
+        background: var(--sidebar-accent-light);
+    }
+
+    .sidebar-substep-current {
+        background: var(--sidebar-accent-light);
+    }
+
+    .sidebar-substep-icon {
+        flex-shrink: 0;
+        width: 0.9375rem;
+        height: 0.9375rem;
+        transition: transform 0.2s ease, color 0.2s ease;
+    }
+
+    .sidebar-substep:hover .sidebar-substep-icon {
+        transform: scale(1.08);
+    }
+
+    .sidebar-substep-icon-completed {
+        color: var(--gm-success);
+    }
+
+    .sidebar-substep-label {
+        font-size: 1rem;
+        font-weight: 500;
+        transition: color 0.2s ease;
+    }
+
+    .sidebar-substep-label-current {
+        font-weight: 600;
+        color: var(--sidebar-accent);
+    }
+
+    /* ============================================================================
+       Panel Collapse — Smooth animated expand/collapse for nested panels
+       ============================================================================ */
+
+    .sidebar-panels-collapse {
+        display: grid;
+        grid-template-rows: 0fr;
+        transition: grid-template-rows 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+    }
+
+    .sidebar-panels-collapse-open {
+        grid-template-rows: 1fr;
+    }
+
+    .sidebar-panels-inner {
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        padding-left: 1.75rem;
+        padding-top: 0.125rem;
+        padding-bottom: 0.25rem;
+    }
+
+    /* Panel item row */
+    .sidebar-panel-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+        cursor: pointer;
+        transition: background 0.15s ease;
+    }
+
+    .sidebar-panel-item:hover {
+        background: var(--sidebar-accent-light);
+    }
+
+    .sidebar-panel-item-active {
+        background: var(--sidebar-accent-light);
+    }
+
+    /* Panel radio dot */
+    .sidebar-panel-dot {
+        width: 0.75rem;
+        height: 0.75rem;
+        border-radius: 50%;
+        flex-shrink: 0;
+        border: 1.5px solid oklch(0.5 0 0 / 0.25);
+        background: transparent;
+        transition: all 0.2s ease;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .sidebar-panel-dot-active {
+        border-color: var(--sidebar-accent);
+    }
+
+    .sidebar-panel-dot-active::after {
+        content: '';
+        width: 0.375rem;
+        height: 0.375rem;
+        border-radius: 50%;
+        background: var(--sidebar-accent);
+    }
+
+    /* Panel label */
+    .sidebar-panel-label {
+        font-size: 0.75rem;
+        line-height: 1.35;
+        color: var(--foreground);
+        opacity: 0.55;
+        transition: all 0.15s ease;
+    }
+
+    .sidebar-panel-label-active {
+        opacity: 1;
+        color: var(--sidebar-accent);
+        font-weight: 500;
+    }
+
+    /* ============================================================================
+       Create-modal section cards (.card-glass) — flat surfaces. Class names are kept
+       so call sites need no edits: .card-glass is the card, .card-glass-{platform}
+       sets --card-accent (the neutral/required wash), and the completed / invalid
+       states use the status tokens. No blur, gradient or inner glow.
+       ============================================================================ */
+    .card-glass {
+        position: relative;
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        background-color: var(--card);
+        box-shadow: var(--surface-shadow);
+        transition: border-color 0.2s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .card-glass-meta { --card-accent: var(--platform-meta); }
+    .card-glass-google { --card-accent: var(--platform-google); }
+    .card-glass-tiktok { --card-accent: var(--platform-tiktok); }
+    .card-glass-linkedin { --card-accent: var(--platform-linkedin); }
+    .card-glass-twitter { --card-accent: var(--platform-twitter-series); }
+    .card-glass-pinterest { --card-accent: var(--platform-pinterest); }
+
+    .card-glass.card-glass-neutral {
+        background-color: color-mix(in oklab, var(--card-accent, var(--border)) 4%, var(--card));
+        border-color: color-mix(in oklab, var(--card-accent, var(--border)) 16%, var(--border));
+    }
+    .card-glass.card-glass-required {
+        background-color: color-mix(in oklab, var(--card-accent, var(--brand)) 6%, var(--card));
+        border-color: color-mix(in oklab, var(--card-accent, var(--brand)) 30%, var(--border));
+    }
+    .card-glass.card-glass-recommended {
+        background-color: var(--card);
+        border-color: color-mix(in oklab, var(--foreground) 18%, var(--border));
+    }
+    .card-glass.card-glass-optional {
+        background-color: var(--card);
+        border-color: var(--border);
+    }
+    .card-glass.card-glass-completed {
+        background-color: color-mix(in oklab, var(--status-success-soft) 55%, var(--card));
+        border-color: color-mix(in oklab, var(--status-success) 30%, var(--border));
+    }
+    .card-glass.card-glass-invalid {
+        background-color: color-mix(in oklab, var(--status-error-soft) 65%, var(--card));
+        border-color: color-mix(in oklab, var(--status-error) 40%, var(--border));
+    }
+    .card-glass[class*="card-glass-"]:hover {
+        border-color: color-mix(in oklab, var(--foreground) 22%, var(--border));
+    }
+}
+
+/* Navigation transition animations */
+@keyframes pulse-subtle {
+    0%,
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.95;
+        transform: scale(1.02);
+    }
+}
+
+.animate-pulse-subtle {
+    animation: pulse-subtle 1.5s ease-in-out infinite;
+}
+
+/* End Calendar Override V3 */
+
+/* Report-builder inline click-to-edit text (EditableText). The element looks
+   like plain text until hovered/focused; an empty value shows its placeholder
+   so the click target never collapses. */
+.rb-editable {
+    outline: none;
+    border-radius: 0.25rem;
+    cursor: text;
+    transition: box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.rb-editable:hover {
+    box-shadow: 0 0 0 1px var(--rb-primary-ring, color-mix(in oklab, var(--brand) 25%, transparent));
+}
+.rb-editable:focus {
+    box-shadow: 0 0 0 2px var(--rb-primary, color-mix(in oklab, var(--brand) 50%, transparent));
+    background-color: rgba(255, 255, 255, 0.5);
+}
+.rb-editable:empty::before {
+    content: attr(data-placeholder);
+    opacity: 0.45;
+    pointer-events: none;
+}
+
+/* End Calendar Override V4 */
+/* Chroma mascot — respect reduced motion. The crossfade transition is disabled
+   here so the skin swap is instant. Note: keyframe animations embedded INSIDE
+   the SVG documents are governed by each SVG's own media query, not this rule. */
+@media (prefers-reduced-motion: reduce) {
+  [data-chroma],
+  [data-chroma] * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Chroma in Sonner toasts: Sonner's icon slot is a fixed 16px box that pins the
+   mascot to the first text line, so on a two-line toast he looks tiny and hard
+   to see. Let the slot grow to the full content height and center the mascot in
+   it, so he reads as "as tall as the content".
+
+   The `:has([data-chroma])` qualifier is load-bearing twice over. It scopes the
+   override to slots that actually hold the mascot, leaving Sonner's default 16px
+   SVG icons alone when Chroma is gated off — and it raises specificity to (0,4,0)
+   above Sonner's own (0,3,0) `[data-sonner-toast][data-styled='true'] [data-icon]`.
+   Merely MATCHING that specificity loses: Sonner injects its stylesheet at runtime
+   with `document.head.appendChild(style)`, so it always lands after the app's
+   <link>ed CSS and wins the tie on source order. That left the slot at 16px while
+   Chroma's 48px box overhung the text start by 26px — the mascot sitting on top of
+   the toast copy. */
+[data-sonner-toast][data-styled='true'] [data-icon]:has([data-chroma]) {
+  height: auto;
+  width: auto;
+  align-self: stretch;
+  align-items: center;
+}
+
+/* Sonner's close button (`closeButton` on <Toaster>) defaults to opacity:0 and
+   only fades in on toast hover, so touch users and quick glances never see it.
+   Keep the X always visible so every toast has a discoverable dismiss control. */
+[data-sonner-toast] [data-close-button] {
+  opacity: 1;
+}
+
+/* Toasts above an open create modal (W2-F11). While the Google create modal is
+   open, `useToastLayerAboveModal` stamps `data-toasts-above-modal` on <html>.
+   Radix's modal lock sets `pointer-events: none` on <body>, which made a
+   persistent failure toast's close button dead, and the toast sat on the
+   modal footer's Continue/Publish. Re-enable pointer events on the toaster
+   (the modal ignores outside clicks, so a toast click never closes it) and
+   lift it above the footer. Specificity (0,3,1) beats Sonner's runtime-injected
+   (0,2,0) `[data-sonner-toaster][data-y-position='bottom']` rules. */
+html[data-toasts-above-modal] [data-sonner-toaster] {
+  pointer-events: auto;
+}
+html[data-toasts-above-modal] [data-sonner-toaster][data-y-position='bottom'] {
+  bottom: calc(var(--offset-bottom, 24px) + 6rem);
+}
+@media (max-width: 600px) {
+  html[data-toasts-above-modal] [data-sonner-toaster][data-y-position='bottom'] {
+    bottom: calc(var(--mobile-offset-bottom, 16px) + 9rem);
+  }
+}
