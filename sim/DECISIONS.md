@@ -620,19 +620,22 @@ Last updated: 2026-10-24, B4 (SpacetimeDB, task board, worker). B0 entries: comm
 
 Sources: the SpacetimeDB TypeScript module docs (cheat sheet, reducer context, submodules, unit
 testing), the HTTP API (`/v1/database`) and SATS-JSON pages, and the installed `spacetimedb@2.13.0`
-package (types and `dist/server`). `spacetime/src/tables_a.ts` is still empty on every branch A has
-pushed, and the live database has no tables yet (its schema lists only `ping`).
+package (types and `dist/server`), and A's `spacetime/src/tables_a.ts`, `reducers_a.ts` and
+`schema.ts` from `feat/spacetime-tables-a` (merged). The live database has no tables yet: its schema
+lists only `ping` until the merged module is published.
 
-### D61. B's reducers are exported from `spacetime/src/index.ts` — `DECIDED` (the one shared-file edit)
-- **Why:** in 2.13, a reducer is registered only through the module entry file's exports
-  (`Schema.buildRawModuleDefV10(exports)`; each export's `registerExport` hook). It also has to be
-  built from the schema object `index.ts` creates. So B's reducers can't live only in B's files.
-- **The edit:**
-  - one import of `reducersB` from `reducers_b.ts`;
-  - one `export const { … } = reducersB(spacetimedb)` naming B's 13 reducers.
-- **`reducers_b.ts`** imports the schema type only, so there is no runtime import cycle; checked by
-  an esbuild bundle.
-- **`tables_a.ts` is untouched.** A's own reducers need the same kind of export.
+### D61. B's reducers are re-exported from `index.ts`, built on A's `schema.ts` — `DECIDED` (revised after merging A's tables)
+- **Why an export at all:** in 2.13, a reducer is registered only through the module entry file's
+  exports (`Schema.buildRawModuleDefV10(exports)`; each export's `registerExport` hook).
+- **A's layout** (`feat/spacetime-tables-a`, merged):
+  - `schema.ts` creates the schema from `tablesA` and `tablesB`;
+  - `reducers_a.ts` and `reducers_b.ts` import it, with no import cycle;
+  - `index.ts` re-exports both. A left `export * from './reducers_b'` commented out for B.
+- **B's one edit to `index.ts`** is un-commenting that line. B's earlier `reducersB(spacetimedb)`
+  wrapper and its export block were dropped in the merge.
+- **Only reducers are exported:** helpers in `reducers_b.ts` stay local (the cheat sheet: "only
+  export the schema, reducers, lifecycle handlers, and views"). `test:module` checks the merged
+  module exports exactly the schema, `ping`, A's 6 reducers and B's 13.
 - **Wire names** are the snake_case of the export names (`upsertProducts` → `upsert_products`).
 
 ### D62. The worker talks HTTP; batch writers take one JSON string — `DECIDED`
@@ -703,14 +706,22 @@ pushed, and the live database has no tables yet (its schema lists only `ping`).
   records `{ error }` as the result.
 - **`run_id`** comes from the payload.
 
-### D68. Reading A's rows assumes the contract's field names — `OPEN` (until A's table info arrives)
-- `loadWorldFromDb` reads `brand`, `concept`, `segment`, `arm` and `creative` (A's) plus `product`
-  (B's) with `SELECT *`, then parses them through the same contract schemas and cross-table checks
-  as the fixtures. A field that differs fails loudly with the table and field name.
-- **Rows are sorted by id**, since SQL order isn't guaranteed and draws index into it.
-- **Creatives with `round_created` after the round are left out.**
-- **Products:** in A mode they come from the `product` table; in fixture mode the worker writes the
-  fixture products. With A's real table information, map any name differences here.
+### D68. Reading A's rows: A's field names match the contract — `DECIDED` (after merging A's tables)
+- A's `tables_a.ts` has the contract's field names and order. Its conventions are the ones B's
+  reader already accepts:
+  - `""` for empty, never an option (D12);
+  - json columns as JSON strings (D13);
+  - integers as u32, so they arrive as numbers.
+- **`loadWorldFromDb` is unchanged.** It reads `brand`, `concept`, `segment`, `arm` and `creative`
+  (A's) plus `product` (B's) with `SELECT *`, and parses them through the same contract schemas and
+  cross-table checks as the fixtures.
+  - Rows are sorted by id.
+  - Creatives with `round_created` after the round are left out.
+- **Checked end to end in `test:module`:** the fixture world is written through A's own reducers
+  (`upsertBrands` … `upsertCreatives`, in A's conventions), and the worker runs a round from those
+  rows in database mode.
+- **Products** are B's table. With A's rows, the worker reads them from `product`, so they must be
+  written before a run (`writer.products`).
 
 ### D69. The module is tested in the official harness without Vitest — `DECIDED`
 - **`npm run test:module`:**
@@ -739,3 +750,13 @@ pushed, and the live database has no tables yet (its schema lists only `ping`).
   `npm run sim:worker -- --enqueue <run>` stands in for start-rounds.
 - **Sample round summary for A6:** `sim/SAMPLE_ROUND_SUMMARY.json`, round 1 of a fixture run on
   real Jev answers (from cache), written by the real worker.
+
+### D71. The competitor set is locked at seven brands; fixtures keep the stand-ins — `OPEN` (products)
+- The plan now locks Magic Spoon against seven competitors that run Meta ads: Catalina Crunch,
+  Seven Sundays, Surreal, GHOST, Premier Protein, Legendary Foods and Quest Nutrition. This
+  replaces Three Wishes and Wonderworks.
+- **Per your call before B4, the fixtures keep the old stand-ins** until real data is in. The sim
+  reads whatever brands A writes, so this only matters for B's `product` table.
+- **Needed:** one landing product per competitor A actually uses as a `landing_product_id`, with
+  price, rating and highlights from each brand's site (D44's method). Only Magic Spoon's page is
+  ever shown today, so the competitors' rows matter only for completeness.

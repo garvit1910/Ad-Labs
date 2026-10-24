@@ -3,6 +3,7 @@ import { describe, test } from "node:test";
 import { type Db, SpacetimeError, type SqlRow, writer } from "../../src/spacetime.js";
 import { Worker } from "../../src/worker.js";
 import { fakeJev } from "../fake-jev.js";
+import { loadWorld } from "../../src/fixtures.js";
 // @ts-expect-error: built by `npm run test:module` from spacetime/src/index.ts (not type-checked here)
 import spacetimedb, * as mod from "../../.cache/module.mjs";
 // @ts-expect-error: the spacetime package's test harness, resolved through test/module/sys-hooks.mjs
@@ -78,12 +79,54 @@ describe("the SpacetimeDB module in the official test harness", () => {
     return { h, db: harnessDb(h, exports), count: (t: string) => Number(h.db[t]!.count()) };
   };
 
-  test("every B table, the task board and B's reducers are in the module", () => {
+  test("A's and B's tables and reducers are all in the merged module, and nothing else is exported", () => {
     const { h } = fresh();
-    for (const t of ["product", "creative_perception", "run", "round", "shopper", "decision", "arm_stat", "learning", "task"]) {
+    for (const t of ["brand", "concept", "segment", "arm", "creative", "product", "creative_perception", "run", "round", "shopper", "decision", "arm_stat", "learning", "task"]) {
       assert.ok(h.db[t], t);
     }
-    for (const r of Object.keys(PARAMS)) assert.ok(exports[r.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase())], r);
+    const reducersB = Object.keys(PARAMS).map((r) => r.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase()));
+    const reducersA = ["upsertBrands", "upsertConcepts", "upsertSegments", "upsertArms", "upsertCreatives", "resetATables"];
+    assert.deepEqual(Object.keys(exports).sort(), ["default", "ping", ...reducersA, ...reducersB].sort());
+  });
+
+  test("the worker runs on A's tables, loaded through A's own reducers in A's conventions", async () => {
+    const { h, db, count } = fresh();
+    const w = loadWorld();
+    // A's wire conventions (tables_a.ts): "" for empty, json columns as JSON strings, u32 integers.
+    const e = (v: unknown) => (v === null || v === undefined ? "" : v);
+    const j = (v: unknown) => JSON.stringify(v);
+    const asA = {
+      upsertBrands: w.brands,
+      upsertConcepts: w.concepts,
+      upsertSegments: w.segments.map((s) => ({ ...s, prior_weights: j(s.prior_weights), quotes: j(s.quotes) })),
+      upsertArms: w.arms.map((a) => ({ ...a, angle: e(a.angle), hook: e(a.hook), evidence: j(a.evidence) })),
+      upsertCreatives: w.creatives.map((c) => ({
+        ...c,
+        arm_id: e(c.arm_id),
+        image_url: e(c.image_url),
+        landing_product_id: e(c.landing_product_id),
+        segment_id: e(c.segment_id),
+        pack_fingerprint: e(c.pack_fingerprint),
+        learning_ids: j(c.learning_ids),
+      })),
+    };
+    for (const [reducer, rows] of Object.entries(asA)) {
+      h.withReducerTx(TestAuth.internal(), (ctx) => (exports[reducer] as (c: unknown, a: object) => void)(ctx, { rows }));
+    }
+    // Products are B's table; the worker reads them from the database in this mode.
+    await writer.products(db, w);
+    assert.equal(count("creative"), 20);
+
+    await writer.enqueue(db, "tsk_run_run_a_r0", "run_round", { run_id: "run_a", round: 0 });
+    const worker = new Worker({ db, jev: fakeJev(), source: "db", log: () => {} });
+    assert.equal(await worker.tick(), true);
+    const task = [...h.db.task!.iter()].find((t) => t.task_id === "tsk_run_run_a_r0")!;
+    assert.equal(task.status, "done", String(task.result));
+    const round = [...h.db.round!.iter()].find((r) => r.run_id === "run_a")!;
+    assert.equal(round.status, "done");
+    const summary = JSON.parse(String(round.summary));
+    assert.equal(summary.leaderboard.length, w.segments.length);
+    assert.equal(summary.by_arm.length, 12);
   });
 
   test("the worker runs two rounds through the real reducers", async () => {
