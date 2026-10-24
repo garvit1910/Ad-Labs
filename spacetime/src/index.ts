@@ -1,10 +1,9 @@
-import { schema } from 'spacetimedb/server';
-import { tablesA } from './tables_a';
-import { tablesB } from './tables_b';
+import spacetimedb from './schema';
 
-// One module, two files: A owns tables_a.ts, B owns tables_b.ts.
-const spacetimedb = schema({ ...tablesA, ...tablesB });
-export default spacetimedb;
+// Module entry: the schema plus every reducer. Each side's reducers file is re-exported here.
+export { default } from './schema';
+export * from './reducers_a';
+// export * from './reducers_b';
 
 // Liveness check for `npm run check:connections`; touches no table.
 export const ping = spacetimedb.reducer(_ctx => {
