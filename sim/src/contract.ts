@@ -35,6 +35,10 @@ export const CREATIVE_STATUSES = ["ranked", "gated_out"] as const;
 const empty = <T extends z.ZodTypeAny>(schema: T) =>
   z.union([schema, z.literal(""), z.null()]).transform((v) => (v === "" ? null : v) as z.output<T> | null);
 
+// SpacetimeDB stores json columns as strings; fixtures store them parsed. Accept both.
+const json = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess((v) => (typeof v === "string" ? JSON.parse(v) : v), schema);
+
 const prefixedId = (prefix: string) => z.string().regex(new RegExp(`^${prefix}[a-z0-9_]+$`));
 const unit = z.number().min(0).max(1);
 
@@ -60,8 +64,9 @@ export const segmentSchema = z
     name: z.string().min(1),
     description: z.string().min(1),
     share: unit,
-    prior_weights: z.record(z.string(), unit),
-    quotes: z.array(z.string().min(1)).min(1),
+    prior_weights: json(z.record(z.string(), unit)),
+    // At least 2: each shopper draws 2 quotes from the pool.
+    quotes: json(z.array(z.string().min(1)).min(2)),
     budget_mean_usd: z.number().positive(),
     budget_sd_usd: z.number().min(0),
     in_market_rate: unit,
@@ -75,12 +80,13 @@ export const armSchema = z
     hook: empty(z.enum(HOOKS)),
     strategy: z.enum(STRATEGIES),
     rationale: z.string().min(1),
-    evidence: z.array(z.string()),
+    evidence: json(z.array(z.string())),
   })
   .strict()
-  .refine((a) => (a.strategy === "control") === (a.angle === null && a.hook === null), {
-    message: "only the control arm has no angle and hook",
-  });
+  .refine(
+    (a) => (a.strategy === "control" ? a.angle === null && a.hook === null : a.angle !== null && a.hook !== null),
+    { message: "the control arm has no angle or hook; every recipe has both" },
+  );
 
 export const creativeSchema = z
   .object({
@@ -96,7 +102,7 @@ export const creativeSchema = z
     landing_product_id: empty(prefixedId("prd_")),
     days_running: z.number().int().min(0),
     round_created: z.number().int().min(0),
-    learning_ids: z.array(z.string()),
+    learning_ids: json(z.array(z.string())),
     segment_id: empty(prefixedId("seg_")),
     pack_fingerprint: empty(z.string()),
     status: z.enum(CREATIVE_STATUSES),
@@ -112,7 +118,7 @@ export const productSchema = z
     subscription_price_usd: z.number().min(0).nullable(),
     rating: z.number().min(0).max(5),
     review_count: z.number().int().min(0),
-    page_highlights: z.array(z.string()),
+    page_highlights: json(z.array(z.string())),
     shipping_note: z.string(),
   })
   .strict();

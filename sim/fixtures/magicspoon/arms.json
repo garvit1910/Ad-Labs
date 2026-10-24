@@ -5,7 +5,10 @@
     "hook": "bold_claim",
     "strategy": "steal",
     "rationale": "Placeholder recipe: competitors' taste-first ads with a bold claim.",
-    "evidence": []
+    "evidence": [
+      "cr_cc_live_1",
+      "cr_ww_live_2"
+    ]
   },
   {
     "arm_id": "arm_02",
@@ -13,7 +16,10 @@
     "hook": "problem_callout",
     "strategy": "steal",
     "rationale": "Placeholder recipe: competitors call out the carb problem with regular cereal.",
-    "evidence": []
+    "evidence": [
+      "cr_cc_live_1",
+      "cr_ww_live_1"
+    ]
   },
   {
     "arm_id": "arm_03",
@@ -21,7 +27,10 @@
     "hook": "statistic",
     "strategy": "steal",
     "rationale": "Placeholder recipe: competitors lead with a protein number.",
-    "evidence": []
+    "evidence": [
+      "cr_ww_live_1",
+      "cr_cc_live_2"
+    ]
   },
   {
     "arm_id": "arm_04",
@@ -29,7 +38,10 @@
     "hook": "pov_relatable",
     "strategy": "steal",
     "rationale": "Placeholder recipe: competitors use relatable point-of-view cravings.",
-    "evidence": []
+    "evidence": [
+      "cr_ww_live_2",
+      "cr_tw_live_2"
+    ]
   },
   {
     "arm_id": "arm_05",
@@ -37,7 +49,10 @@
     "hook": "question",
     "strategy": "steal",
     "rationale": "Placeholder recipe: competitors ask what is in your cereal.",
-    "evidence": []
+    "evidence": [
+      "cr_tw_live_1",
+      "cr_tw_live_2"
+    ]
   },
   {
     "arm_id": "arm_06",
@@ -45,7 +60,9 @@
     "hook": "social_proof",
     "strategy": "double_down",
     "rationale": "Placeholder recipe: Magic Spoon's long-running taste ads, backed by reviews.",
-    "evidence": []
+    "evidence": [
+      "cr_ms_live_1"
+    ]
   },
   {
     "arm_id": "arm_07",
@@ -53,7 +70,9 @@
     "hook": "testimonial",
     "strategy": "double_down",
     "rationale": "Placeholder recipe: Magic Spoon's protein message told by a customer.",
-    "evidence": []
+    "evidence": [
+      "cr_ms_live_3"
+    ]
   },
   {
     "arm_id": "arm_08",
@@ -61,7 +80,9 @@
     "hook": "curiosity",
     "strategy": "double_down",
     "rationale": "Placeholder recipe: Magic Spoon's craving ads with a curiosity hook.",
-    "evidence": []
+    "evidence": [
+      "cr_ms_live_2"
+    ]
   },
   {
     "arm_id": "arm_09",
@@ -93,6 +114,10 @@
     "hook": null,
     "strategy": "control",
     "rationale": "Magic Spoon's own live ads.",
-    "evidence": []
+    "evidence": [
+      "cr_ms_live_1",
+      "cr_ms_live_2",
+      "cr_ms_live_3"
+    ]
   }
 ]

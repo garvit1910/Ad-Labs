@@ -34,6 +34,8 @@ export function feedQuestions(options: FeedOption[], ours: Creative, world: Worl
   for (const o of options) criteria[o.key] = renderAd(o.creative, world);
   criteria.none = "None of them: keeps scrolling without tapping any post.";
   const brand = world.brands.find((b) => b.brand_id === ours.brand_id)?.name ?? ours.brand_id;
+  // A testimonial headline is already in quotes; don't wrap it twice.
+  const headline = ours.headline.replace(/^["“](.*)["”]$/, "$1");
   return {
     tap: {
       type: "choice",
@@ -42,7 +44,7 @@ export function feedQuestions(options: FeedOption[], ours: Creative, world: Worl
     },
     believes: {
       type: "noul",
-      instructions: `Does this shopper believe the main promise of the ${brand} post that says "${ours.headline}"? The full post: ${renderAd(ours, world)}`,
+      instructions: `Does this shopper believe the main promise of the ${brand} post that says "${headline}"? The full post: ${renderAd(ours, world)}`,
     },
   };
 }

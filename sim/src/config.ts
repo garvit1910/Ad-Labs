@@ -25,6 +25,8 @@ export const config = {
     seed: 13,
     population: 300,
     roundsPlanned: 5,
+    // A tick is one sim day, counted across the whole run (round 0 = ticks 0-2, round 1 =
+    // ticks 3-5, ...), so a tick never repeats and draw keys never collide across rounds.
     ticksPerRound: 3,
     reach: 0.8,
   },
@@ -33,6 +35,8 @@ export const config = {
     preferenceMin: 0.05,
     preferenceMax: 0.95,
     preferenceEvidence: 2,
+    unheldW: 0.5,
+    unheldE: 1.0,
     budgetFloorUsd: 15,
     quotesShown: 2,
   },

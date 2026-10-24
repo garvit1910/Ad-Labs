@@ -59,7 +59,6 @@ export function checkWorld(w: World): { errors: string[]; warnings: string[] } {
   const brandIds = ids(w.brands, "brand_id");
   const conceptKeys = ids(w.concepts, "key");
   const segmentIds = ids(w.segments, "segment_id");
-  const productIds = ids(w.products, "product_id");
   const armIds = ids(w.arms, "arm_id");
 
   const clients = w.brands.filter((b) => b.is_client);
@@ -72,9 +71,8 @@ export function checkWorld(w: World): { errors: string[]; warnings: string[] } {
     for (const k of Object.keys(s.prior_weights)) {
       if (!conceptKeys.has(k)) errors.push(`segment ${s.segment_id}: prior weight for unknown concept ${k}`);
     }
-    for (const k of conceptKeys) {
-      if (!(k in s.prior_weights)) errors.push(`segment ${s.segment_id}: no prior weight for concept ${k}`);
-    }
+    const missing = [...conceptKeys].filter((k) => !(k in s.prior_weights));
+    if (missing.length) warnings.push(`segment ${s.segment_id}: no prior for ${missing.join(", ")} (treated as unheld)`);
   }
 
   const controls = w.arms.filter((a) => a.strategy === "control");
@@ -96,8 +94,10 @@ export function checkWorld(w: World): { errors: string[]; warnings: string[] } {
   for (const c of w.creatives) {
     const where = `creative ${c.creative_id}`;
     if (!brandIds.has(c.brand_id)) errors.push(`${where}: unknown brand ${c.brand_id}`);
-    if (c.landing_product_id && !productIds.has(c.landing_product_id)) {
-      errors.push(`${where}: unknown product ${c.landing_product_id}`);
+    if (c.landing_product_id) {
+      const product = w.products.find((p) => p.product_id === c.landing_product_id);
+      if (!product) errors.push(`${where}: unknown product ${c.landing_product_id}`);
+      else if (product.brand_id !== c.brand_id) errors.push(`${where}: lands on another brand's product`);
     }
     if (c.segment_id && !segmentIds.has(c.segment_id)) errors.push(`${where}: unknown segment ${c.segment_id}`);
     if (c.arm_id && !armIds.has(c.arm_id)) errors.push(`${where}: unknown arm ${c.arm_id}`);
@@ -120,10 +120,19 @@ export function checkWorld(w: World): { errors: string[]; warnings: string[] } {
         break;
     }
   }
-  for (const a of recipes) {
+  const creativeIds = ids(w.creatives, "creative_id");
+  for (const a of w.arms) {
+    for (const e of a.evidence) {
+      if (e.startsWith("cr_") && !creativeIds.has(e)) errors.push(`arm ${a.arm_id}: evidence cites unknown ad ${e}`);
+    }
     if (!w.creatives.some((c) => c.arm_id === a.arm_id && c.status === "ranked")) {
       warnings.push(`arm ${a.arm_id}: no ranked creative`);
     }
+  }
+  for (const b of w.brands) {
+    const live = w.creatives.filter((c) => c.brand_id === b.brand_id && c.origin !== "generated").length;
+    if (live < 2) warnings.push(`brand ${b.brand_id}: ${live} live ads, B0 asks for at least 2`);
+    if (!w.products.some((p) => p.brand_id === b.brand_id)) warnings.push(`brand ${b.brand_id}: no product`);
   }
   return { errors, warnings };
 }

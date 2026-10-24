@@ -10,7 +10,7 @@ contract marks json are stored parsed here; `""` and `null` both mean "empty".
 | concepts.json | concept | 19 | Draft vocabulary from "Simulation design"; agree with A |
 | segments.json | segment | 6 | Draft; A's personas replace them at the 2:30 PM integration |
 | products.json | product | 4 | **Placeholder**: prices, rating, review count, highlights and shipping notes are 0 or empty until filled from the brand sites |
-| arms.json | arm | 11 recipes + control | Placeholder recipes; evidence is empty |
+| arms.json | arm | 11 recipes + control | Placeholder recipes; steal, double_down and control cite fixture ad ids; gap arms cite nothing until A's voc facts exist |
 | creatives.json | creative | 20 | See below |
 
 ## Placeholders still to replace
@@ -33,3 +33,7 @@ contract marks json are stored parsed here; `""` and `null` both mean "empty".
 - `brand_live` creatives carry `arm_id: "arm_control"`; competitor ads have no arm.
 - Generated fixture creatives have `days_running: 0`, `image_url: null`, `pack_fingerprint: null`.
 - `subscription_price_usd` may be null for a brand without a subscription.
+- json columns (`prior_weights`, `quotes`, `evidence`, `learning_ids`, `page_highlights`) may arrive as
+  JSON strings from SpacetimeDB or parsed here; both load.
+- A segment missing a concept in `prior_weights` loads with a warning; that concept starts unheld (w 0.5, E 1.0).
+- Segment descriptions avoid restating a prior (no gym routine, no childhood cartoons): rendering rule 2.

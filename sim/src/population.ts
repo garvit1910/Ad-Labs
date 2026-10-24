@@ -4,7 +4,8 @@ import type { World } from "./fixtures.js";
 import { bernoulli, normal, shuffle, weightedIndex } from "./rng.js";
 
 export type Preference = { w: number; E: number };
-export type Opinion = { value: number; E: number; source: "page visit" | "purchase" };
+// Counts drive the "from one page visit" / "from a purchase" wording.
+export type Opinion = { value: number; E: number; page_visits: number; purchases: number };
 export type Exposure = { tick: number; creative_id: string; brand_id: string; concepts: string[] };
 export type Engagement = { tick: number; creative_id: string; kind: "tap" | "stay" | "buy" };
 
@@ -58,12 +59,18 @@ export function makeShopper(index: number, world: World, seed: number): Shopper 
 
   const preferences: Record<string, Preference> = {};
   for (const { key } of world.concepts) {
-    const prior = segment.prior_weights[key] ?? 0.5;
+    const prior = segment.prior_weights[key];
+    if (prior === undefined) {
+      // No prior for this concept: an unheld concept (ShopSim's Phase 7 fix).
+      preferences[key] = { w: c.unheldW, E: c.unheldE };
+      continue;
+    }
     const w = clip(normal(prior, c.preferenceSd, seed, "population", id, "pref", key), c.preferenceMin, c.preferenceMax);
     preferences[key] = { w, E: c.preferenceEvidence };
   }
 
-  const inMarket = bernoulli(segment.in_market_rate, seed, "need", id, 0);
+  // Its own key: the "need" stream is for per-tick arrivals in the sim day.
+  const inMarket = bernoulli(segment.in_market_rate, seed, "population", id, "in_market");
   return {
     shopper_id: id,
     index,

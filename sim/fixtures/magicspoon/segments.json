@@ -38,7 +38,7 @@
   {
     "segment_id": "seg_protein_athlete",
     "name": "Protein athlete",
-    "description": "Trains at the gym five mornings a week before work and eats breakfast as soon as they get home.",
+    "description": "Works early shifts as a physical therapist and eats breakfast at home before a 7 AM start.",
     "share": 0.2,
     "prior_weights": {
       "high_protein": 0.92,
@@ -73,7 +73,7 @@
   {
     "segment_id": "seg_nostalgic_adult",
     "name": "Nostalgic adult",
-    "description": "In their late thirties with a desk job; grew up watching Saturday-morning cartoons and now eats breakfast at their desk.",
+    "description": "In their late thirties with a desk job in an open-plan office; usually eats breakfast at their desk.",
     "share": 0.15,
     "prior_weights": {
       "high_protein": 0.4,

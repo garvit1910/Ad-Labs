@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 
 // Every draw has its own key, hash(seed, stream, shopper, tick, ...), so no draw depends on
 // processing order, and changing the population size never changes an existing shopper.
+// `tick` in keys is the run-wide sim day (see config.run), never a per-round day number.
 export type Stream =
   | "population"
   | "need"

@@ -9,7 +9,8 @@
   "scripts": {
     "sim:smoke": "tsx src/smoke.ts",
     "fixtures:check": "tsx src/fixtures.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test test/*.test.ts"
   },
   "dependencies": {
     "better-sqlite3": "13.0.3",

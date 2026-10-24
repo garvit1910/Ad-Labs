@@ -12,6 +12,10 @@ const CARES_SOMEWHAT = 0.45;
 const LIKES = 0.6;
 const MIXED = 0.45;
 const WEEK_TICKS = 7;
+// Slots in the preference line that always go to the shopper's strongest concepts, so
+// claimed concepts can't crowd out who the shopper is.
+const STRONGEST_RESERVED = 3;
+const NUMBER_WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten"];
 
 export function wordCount(text: string): number {
   return text.split(/\s+/).filter(Boolean).length;
@@ -21,21 +25,36 @@ function timesWord(n: number): string {
   return n === 1 ? "once" : n === 2 ? "twice" : `${n} times`;
 }
 
+function countWord(n: number, one: string, many: string): string {
+  if (n === 1) return one === "purchase" ? "a purchase" : `one ${one}`;
+  return `${NUMBER_WORDS[n] ?? n} ${many}`;
+}
+
+function daysAgo(days: number): string {
+  return days <= 0 ? "earlier today" : days === 1 ? "yesterday" : `${days} days ago`;
+}
+
 function joinLabels(labels: string[]): string {
   if (labels.length <= 1) return labels.join("");
   return `${labels.slice(0, -1).join(", ")} and ${labels.at(-1)}`;
 }
 
-// At most maxConcepts concepts: any concept today's ads claim, then the strongest others.
+// At most maxConcepts concepts: the strongest few, then concepts today's ads claim (in the
+// order given), then more of the strongest.
 export function preferenceLine(shopper: Shopper, world: World, claimedConcepts: readonly string[] = []): string {
   const label = new Map(world.concepts.map((c) => [c.key, c.label]));
-  const shown = new Set<string>();
-  for (const k of claimedConcepts) if (k !== "other" && shopper.preferences[k]) shown.add(k);
+  const max = config.render.maxConcepts;
   const strongest = Object.entries(shopper.preferences)
-    .filter(([k]) => k !== "other" && !shown.has(k))
-    .sort(([, a], [, b]) => b.w - a.w);
-  for (const [k] of strongest) {
-    if (shown.size >= config.render.maxConcepts) break;
+    .filter(([k]) => k !== "other")
+    .sort(([, a], [, b]) => b.w - a.w)
+    .map(([k]) => k);
+  const shown = new Set<string>(strongest.slice(0, Math.min(STRONGEST_RESERVED, max)));
+  for (const k of claimedConcepts) {
+    if (shown.size >= max) break;
+    if (k !== "other" && shopper.preferences[k]) shown.add(k);
+  }
+  for (const k of strongest) {
+    if (shown.size >= max) break;
     shown.add(k);
   }
   const ordered = [...shown].sort((a, b) => shopper.preferences[b]!.w - shopper.preferences[a]!.w);
@@ -72,7 +91,7 @@ export function memoryLines(shopper: Shopper, world: World, tick: number): strin
     );
   } else {
     const counts = new Map<string, number>();
-    for (const e of ours) for (const k of e.concepts) counts.set(k, (counts.get(k) ?? 0) + 1);
+    for (const e of ours) for (const k of e.concepts) if (k !== "other") counts.set(k, (counts.get(k) ?? 0) + 1);
     const top = [...counts].sort((a, b) => b[1] - a[1])[0]?.[0];
     const about = top ? `, mostly about ${label.get(top) ?? top}` : "";
     lines.push(`Has seen ${client.name} ads ${timesWord(ours.length)} this week${about}.`);
@@ -87,12 +106,40 @@ export function memoryLines(shopper: Shopper, world: World, tick: number): strin
   }
 
   const opinion = shopper.opinions[client.brand_id];
-  lines.push(
-    opinion
-      ? `Opinion of ${client.name}: ${opinionWords(opinion.value)}, from ${opinion.source === "purchase" ? "a purchase" : "a page visit"}.`
-      : `No opinion of ${client.name} yet.`,
-  );
+  if (opinion) {
+    const source =
+      opinion.purchases > 0
+        ? countWord(opinion.purchases, "purchase", "purchases")
+        : countWord(opinion.page_visits, "page visit", "page visits");
+    lines.push(`Opinion of ${client.name}: ${opinionWords(opinion.value)}, from ${source}.`);
+  } else {
+    lines.push(`No opinion of ${client.name} yet.`);
+  }
+
+  const engagement = lastEngagementLine(shopper, world, client.brand_id, client.name, tick);
+  if (engagement) lines.push(engagement);
+
+  for (const p of world.products) {
+    const expected = shopper.expected_price_usd[p.product_id];
+    if (p.brand_id === client.brand_id && expected !== undefined) {
+      lines.push(`Thinks the ${p.name} costs about $${Math.round(expected)}.`);
+    }
+  }
   return lines;
+}
+
+// "Tapped a Magic Spoon ad 2 days ago, looked at the page, didn't buy." for the most recent
+// tap on one of our ads; stay and buy on the same tick and creative belong to that visit.
+function lastEngagementLine(shopper: Shopper, world: World, clientId: string, clientName: string, tick: number): string | null {
+  const ourCreatives = new Set(world.creatives.filter((c) => c.brand_id === clientId).map((c) => c.creative_id));
+  const taps = shopper.engagements.filter((e) => e.kind === "tap" && ourCreatives.has(e.creative_id));
+  const last = taps.reduce<(typeof taps)[number] | undefined>((a, e) => (!a || e.tick >= a.tick ? e : a), undefined);
+  if (!last) return null;
+  const visit = shopper.engagements.filter((e) => e.tick === last.tick && e.creative_id === last.creative_id);
+  const stayed = visit.some((e) => e.kind === "stay");
+  const bought = visit.some((e) => e.kind === "buy");
+  const outcome = bought ? "looked at the page and bought" : stayed ? "looked at the page, didn't buy" : "left the page right away";
+  return `Tapped a ${clientName} ad ${daysAgo(tick - last.tick)}, ${outcome}.`;
 }
 
 export function renderShopper(shopper: Shopper, world: World, claimedConcepts: readonly string[] = []): string {
@@ -115,11 +162,16 @@ export function renderFeedState(
   tick: number,
   claimedConcepts: readonly string[] = [],
 ): string {
-  return [
+  const state = [
     renderShopper(shopper, world, claimedConcepts),
     ["MEMORY", ...memoryLines(shopper, world, tick)].join("\n"),
     ["RIGHT NOW", "Scrolling Instagram on their phone. Three sponsored posts appear one after another."].join("\n"),
   ].join("\n\n");
+  const words = wordCount(state);
+  if (words > config.render.maxWords) {
+    throw new Error(`state for ${shopper.shopper_id} is ${words} words, limit ${config.render.maxWords}`);
+  }
+  return state;
 }
 
 export function renderAd(creative: Creative, world: World): string {

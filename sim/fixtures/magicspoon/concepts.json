@@ -62,7 +62,7 @@
   {
     "concept_id": "cpt_kid_friendly",
     "key": "kid_friendly",
-    "label": "food their kids will eat"
+    "label": "kid-friendly"
   },
   {
     "concept_id": "cpt_convenience",

@@ -92,6 +92,8 @@ export class JevError extends Error {
 
 const PROBABILITY_SUM_TOLERANCE = 0.02;
 const RETRYABLE = new Set([429, 500, 502, 503, 504, 529]);
+const MAX_RETRY_AFTER_MS = 30_000;
+const PINNED_VERSION = /^jev-\d+\.\d+\.\d+$/;
 
 type ParsedResponse = z.infer<typeof responseSchema>;
 
@@ -163,6 +165,7 @@ export class JevClient {
   private apiKey: string | undefined;
   private limit: ReturnType<typeof pLimit>;
   private cache: JevCache | null;
+  private inFlight = new Map<string, Promise<{ parsed: ParsedResponse; latencyMs: number }>>();
 
   constructor(opts: JevClientOptions = {}) {
     this.apiKey = opts.apiKey ?? process.env.TYPESAFE_API_KEY;
@@ -177,27 +180,43 @@ export class JevClient {
     return createHash("sha256").update(JSON.stringify(request)).digest("hex");
   }
 
-  ask<Q extends Questions>(state: string, questions: Q): Promise<JevResult<Q>> {
+  async ask<Q extends Questions>(state: string, questions: Q): Promise<JevResult<Q>> {
     const request: JevRequest<Q> = { model: this.model, state, questions };
     const cacheKey = JevClient.cacheKey(request);
     const cached = this.cache?.get(cacheKey);
     if (cached !== undefined) {
-      const parsed = responseSchema.parse(cached);
-      checkAnswers(questions, parsed.answers);
-      return Promise.resolve(toResult(parsed, { latencyMs: 0, cacheHit: true, cacheKey, request }));
+      const parsed = this.validate(cached, questions);
+      return toResult(parsed, { latencyMs: 0, cacheHit: true, cacheKey, request });
     }
-    return this.limit(async () => {
-      const started = performance.now();
-      const raw = await this.post(JSON.stringify(request));
-      const latencyMs = Math.round(performance.now() - started);
-      const result = responseSchema.safeParse(raw);
-      if (!result.success) {
-        throw new JevError(`response failed validation: ${z.prettifyError(result.error)}`, 200, JSON.stringify(raw));
-      }
-      checkAnswers(questions, result.data.answers);
-      this.cache?.put(cacheKey, result.data.model, JSON.stringify(request), result.data);
-      return toResult(result.data, { latencyMs, cacheHit: false, cacheKey, request });
-    });
+    // Identical requests in flight share one paid call.
+    let pending = this.inFlight.get(cacheKey);
+    if (!pending) {
+      pending = this.limit(async () => {
+        const started = performance.now();
+        const raw = await this.post(JSON.stringify(request));
+        const latencyMs = Math.round(performance.now() - started);
+        const parsed = this.validate(raw, questions);
+        this.cache?.put(cacheKey, parsed.model, JSON.stringify(request), parsed);
+        return { parsed, latencyMs };
+      }).finally(() => this.inFlight.delete(cacheKey));
+      this.inFlight.set(cacheKey, pending);
+    }
+    const { parsed, latencyMs } = await pending;
+    return toResult(parsed, { latencyMs, cacheHit: false, cacheKey, request });
+  }
+
+  // Schema, answers-match-questions, and the answering model. A pinned version must answer
+  // as itself; only an alias (jev-latest) may resolve to another name.
+  private validate(raw: unknown, questions: Questions): ParsedResponse {
+    const result = responseSchema.safeParse(raw);
+    if (!result.success) {
+      throw new JevError(`response failed validation: ${z.prettifyError(result.error)}`, 200, JSON.stringify(raw));
+    }
+    if (PINNED_VERSION.test(this.model) && result.data.model !== this.model) {
+      throw new JevError(`asked ${this.model}, answered by ${result.data.model}`);
+    }
+    checkAnswers(questions, result.data.answers);
+    return result.data;
   }
 
   // POST with exponential backoff on 429/529/5xx and network errors, honouring retry-after.
@@ -215,15 +234,18 @@ export class JevClient {
         });
       } catch (err) {
         lastError = err;
-        await sleep(backoffMs(attempt));
+        if (attempt < config.jev.maxAttempts - 1) await sleep(backoffMs(attempt));
         continue;
       }
       if (res.ok) return res.json();
       const text = await res.text();
       lastError = new JevError(`Jev HTTP ${res.status}: ${text}`, res.status, text);
       if (!RETRYABLE.has(res.status)) throw lastError;
-      const retryAfter = Number(res.headers.get("retry-after"));
-      await sleep(Number.isFinite(retryAfter) && retryAfter > 0 ? retryAfter * 1000 : backoffMs(attempt));
+      if (attempt === config.jev.maxAttempts - 1) break;
+      const retryAfterMs = Number(res.headers.get("retry-after")) * 1000;
+      await sleep(
+        Number.isFinite(retryAfterMs) && retryAfterMs > 0 ? Math.min(retryAfterMs, MAX_RETRY_AFTER_MS) : backoffMs(attempt),
+      );
     }
     throw lastError;
   }

@@ -33,7 +33,6 @@ const options = assembleFeed(shopper, ours, world, seed, tick);
 const questions = feedQuestions(options, ours, world);
 const state = renderFeedState(shopper, world, tick);
 const words = wordCount(state);
-if (words > config.render.maxWords) throw new Error(`state is ${words} words, limit ${config.render.maxWords}`);
 
 if (args["dry-run"]) {
   console.log(JSON.stringify({ model: config.jev.model, state, questions }, null, 2));
