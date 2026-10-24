@@ -1,6 +1,6 @@
 # Ad Lab — master plan
 
-Last updated Oct 24, 2026
+Last updated Sat Oct 24, 2026, 3 PM PT
 
 Ad Lab tests Magic Spoon ad recipes on Jev-driven shoppers built from real customer voice, then keeps and refines the winners. Person A owns data and agents; Person B owns the simulation. Both halves are planned below, phase by phase, with a ready prompt for every phase in the "Appendix: Phase prompts" at the end of this file.
 
@@ -24,6 +24,30 @@ Everything here is settled. Change a row only by editing this table, so both of 
 | Out of scope | Mana, backtest, a custom Apify actor, a Visa shopper-facing product (maybe later), images inside the sim. Payment Protocol only if time remains |
 | Recipes (bandit arms) | Angle × hook. Angles are Adcero's food-industry tokens (taste\_indulgence, health\_nutrition, …), hooks are HOOK\_ARCHETYPES limited to the ones Adcero's copywriter can produce. 10–12 recipes plus a control |
 | Creative generation | Adcero's text-only path, one brief per (persona, angle). Image judge and ranking off; the sim ranks. Competitor market-prior statements never reach copy. Learnings reach copy only as number-free notes. Numbers are checked on whole-number boundaries |
+
+## Status
+
+As of Sat Oct 24, 3 PM PT.
+
+| | Done | In progress | Next |
+| --- | --- | --- | --- |
+| A | A0 setup, A1 Adcero port, A's half of the contract in SpacetimeDB (`tables_a.ts`, `reducers_a.ts`) | A2 ingest, on its own agent (`feat/a2-ingest`) | A3 distill, then A4 writes the contract rows |
+| B | B0–B4: fixtures, Jev spike, engine, calibration, bandit, learnings, task board and worker | — | B5 live sim views. B4's integration step waits on A4's rows |
+
+**Branches.** `simulation` is the integration branch: B commits there, and every A phase opens its PR against it. `B`, GitHub's default branch, is stale; don't branch from it or target it.
+
+**Shared database.** The SpacetimeDB database `adlab-calhacks13` on Maincloud is live, with the whole contract published from `simulation` at 3 PM PT:
+
+- 14 public tables: A's 5 and B's 9, the task board included.
+- 20 reducers: `ping`, A's 6 and B's 13.
+- Every table was empty at publish time. Rows arrive with A4 and B's first real round.
+
+How to work with it:
+
+- **Who publishes.** Only A can: the database belongs to A's SpacetimeDB login. Publish from an up-to-date `simulation` with `npm run spacetime:publish`, which stops instead of breaking clients. `npm run spacetime:publish:clear` wipes both sides' data, so agree first.
+- **Clients.** B's worker and A's agents call reducers and SQL over HTTP. The web app subscribes through the `spacetimedb` SDK, using the generated client in `lib/spacetime/`. After any module change, run `npm run spacetime:generate` and commit the result.
+
+**Supabase.** The 17 Adcero tables, `library_ads_enriched` and `job_queue` are applied (`npm run db:migrate`). A2 is filling them.
 
 ## How A and B fit together
 
@@ -94,7 +118,8 @@ Payloads:
 
 Housekeeping:
 
-- One SpacetimeDB module, two files: `tables_a.ts` and `tables_b.ts`. Add columns; don't drop them mid-hackathon (SpacetimeDB can't drop columns automatically). In development, republish with data cleared instead.
+- One SpacetimeDB module in `spacetime/src/`. `schema.ts` builds it from `tables_a.ts` (A) and `tables_b.ts` (B). Each side's reducers are in `reducers_a.ts` and `reducers_b.ts`, and `index.ts` exports both. Add columns; don't drop them mid-hackathon (SpacetimeDB can't drop columns automatically). In development, republish with data cleared instead.
+- Empty values and reducer arguments differ by side, as each table file documents. A's tables write `""` for an empty value and their upsert reducers take typed row arrays. B's tables use options for empty values and their batch reducers take one JSON string (`rows_json`). Fields marked json are JSON strings on both sides.
 - Ids are strings with a prefix (`seg_`, `arm_`, `cr_`, `shp_`).
 - How Adcero's creative output maps onto the creative fields gets confirmed when the creative export lands.
 
@@ -114,11 +139,15 @@ Each phase is one prompt to a coding agent working in the new repo. The agent re
 /                      Next app at the root, Adcero layout (app/, components/, hooks/, lib/, services/, messages/, i18n/)
 app/sim/               B: live sim views
 app/api/agent/         A: HTTP API the Python agents call
+lib/adlab/             A: Ad Lab glue (the constant org id, the service-role Supabase client)
+lib/spacetime/         shared: the web app's SpacetimeDB client (generated bindings and config)
 sim/                   B: simulation engine (TypeScript)
-spacetime/             shared SpacetimeDB module: tables_a.ts (A), tables_b.ts (B)
+spacetime/             shared SpacetimeDB module: tables_a.ts and reducers_a.ts (A), tables_b.ts and reducers_b.ts (B)
 worker/                A: job_queue worker for the copied Adcero processors
 agents/                A: Python uAgents for Fetch.ai
-supabase/migrations/   A: SQL for the copied tables, view and job_queue
+scripts/               A: connection check, Supabase setup, phase scripts
+supabase/              A: migrations/ (the copied tables, view and job_queue) and migrate.mts
+tests/                 A: unit tests for edits to copied code
 docs/                  PLAN.md, reuse-export/, sim-export/
 ```
 
@@ -132,6 +161,7 @@ Also read: {extra inputs from the table below}.
 Goal: {the phase's checklist, copied from the plan}.
 Done when: {the phase's check}.
 Rules:
+- Branch off `simulation` and open the PR against `simulation`.
 - Write only inside {paths}. Never edit the other person's files or SpacetimeDB tables.
 - Use the versions in docs/reuse-export/deps.json. Ask before adding any other dependency.
 - Secrets come from .env.local. Never commit them.
@@ -192,30 +222,30 @@ A turns Magic Spoon's public footprint into the rows the sim needs, writes the a
 
 ### A0 · Sat 2:30 – 4 AM · Setup and connections
 
-- [ ] New repo in the layout above. Next app at the root (Next 16.4, React 19.3, Tailwind 4), npm.
-- [ ] Fresh Supabase project with the `vector` extension enabled; note the service role key.
-- [ ] SpacetimeDB module in `spacetime/`, published to Maincloud so both laptops share one database. Include a `ping` reducer and empty `tables_a.ts` and `tables_b.ts`.
-- [ ] `.env.example` listing every key and setting:
+- [x] New repo in the layout above. Next app at the root (Next 16.4, React 19.3, Tailwind 4), npm.
+- [x] Fresh Supabase project with the `vector` extension enabled; note the service role key.
+- [x] SpacetimeDB module in `spacetime/`, published to Maincloud so both laptops share one database. Include a `ping` reducer and empty `tables_a.ts` and `tables_b.ts`.
+- [x] `.env.example` listing every key and setting:
   - keys: APIFY\_TOKEN, OPENAI\_API\_KEY, SUPABASE\_URL, SUPABASE\_SERVICE\_ROLE\_KEY, the SpacetimeDB URI and database name, TYPESAFE\_API\_KEY (B), the Agentverse and ASI:One keys, ANTHROPIC\_API\_KEY (only if B's perception uses Claude)
   - settings: `LLM_FLEX_TIER=0`, `APIFY_AD_LIBRARY_MAX_ADS=50`, `CREATIVE_JUDGE_GATE_MODE=off`
-- [ ] `npm run check:connections`: one tiny call per service, printed as a pass/fail table. Cover the Supabase select plus pgvector, SpacetimeDB ping, the Apify user, each OpenAI model the code uses, one Jev call and one ASI:One call.
-- [ ] A hello-world uAgent with the chat protocol, registered on Agentverse through a mailbox, that answers inside ASI:One. This takes Fetch's biggest unknown off the table early.
+- [x] `npm run check:connections`: one tiny call per service, printed as a pass/fail table. Cover the Supabase select plus pgvector, SpacetimeDB ping, the Apify user, each OpenAI model the code uses, one Jev call and one ASI:One call.
+- [x] A hello-world uAgent with the chat protocol, registered on Agentverse through a mailbox, that answers inside ASI:One. This takes Fetch's biggest unknown off the table early.
 - [x] **Insurance:** start the Meta Ad Library actor for Magic Spoon's page and each competitor's page, and the Trustpilot reviews actor, with the manifest's inputs. If the port slips, A2 imports these datasets. Done Oct 24; dataset ids are under A2.
 
 **Done when** the connection check is all green and the agent replies in ASI:One.
 
 ### A1 · Sat 4 – 8 AM · Port the Adcero core (384 files)
 
-- [ ] rsync `files.txt` from Adcero, then `npm install --prefer-dedupe` with the deps.json versions.
-- [ ] Write the 18 same-path stubs (REUSE\_MANIFEST §8.2). Only `lib/llm/clients.ts` and `services/r2-service.ts` need real code. The R2 stub writes to local disk, and its `downloadFile` must return the bytes, because identity reads crawled pages back from it.
-- [ ] Apply the 11 copy + edits (§8.3), including the market-processor paging fix.
-- [ ] One more edit: make `findUngroundedNumerals` in `lib/creative-engine/brand-check/grounding.ts` match whole numbers, so "30" no longer grounds on "3,000" while "4.7" still grounds on "4.7 out of 5".
-- [ ] `supabase/migrations/`:
+- [x] rsync `files.txt` from Adcero, then `npm install --prefer-dedupe` with the deps.json versions.
+- [x] Write the 18 same-path stubs (REUSE\_MANIFEST §8.2). Only `lib/llm/clients.ts` and `services/r2-service.ts` need real code. The R2 stub writes to local disk, and its `downloadFile` must return the bytes, because identity reads crawled pages back from it.
+- [x] Apply the 11 copy + edits (§8.3), including the market-processor paging fix.
+- [x] One more edit: make `findUngroundedNumerals` in `lib/creative-engine/brand-check/grounding.ts` match whole numbers, so "30" no longer grounds on "3,000" while "4.7" still grounds on "4.7 out of 5".
+- [x] `supabase/migrations/`:
   - the §13 tables, without org foreign keys or RLS, and one constant org id
   - the `library_ads_enriched` view
   - the `job_queue` subset with its two dedupe indexes
-- [ ] `worker/`: the \~60-line loop from §8.4, using the registry from Adcero's `job-executor.ts`.
-- [ ] App shell from §7.6 (layout, providers, globals.css, fonts) so B can add `/sim`.
+- [x] `worker/`: the \~60-line loop from §8.4, using the registry from Adcero's `job-executor.ts`.
+- [x] App shell from §7.6 (layout, providers, globals.css, fonts) so B can add `/sim`.
 
 **Done when** `npm run typecheck` passes, `npm run worker` drains an empty queue, and `/` renders in Adcero's dark theme.
 
@@ -241,9 +271,9 @@ A turns Magic Spoon's public footprint into the rows the sim needs, writes the a
   | Three Wishes, HighKey, Schoolyard Snacks, Snack House, Lovebird, Nature's Path | — | none | — |
   | Wonderworks | no page of its own (General Mills line) | none | — |
 - Insurance datasets from A0 (Apify): Magic Spoon ads `3gFmofqMK6sEyeHto` (45), Catalina Crunch ads `1IPZWLnFfFMWN01fa` (5), Magic Spoon Trustpilot, English, `8XhvrGA89aht0K74A` (39 reviews).
-- [ ] Keep Magic Spoon's own ads out of market priors. Have the agent find how Adcero marks a brand's own page; if there's no flag, filter its competitor id in the market step.
+- [ ] Keep Magic Spoon's own ads out of market priors with Adcero's own flag: its `tracked_competitors` row gets `is_brand_self = true` and Magic Spoon's `brand_profile_id`. The market step skips self rows; the identity step reads their ad copy.
 - [ ] Run competitor sync → label → embed.
-- [ ] **If A1 slipped:** import the insurance datasets from A0 through the copied normalizers instead.
+- [ ] **If an actor fails or comes back empty:** import that source's A0 insurance dataset through the copied normalizers instead.
 
 **Done when** brand\_mentions has rows from at least 5 sources, and library\_ads has labelled, embedded ads for Magic Spoon's page and every competitor page.
 
@@ -652,15 +682,15 @@ Layout: the repo root is the Next app, Adcero-style. Put the engine in `sim/src/
 
 ### B0 · Fri 11:30 PM – Sat 1:30 AM · Setup and fixtures
 
-- [ ] Make one Choice call and one Noul call to Jev from Node. Write down the exact request and response field names from the TypeSafe docs.
-- [ ] Scaffold `packages/sim`: TypeScript, Node 20, zod (validate every Jev response), p-limit (concurrency), better-sqlite3 (cache).
-- [ ] Fixtures:
+- [x] Make one Choice call and one Noul call to Jev from Node. Write down the exact request and response field names from the TypeSafe docs.
+- [x] Scaffold `packages/sim`: TypeScript, Node 20, zod (validate every Jev response), p-limit (concurrency), better-sqlite3 (cache).
+- [x] Fixtures:
   - concepts.json: the draft vocabulary
   - segments.json: the 6 draft segments, each with 3–5 quotes and prior weights
   - products.json: one product per brand, prices copied from the sites tonight
   - arms.json: 10–12 placeholder recipes plus the control
   - creatives.json: one text ad per arm, 2–3 Magic Spoon live ads, 2 live ads per competitor copied from the Meta Ad Library
-- [ ] Spend 15 minutes with A agreeing the concept vocabulary and the contract table shapes.
+- [x] Spend 15 minutes with A agreeing the concept vocabulary and the contract table shapes.
 
 **Done when** `npm run sim:smoke` sends one feed call for one fixture shopper and prints the probabilities.
 
@@ -680,11 +710,11 @@ Run these on about 10 hand-built states before writing the engine:
 
 ### B2 · Sat 4 – 9 AM · Engine core, in memory
 
-- [ ] Hash-keyed draws, population draw, perception (Claude, cached per creative).
-- [ ] State renderer that follows every rendering rule.
-- [ ] Feed assembly, feed call, page call, budget guard, dice, memory updates (the evidence table).
-- [ ] One-round JSON summary printed to the console.
-- [ ] Five tests:
+- [x] Hash-keyed draws, population draw, perception (Claude, cached per creative).
+- [x] State renderer that follows every rendering rule.
+- [x] Feed assembly, feed call, page call, budget guard, dice, memory updates (the evidence table).
+- [x] One-round JSON summary printed to the console.
+- [x] Five tests:
   - same seed + warm cache gives identical output
   - the budget guard zeroes P(buy)
   - a tap → stay → buy chain matches hand-computed preference values
@@ -695,25 +725,25 @@ Run these on about 10 hand-built states before writing the engine:
 
 ### B3 · Sat 9 AM – 12 PM · Calibration, reward, bandit, learnings
 
-- [ ] Warm-up round and offset fitting by bisection; offsets saved on the run.
-- [ ] Reward per impression, pooled Thompson sampling, floors, p\_best.
-- [ ] Learning templates with versioning.
-- [ ] Planted-winner test: one fixture creative is written to fit one segment perfectly. By round 3 it should get more than 50% of that segment's impressions.
+- [x] Warm-up round and offset fitting by bisection; offsets saved on the run.
+- [x] Reward per impression, pooled Thompson sampling, floors, p\_best.
+- [x] Learning templates with versioning.
+- [x] Planted-winner test: one fixture creative is written to fit one segment perfectly. By round 3 it should get more than 50% of that segment's impressions.
 
 **Done when** a 5-round fixture run prints arm stats and learnings, and the planted winner wins.
 
 ### B4 · Sat 12 – 3 PM · SpacetimeDB, task board, integration
 
-- [ ] `tables_b.ts` with batch reducers: one call per table per sim day.
-- [ ] Worker that claims `run_round`, runs it, writes the summary and queues `generate_creatives`.
-- [ ] The round summary JSON A's ASI:One cards will render.
+- [x] `tables_b.ts` with batch reducers: one call per table per sim day.
+- [x] Worker that claims `run_round`, runs it, writes the summary and queues `generate_creatives`.
+- [x] The round summary JSON A's ASI:One cards will render.
 - [ ] **2:30 PM integration with A:** swap fixtures for A's real segments, arms, creatives and competitor ads. Re-run the warm-up round, because new personas need new calibration offsets.
 
 **Done when** A starts a round from ASI:One, the worker runs it, and the summary lands in the round row.
 
 ### B5 · Sat 3 – 10 PM · Live sim views
 
-Build the five views in the next section on SpacetimeDB subscriptions.
+Build the five views in the next section on SpacetimeDB subscriptions. The browser client is ready in `lib/spacetime/` (see Status).
 
 **Done when** all five update live during a real round.
 
@@ -834,16 +864,23 @@ Ad Lab, phase A2: ingest Magic Spoon and its seven competitors. Cal Hacks 13.0; 
 Read first: docs/PLAN.md "Locked decisions", "A2" and its gotchas.
 Also read: REUSE_MANIFEST.md §1, §2, §3, §10.
 ../adcero is read-only; use tests/fixtures/ad-library/apify-sample.json for a normalizer smoke test.
+Work on a new branch off simulation, and open the PR against simulation.
 Goal: a script scripts/a2-ingest.ts that, through the copied job types and the worker:
 - runs brand_presence_discover on magicspoon.com and confirms the profile;
-- sets up and confirms Reddit, Trustpilot, Google Maps, X, Instagram and TikTok sources (handles I give you where discovery misses them), with the plan's caps;
+- sets up and confirms Reddit, Trustpilot, Google Maps, X, Instagram and TikTok sources (handles I give you where discovery misses them), with the plan's caps. If Google Maps finds no place (Magic Spoon sells online), skip it cleanly;
 - pins TikTok comment field names with one ~20-item run before the real harvest;
-- creates Meta-only tracked_competitors for the competitor set locked in "Locked decisions" and Magic Spoon's own page, each by Meta page id (never keyword; ids in A2), with APIFY_AD_LIBRARY_MAX_ADS=50, and runs sync → label → embed;
-- keeps Magic Spoon's own ads out of market priors (find how Adcero marks a brand's own page; if no flag exists, filter it in the market step and tell me).
-If A1 slipped, instead import the Apify console datasets I give you through the copied normalizers.
+- creates Meta-only tracked_competitors for the seven locked competitors and Magic Spoon's own page (page ids in A2): each with meta_page_id set and no keyword, all tagged with Magic Spoon's brand_profile_id, and Magic Spoon's row with is_brand_self = true. Show me all eight pages (brand, page id, Ad Library link) and wait for my OK before the full scrape. Then, with APIFY_AD_LIBRARY_MAX_ADS=50, run sync → label → embed;
+- keeps Magic Spoon's own ads out of market priors through that is_brand_self flag (the market step skips self rows). Prove it with a query; don't edit the market step.
+Know before you start:
+- Use ADLAB_ORG_ID (lib/adlab/org.ts) and serviceSupabase() (lib/adlab/supabase.ts). Run the script the way npm run worker runs (node --env-file-if-exists=.env.local --import tsx), so .env.local loads before any copied module, and add an npm script for it.
+- worker/index.ts runs on import. If the script drains the queue in-process, move the loop into an exported function that npm run worker also uses; don't copy it.
+- Every competitor sync enqueues adlib_media_rehost jobs, which A1 didn't port (expiring Meta CDN links are fine for the weekend). Make the worker mark them cancelled as skipped, not failed.
+- Surreal is a UK brand. If its US sync returns no ads, set its country to GB and resync.
+- The ad labeller's industry classifier defaults to gpt-4o-mini, which A0's model check didn't cover. If it fails, override ADLIB_INDUSTRY_MODEL.
+- If an actor fails or comes back empty, import that source's A0 insurance dataset (ids in A2) through the copied normalizers, and tell me.
 Done when: brand_mentions has rows from at least 5 sources, and library_ads has labelled, embedded ads for Magic Spoon's page and every competitor page. Print the counts.
-Rules: write only scripts/, worker/ and config; secrets only in .env.local.
-Finish with: counts per source, anything skipped and why, and a commit "A2: ingest".
+Rules: write only scripts/, worker/ and config. Never edit copied Adcero files; stop and ask if one must change. Secrets only in .env.local.
+Finish with: counts per source and per page, anything skipped and why, and a commit "A2: ingest".
 ```
 
 ### A3 · Distill
@@ -988,8 +1025,14 @@ Finish with: a sample round summary JSON (A needs it for A6) and a commit "B4: S
 
 ```
 Ad Lab, phase B5: the live sim views. Cal Hacks 13.0; hard deadline Sun Oct 25, 9 AM PT. You are Person B's coding agent.
-Read first: docs/PLAN.md "Live sim views" and "B5".
-Also read: components/ui/ and app/globals.css (Adcero's look, already in the repo).
+Read first: docs/PLAN.md "Status", "Live sim views" and "B5".
+Also read: components/ui/, app/globals.css, app/layout.tsx and app/providers.tsx (Adcero's look and the dark shell every page sits in); lib/spacetime/.
+Work on a branch off an up-to-date simulation, and run npm install at the root first: it brings A1's packages and the SpacetimeDB client.
+The SpacetimeDB client is ready:
+- spacetimedb 2.13.0, whose spacetimedb/react has SpacetimeDBProvider and useTable;
+- the typed bindings in lib/spacetime/bindings (DbConnection.builder()), generated, so never edit them;
+- lib/spacetime/config.ts for the URI and database name, which need no env.
+If the module changes, A republishes and regenerates.
 ../shopsim is read-only; use web/components/{AllocationRiver,Inspector,charts}.tsx and web/lib/{market,selectors}.ts as reference.
 Goal: app/sim/ with the allocation river, the leaderboard per segment (control row included), the decision ticker (probabilities, not just outcomes), the shopper inspector with the exact state text, the questions, probabilities, dice and memory across rounds, plus a what-if toggle that removes one memory line and re-asks Jev through a small cached API route, and the learnings feed linked to the creatives that used them. A header strip with round, sim day, Jev calls, cost and cache hit rate. Live through SpacetimeDB subscriptions, no polling.
 Done when: all five views update live during a real round.

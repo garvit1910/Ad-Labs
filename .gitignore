@@ -17,3 +17,6 @@ __pycache__/
 
 # misc
 .DS_Store
+
+# local R2 stub (services/r2-service.ts)
+data/
