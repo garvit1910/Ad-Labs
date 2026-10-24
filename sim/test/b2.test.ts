@@ -1,5 +1,4 @@
 import assert from "node:assert/strict";
-import { createHash } from "node:crypto";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -8,48 +7,17 @@ import { ZERO_OFFSETS, calibrate } from "../src/calibrate.js";
 import { type Asker, Engine } from "../src/engine.js";
 import { assembleFeed } from "../src/feed.js";
 import { type World, loadWorld } from "../src/fixtures.js";
-import { JevClient, type JevResult, type Questions } from "../src/jev.js";
+import { JevClient, type Questions } from "../src/jev.js";
 import { EVIDENCE, applyEvidence, blend } from "../src/memory.js";
 import { perceiveAll } from "../src/perceive.js";
 import { type Opinion, makeShopper } from "../src/population.js";
 import { priceComparison, renderAd, wordCount } from "../src/render.js";
 import { roundSummary } from "../src/summary.js";
+import { fakeJev } from "./fake-jev.js";
 
 const world = loadWorld();
 const perceptions = await perceiveAll(world);
 const SEED = 13;
-
-const hashUnit = (...parts: string[]) =>
-  createHash("sha256").update(parts.join("\u0000")).digest().readUInt32BE(0) / 2 ** 32;
-
-// A stand-in for Jev: answers are a pure function of (state, question), or fixed overrides.
-function fakeJev(fixed: Partial<Record<string, number>> = {}, onAsk?: (state: string) => void): Asker {
-  return {
-    async ask<Q extends Questions>(state: string, questions: Q): Promise<JevResult<Q>> {
-      onAsk?.(state);
-      const answers: Record<string, unknown> = {};
-      for (const [name, q] of Object.entries(questions)) {
-        const tapKey = name.startsWith("tap_") ? "tap" : name;
-        if (q.type === "noul") answers[name] = { type: "noul", noul: fixed[tapKey] ?? Math.round(hashUnit(state, name) * 100) / 100 };
-        else if (q.type === "choice") {
-          const keys = Object.keys(q.criteria);
-          const probabilities = Object.fromEntries(keys.map((k, i) => [k, i === 0 ? 1 : 0]));
-          answers[name] = { type: "choice", choice: keys[0], confidence: 1, probabilities };
-        }
-      }
-      const request = { model: "jev-1.13.0", state, questions };
-      return {
-        model: "jev-1.13.0",
-        answers: answers as JevResult<Q>["answers"],
-        usage: { input_tokens: wordCount(state), output_tokens: 1 },
-        latencyMs: 0,
-        cacheHit: false,
-        cacheKey: JevClient.cacheKey(request),
-        request,
-      };
-    },
-  };
-}
 
 async function runRounds(jev: Asker, opts: { population: number; rounds: number; world?: World; seed?: number }) {
   const w = opts.world ?? world;

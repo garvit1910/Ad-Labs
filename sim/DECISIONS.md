@@ -7,7 +7,7 @@ When a decision changes, edit its entry and status here in the same commit as th
 **Status:** `OPEN` needs an answer · `NEEDS A` needs Person A's agreement because it touches the
 contract or A's data · `DECIDED` taken by B and reversible · `FORCED` the plan couldn't be followed.
 
-Last updated: 2026-10-24, after B2 (the engine core). B0 entries: commits `c82e80e`, `2a4f72a`; B1: `2dd85d2`.
+Last updated: 2026-10-24, after B3 (bandit and learnings). B0 entries: commits `c82e80e`, `2a4f72a`; B1: `2dd85d2`; B2: `e7ca652`, `d5da10d`.
 
 ---
 
@@ -243,7 +243,7 @@ Last updated: 2026-10-24, after B2 (the engine core). B0 entries: commits `c82e8
   A re-run with the same seed only reproduces numbers when the cache is warm. The demo must replay
   from `.cache/jev-cache.sqlite`; never clear it before the demo.
 
-### D33. Guidance for B2 and B3 from the spike — `OPEN` (B2 part settled, B3 part open)
+### D33. Guidance for B2 and B3 from the spike — `DECIDED` (B2: D39; B3: D49)
 - **B2 dice (done, D39):** tap Nouls are independent and don't sum to 1. Draw our tap from
   P_cal(tap ours) alone; a competitor tap only counts as "lost to a competitor".
 - **B3 calibration:** fit one log-odds offset on P(tap ours) to a 1% mean. This replaces the plan's
@@ -281,10 +281,11 @@ Last updated: 2026-10-24, after B2 (the engine core). B0 entries: commits `c82e8
   stand-in, and it is one more reason to settle the provider.
 - **Where:** `src/perceive.ts`.
 
-### D36. `--rounds N` runs rounds 0 to N−1; round 0 is the warm-up — `OPEN` (for B3)
-- B2's done-when (`--rounds 1`) reads as one round. The plan's run has "a warm-up round plus 5
-  rounds" and `rounds_planned` likely excludes the warm-up. B3 decides whether `--rounds 5`
-  means 5 or 6 rounds once the warm-up does something different (fitting offsets).
+### D36. `--rounds N` runs the warm-up plus N bandit rounds — `DECIDED` (in B3)
+- The plan's run is "a warm-up round plus 5 rounds", `rounds_planned` counts rounds after the
+  warm-up (A's worker queues `run_round` "until rounds_planned"), and B3's done-when is "a
+  5-round fixture run". So `--rounds 5` runs round 0 (warm-up) and rounds 1–5. In B2 the flag
+  meant rounds 0..N−1; `--rounds 1` now also runs round 1 (still well under 60 s).
 - **Where:** `src/cli.ts`.
 
 ### D37. Page call details — `DECIDED`
@@ -340,7 +341,7 @@ Last updated: 2026-10-24, after B2 (the engine core). B0 entries: commits `c82e8
   more than expected", rounded to the nearest 10%. At least 10% below: "cheaper than expected".
 - **Where:** `src/render.ts` `priceComparison`.
 
-### D42. Calibration offsets are 0 until B3 — `DECIDED`
+### D42. Calibration offsets were 0 in B2 — `DECIDED` (superseded by D49 in B3)
 - `src/calibrate.ts` applies σ(logit(p) + b) after clamping to [0.005, 0.995]. With b = 0 it
   returns the clamped value exactly. Raw and calibrated values are both stored.
 - The guard is applied after calibration (P_cal(buy) = 0), so the clamp can never lift a guarded
@@ -375,7 +376,9 @@ Last updated: 2026-10-24, after B2 (the engine core). B0 entries: commits `c82e8
 - **Where:** `fixtures/magicspoon/products.json`, `FIXTURES.md`.
 
 ### D45. Output: summary on stdout, stats on stderr — `DECIDED`
-- `sim:run` prints one JSON summary per round on stdout, built only from Jev's answers and the
+- **Since B3:** stdout is a readable report (calibration, leaderboard, learnings, generation,
+  final arm stats); `--json` prints the per-round JSON instead. Both are deterministic.
+- In B2, `sim:run` printed one JSON summary per round on stdout, built only from Jev's answers and the
   seeded dice (calls and input tokens count the same cached or fresh). Cache hits, latency and
   wall time go to stderr. A cold run and a warm run therefore print identical stdout.
 - The plan's round summary also lists the cache hit rate; B4's round row can add it next to the
@@ -404,3 +407,112 @@ Last updated: 2026-10-24, after B2 (the engine core). B0 entries: commits `c82e8
 - **Since D37, both states share their SHOPPER and MEMORY blocks.** B4 can store the page state
   (the last one Jev reads) or the feed state, or add a column with A's agreement.
 - **Where:** `src/engine.ts`.
+
+---
+
+## B3: calibration, reward, bandit and learnings
+
+### D49. Each gate is fitted as a conditional rate, with the guard counted — `DECIDED`
+- **Plan:** "bisection finds each offset b so the average calibrated probability hits its target":
+  tap 1% per ad, stay 50%, buy given stay 4% ("about 2% from visit to purchase").
+- **Code** fits in funnel order on the warm-up's impressions:
+  - **tap:** the plain mean of P_cal(tap ours) = 1%;
+  - **stay:** the mean weighted by P_cal(tap) = 50%, which makes it the rate among visitors;
+  - **buy:** the mean weighted by P_cal(tap) × P_cal(stay), with guarded impressions counted as 0
+    = 4%, which makes it the realised rate among shoppers who stayed.
+- **Why the guard counts:** the bands are what happens to real visitors, including those who can't
+  afford it. Without it, visit→purchase would come out near 1.1% (43% of impressions are
+  guarded), at the bottom of its band.
+- **Competitor taps** use the same tap offset ("1% per ad"). The plan's "1 − P(none), then split"
+  died with the Choice shape (D29).
+- **Fitted on the fixtures (728 impressions):** tap −3.932, stay −0.318, buy −1.820. That gives
+  P(tap) 1.00%, bounce 50.0%, P(buy | stay) 4.00% and visit→purchase 2.00%, all inside
+  FUNNEL_BANDS.
+- **Where:** `src/calibrate.ts` `fitOffsets`, `FUNNEL_BANDS`, `TARGETS`.
+
+### D50. The warm-up is asked twice: a probe, then the real round 0 — `DECIDED`
+- The offsets need the whole warm-up round's raw answers, but day 1's state depends on day 0's dice.
+  Rolling those dice at raw rates (taps about 28%) would fill memory and drain budgets with taps
+  that calibration then says shouldn't happen.
+- **So `SimRun.calibrate`:**
+  1. runs round 0 with zero offsets on throwaway shoppers;
+  2. fits the offsets;
+  3. builds the real engine with fresh shoppers and the frozen offsets;
+  4. runs round 0 again, rolling the dice with calibrated values.
+- **Cost:** day 0 of the real pass reads exactly the probe's states, so it comes from the cache.
+  Days 1–2 are mostly fresh: about 1,000 extra calls, $0.03.
+- **Where:** `src/run.ts`.
+
+### D51. Floors are met in expectation, exactly; a round's realised share varies — `DECIDED`
+- **Plan:** "the control arm gets at least 10% of impressions and every other live arm at least 3%".
+- **Code:**
+  - Each impression draws θ ~ N(μ, σ²) for every arm, with seeded draws, and takes the highest.
+  - The floored shares are p_best raised to the floors, with the rest scaled down in proportion.
+  - A pick from an arm above its share is kept with probability share ÷ p_best. Otherwise the
+    impression goes to an arm below its floor, in proportion to how far below it is.
+  - Each impression's arm then follows the floored shares exactly (unit test: 20,000 picks within
+    1 point).
+- **What a run shows:** realised per-round shares scatter around that. In the fixture run the
+  control got 9.6% over rounds 1–5 (3,614 impressions); by segment it ranged from 7.9% (531
+  impressions) to 11.3%, which is sampling noise.
+- **With 11 recipes plus the control, the floors cap any one arm at 60%.**
+- **Where:** `src/bandit.ts` `applyFloors`, `Bandit.policy`.
+
+### D52. arm_stat covers the run so far; the leaderboard range is μ ± 2σ — `DECIDED`
+- `impressions` and `mean_reward` count the whole run so far, like the posterior they sit next to.
+  Per-round counts are in the round summary.
+- `est_cost_per_order_usd` = $13.88 CPM ÷ 1000 ÷ μ (null when μ ≤ 0). The leaderboard's range is
+  the cost per order at μ + 2σ and μ − 2σ ("n/a" when μ − 2σ ≤ 0).
+- **p_best** comes from 2,000 joint draws per segment at the end of each day. It drives the
+  floored shares for the next day, the winner learning and the generation pick.
+- **Where:** `src/run.ts` `armStats`, `report`.
+
+### D53. p_best's Monte Carlo uses one keyed stream per (segment, day) — `DECIDED`
+- **Plan:** "every draw uses its own key". 2,000 draws × 12 arms × 6 segments per day as separate
+  sha256 keys would take seconds per day.
+- **Code:** one sfc32 stream seeded from the key `(seed, "arm", "p_best", segment, tick)`. It is
+  just as reproducible and independent of every other key. The per-impression θ draws still use
+  one key each: `(seed, "arm", shopper, tick, arm)`, plus `"keep"` and `"floor"` for the floors.
+- **Where:** `src/rng.ts` `keyedStream`, `src/bandit.ts`.
+
+### D54. Learning details the templates leave open — `DECIDED`, one `OPEN` point
+- **winner:** p_best ≥ 0.8 and n ≥ 100 in that segment. The control never "wins" (it has no angle
+  or hook to keep), but it is the "vs" in every winner statement.
+- **objection:** fires at ≥ 50 page calls. It names the most common hesitation other than
+  "nothing", as a share of all the segment's page calls. Page calls are asked on every
+  impression, so this is hypothetical visits, not only realised ones.
+- **claim_doubt:** fires when mean `believes` is under 0.40 over ≥ 50 feed calls, grouped by the
+  concept of each ad's strongest claimed concept (its "main promise").
+- **Wording:** segments read "{name} shoppers"; numbers are rounded to whole dollars and
+  percents; directives go through `numberFree`, which throws if a digit survives.
+- **Versioning:** a key is (segment, kind, arm or concept). A new version opens whenever the
+  statement text changes, so a statement whose numbers move opens a new version each round;
+  valid_from_round is the round whose data produced it. A key that stops firing is closed at that
+  round. Nothing is deleted.
+- **wear_out is not built** (cut line 1; SPIKE.md test 3 found Jev's wear-out response weak).
+- **`OPEN` (yours):** with the stand-in ads, "not needing cereal yet" is every segment's top
+  hesitation (53–64%), so every objection directive reads "Address not needing cereal yet early
+  for …". Either keep it (urgency is copy's job too) or skip `not_now` like `nothing`.
+  - claim_doubt also fires widely, because Jev's mean `believes` is about 0.32 across the board.
+- **Where:** `src/learnings.ts`.
+
+### D55. Generation request — `DECIDED`
+- After every round except the last, the top recipe per segment by p_best (never the control) is
+  taken. Recipes are deduped and keep their segments, at most 3 are kept by their best p_best,
+  `n_per_arm` is 1, and `learning_ids` are the live learnings for those segments. B4 queues it as a
+  `generate_creatives` task.
+- **Where:** `src/run.ts` `generation`.
+
+### D56. The planted winner replaces arm_11 — `DECIDED` (fixtures only)
+- **Change:** `arm_11` (gap) was convenience × question for deal seekers. It is now taste_indulgence
+  × testimonial, still a gap recipe ("answers the taste-doubt objection"), so the strategy counts
+  stay inside the arm builder's limits. Adding a 12th recipe would have lowered the floor cap to
+  57%.
+- **The creative:** `cr_gen_11` is written for the taste skeptic segment: their own "gravel" quote,
+  their roommates, taste, crunch, and the product page's real "4.6 stars, over 25,000" reviews.
+  `fixtures/magicspoon/planted.json` names it, and the CLI reports its share each round.
+- **Real Jev:** share in its segment 15% (warm-up), 44%, 63%, then **57% in round 3** (> 50%), then
+  65% and 65%; p_best 99.7% at round 3.
+- **Stub Jev:** `test/b3.test.ts` checks the same rule with a stub that only likes the planted ad
+  for that segment.
+- **Where:** `fixtures/magicspoon/arms.json`, `creatives.json`, `planted.json`.

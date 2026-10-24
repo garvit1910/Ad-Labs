@@ -33,6 +33,10 @@ export const config = {
     ticksPerRound: 3,
     reach: 0.8,
   },
+  reward: {
+    // ShopSim's CPM assumption; swap in a real Meta CPM for cereal if A finds one.
+    cpmUsd: 13.88,
+  },
   shopper: {
     preferenceSd: 0.08,
     preferenceMin: 0.05,

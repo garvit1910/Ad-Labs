@@ -124,6 +124,11 @@ export class Engine {
     }
   }
 
+  // Arms with at least one ranked Magic Spoon creative, in fixture order.
+  get arms(): readonly Arm[] {
+    return this.liveArms;
+  }
+
   claimed(creative: Creative): string[] {
     return claimedConcepts(this.perceptions.get(creative.creative_id));
   }
