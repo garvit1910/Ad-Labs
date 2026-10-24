@@ -834,7 +834,7 @@ Ad Lab, phase A2: ingest Magic Spoon and its seven competitors. Cal Hacks 13.0; 
 Read first: docs/PLAN.md "Locked decisions", "A2" and its gotchas.
 Also read: REUSE_MANIFEST.md §1, §2, §3, §10.
 ../adcero is read-only; use tests/fixtures/ad-library/apify-sample.json for a normalizer smoke test.
-Work on a new branch off feat/port-adcero-core (A1).
+Work on a new branch off feat/port-adcero-core (A1), and first merge origin/feat/setup-and-connections into it for the latest PLAN.md.
 Goal: a script scripts/a2-ingest.ts that, through the copied job types and the worker:
 - runs brand_presence_discover on magicspoon.com and confirms the profile;
 - sets up and confirms Reddit, Trustpilot, Google Maps, X, Instagram and TikTok sources (handles I give you where discovery misses them), with the plan's caps. If Google Maps finds no place (Magic Spoon sells online), skip it cleanly;
