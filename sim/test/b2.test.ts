@@ -12,7 +12,7 @@ import { JevClient, type JevResult, type Questions } from "../src/jev.js";
 import { EVIDENCE, applyEvidence, blend } from "../src/memory.js";
 import { perceiveAll } from "../src/perceive.js";
 import { type Opinion, makeShopper } from "../src/population.js";
-import { priceComparison, wordCount } from "../src/render.js";
+import { priceComparison, renderAd, wordCount } from "../src/render.js";
 import { roundSummary } from "../src/summary.js";
 
 const world = loadWorld();
@@ -138,6 +138,28 @@ describe("B2 test 2: the budget guard zeroes P(buy)", () => {
     assert.equal(summaries[0]!.budget_guarded, 0);
     assert.ok(summaries[0]!.buys > 0);
   });
+  test("at a real price, the guard compares with each shopper's budget left that day", async () => {
+    const engine = new Engine(withPrice(39), fakeJev(sure), perceptions, { run_id: "run_test", seed: SEED, population: 150 });
+    const startBudget = new Map(engine.shoppers.map((s) => [s.shopper_id, s.budget_left_usd]));
+    let guarded = 0;
+    let open = 0;
+    let guardedAfterSpending = 0;
+    for (const tick of engine.ticksOf(0)) {
+      const budgetToday = new Map(engine.shoppers.map((s) => [s.shopper_id, s.budget_left_usd]));
+      const day = await engine.runDay(0, tick);
+      for (const i of day.impressions) {
+        const over = 39 > budgetToday.get(i.shopper_id)!;
+        assert.equal(i.guard, over ? 0 : 1, i.shopper_id);
+        assert.equal(i.p_cal.buy, over ? 0 : 0.99, i.shopper_id);
+        if (over) guarded++;
+        else open++;
+        // Could afford it at the start of the run, but not after an earlier purchase.
+        if (over && startBudget.get(i.shopper_id)! >= 39) guardedAfterSpending++;
+      }
+    }
+    assert.ok(guarded > 20 && open > 20, `${guarded} guarded, ${open} open`);
+    assert.ok(guardedAfterSpending > 0, "the guard reads the budget left, not the starting budget");
+  });
   test("calibration never lifts a guarded zero", () => {
     // The clamp would turn 0 into 0.005; the engine sets 0 after calibrating instead.
     assert.equal(calibrate(0, 0), 0.005);
@@ -178,6 +200,42 @@ describe("B2 test 3: tap → stay → buy matches hand-computed values", () => {
     assert.deepEqual(s.preferences.taste, { w: 0.92, E: 2 });
     assert.equal(EVIDENCE.stay.pref, 0.25, "one STAY row per page visit");
   });
+  test("in the engine, tap+bounce and tap+stay land on hand-computed values", async () => {
+    // Every preference starts at 0.45 (E 2), so the expected values are the literal ones above.
+    const cases = [
+      { stays: 0.005, w: 0.47619, opinion: undefined, kinds: ["tap"], pick: (i: { stayed: boolean }) => !i.stayed },
+      {
+        stays: 0.995,
+        w: 0.531915,
+        opinion: { value: 0.6, E: 0.75, page_visits: 1, purchases: 0 },
+        kinds: ["tap", "stay"],
+        pick: (i: { stayed: boolean; bought: boolean }) => i.stayed && !i.bought,
+      },
+    ];
+    for (const c of cases) {
+      const engine = new Engine(withPrice(1), fakeJev({ tap: 0.995, stays: c.stays, buys: 0.005 }), perceptions, {
+        run_id: "run_test",
+        seed: SEED,
+        population: 40,
+      });
+      for (const s of engine.shoppers) for (const k of Object.keys(s.preferences)) s.preferences[k] = { w: 0.45, E: 2 };
+      const day = await engine.runDay(0, 0);
+      const hits = day.impressions.filter((i) => i.tapped && c.pick(i));
+      assert.ok(hits.length > 20, `${hits.length} ${c.kinds.join("+")} impressions`);
+      for (const imp of hits) {
+        const s = engine.shoppers.find((x) => x.shopper_id === imp.shopper_id)!;
+        const claimed = new Set(engine.claimed(world.creatives.find((x) => x.creative_id === imp.creative_id)!));
+        assert.ok(claimed.size > 0);
+        for (const [k, p] of Object.entries(s.preferences)) {
+          if (claimed.has(k)) assert.ok(Math.abs(p.w - c.w) < 1e-6, `${k} ${p.w}`);
+          else assert.deepEqual(p, { w: 0.45, E: 2 }, `${k} is not claimed and must not move`);
+        }
+        assert.deepEqual(s.opinions.br_magic_spoon, c.opinion);
+        assert.deepEqual(s.engagements.map((e) => e.kind), c.kinds);
+        assert.equal(s.expected_price_usd.prd_magic_spoon_variety_4pk, c.opinion ? 1 : undefined, "price is seen only on a stay");
+      }
+    }
+  });
   test("in the engine, a forced chain applies exactly tap, stay, buy to the ad's claimed concepts", async () => {
     const sure = { tap: 0.995, stays: 0.995, buys: 0.995 };
     const engine = new Engine(withPrice(1), fakeJev(sure), perceptions, { run_id: "run_test", seed: SEED, population: 40 });
@@ -217,7 +275,15 @@ describe("B2 test 4: every state is under 450 words, with no segment names", () 
       max = Math.max(max, wordCount(state));
       for (const n of names) assert.ok(!state.toLowerCase().includes(n.toLowerCase()), `"${n}" in a state`);
     }
-    assert.ok(max <= 450, `longest state ${max} words`);
+    assert.ok(max < 450, `longest state ${max} words`);
+    // Rule 4: the budget never appears. The only dollar amounts are the page price and the
+    // expected-price memory line.
+    for (const state of states) {
+      assert.ok(!/budget/i.test(state));
+      for (const line of state.split("\n").filter((l) => l.includes("$"))) {
+        assert.match(line, / one-time|^Thinks the |^Magic Spoon: |^- /, line);
+      }
+    }
     // Memory really did fill: the later states carry engagement and price lines.
     assert.ok(states.some((s) => s.includes("looked at the page and bought")));
     assert.ok(states.some((s) => s.includes("Price compared with what they expected: about what they expected")));
@@ -251,5 +317,27 @@ describe("B2 test 5: option order changes with the seed", () => {
     const b = slot(SEED + 1);
     assert.ok(a.filter((x, i) => x !== b[i]).length > 100);
     for (const k of [0, 1, 2]) assert.ok(a.filter((x) => x === k).length > 40, `slot ${k} used`);
+  });
+  test("the seeded order is the order Jev reads and the order the decision row records", async () => {
+    const engine = new Engine(world, fakeJev(), perceptions, { run_id: "run_test", seed: SEED, population: 60 });
+    const day = await engine.runDay(0, 0);
+    const byId = new Map(world.creatives.map((c) => [c.creative_id, c]));
+    for (const d of day.decisions.filter((x) => x.kind === "feed")) {
+      const listed = engine.lastState.get(d.shopper_id)!.feed.split("\n").filter((l) => l.startsWith("- "));
+      assert.deepEqual(listed, d.options.order!.map((id) => `- ${renderAd(byId.get(id)!, world)}`));
+    }
+  });
+  test("the page call keeps the feed call's SHOPPER and MEMORY blocks exactly", async () => {
+    const engine = new Engine(withPrice(40), fakeJev({ tap: 0.6, stays: 0.7, buys: 0.5 }), perceptions, {
+      run_id: "run_test",
+      seed: SEED,
+      population: 120,
+    });
+    for (const tick of engine.ticksOf(0)) {
+      await engine.runDay(0, tick);
+      for (const { feed, page } of engine.lastState.values()) {
+        assert.equal(page.split("\n\nTHEY TAPPED\n")[0], feed.split("\n\nRIGHT NOW\n")[0]);
+      }
+    }
   });
 });

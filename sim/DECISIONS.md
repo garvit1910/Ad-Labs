@@ -175,8 +175,10 @@ Last updated: 2026-10-24, after B2 (the engine core). B0 entries: commits `c82e8
 - **Where:** `src/render.ts` `memoryLines`.
 
 ### D24. The 450-word limit is enforced in the renderer — `DECIDED`
-- `renderFeedState` throws over 450 words, so no caller can send an oversized state. Fixture
-  states run about 100–125 words.
+- `renderFeedState` and `renderPageState` throw at 450 words or more (rule 1 says *under* 450),
+  so no caller can send an oversized state.
+- Since B1 put the three posts in the feed state, real states run 158–297 words (all 1,456 states
+  of round 0, measured in the B2 review).
 
 ---
 
@@ -274,6 +276,9 @@ Last updated: 2026-10-24, after B2 (the engine core). B0 entries: commits `c82e8
   the exposure memory ("mostly about …"), the preference line and the evidence updates.
 - **To decide:** which provider replaces `keyword-v1` (Claude or another model) once real ads with
   images arrive. Bump the id when it lands; the cache then refills on its own.
+- **Known keyword limits:** "variety pack" counts as a flavor-variety claim (`cr_gen_09`,
+  `cr_ms_live_1`). Keyword matching can't tell a claim from a mention. That is acceptable for a
+  stand-in, and it is one more reason to settle the provider.
 - **Where:** `src/perceive.ts`.
 
 ### D36. `--rounds N` runs rounds 0 to N−1; round 0 is the warm-up — `OPEN` (for B3)
@@ -290,13 +295,28 @@ Last updated: 2026-10-24, after B2 (the engine core). B0 entries: commits `c82e8
 - **The guard uses the one-time price.** It is the conservative choice; a first-time buyer may
   not subscribe. `purchase` subtracts the same price.
 - Objection: the summary uses the Choice's most likely option (ties go to the earlier option).
+- **The page keeps the feed's SHOPPER and MEMORY blocks exactly** ("The page call keeps SHOPPER
+  and MEMORY"). That includes the preference line, which shows concepts claimed by any of today's
+  three ads, not just ours. Fixed in the B2 review; a test checks the blocks are identical.
 - **Where:** `src/render.ts` `renderPageState`, `src/feed.ts` `PAGE_QUESTIONS`, `src/engine.ts`.
 
-### D38. A price is "seen" only on STAY — `DECIDED`
-- The expected price updates (first sighting sets it, then 0.7 old + 0.3 seen) only when the
-  shopper looks through the page. A tap without a stay ("left the page within seconds") teaches
-  nothing, as in the evidence table.
-- **Where:** `src/engine.ts` `remember`, `src/memory.ts` `seePrice`.
+### D38. Evidence is cumulative, and a price is "seen" only on STAY — `DECIDED`
+- **Plan:** the evidence table has rows for TAP (0.10), STAY (0.25; opinion 0.75 → 0.6), BUY
+  (1.00; opinion 1.5 → 0.65) and "left the page within seconds" (0 / 0). It doesn't say whether one
+  impression applies every row it reaches or only the highest one.
+- **Code:** cumulative, as in ShopSim (its golden chain runs CLICK → BROWSE → … one row per step):
+  - a tap that bounces applies TAP only (+0.10); the bounce itself adds nothing;
+  - a stay applies TAP then STAY;
+  - a purchase applies TAP, STAY and BUY.
+  "One STAY event, one evidence row" (ShopSim bug (b)) still holds: a page visit is one STAY row,
+  not VISITED plus BROWSED.
+- **Why not the highest event only:** every tap ends in a stay or a bounce, so the TAP row would
+  never apply.
+- **Price:** the expected price (first sighting sets it, then 0.7 old + 0.3 seen) updates only
+  when the shopper looks through the page. A bounce sees no price.
+- B2 tests pin all three paths with hand-computed values: tap+bounce 0.4762, tap+stay 0.5319,
+  tap+stay+buy 0.6716, from a 0.45 prior with E 2.
+- **Where:** `src/engine.ts` `remember`, `src/memory.ts` `applyEvidence`, `seePrice`.
 
 ### D39. Dice — `DECIDED`
 - Our tap: `uniform(seed, "tap", shopper, tick, creative) < P_cal(tap ours)`. If tapped, stay
@@ -361,3 +381,26 @@ Last updated: 2026-10-24, after B2 (the engine core). B0 entries: commits `c82e8
 - The plan's round summary also lists the cache hit rate; B4's round row can add it next to the
   deterministic part.
 - **Where:** `src/cli.ts`, `src/summary.ts`.
+
+### D46. "Changes smaller than 0.01 are ignored" also freezes E — `DECIDED`
+- When an update would move w by less than 0.01, nothing is written: neither w nor E (ShopSim's
+  applier: "a change smaller than that writes nothing").
+- **Effect:** a tap (wt 0.10) no longer registers once w is above about 0.79 at E 2. STAY and BUY
+  still do.
+- **The same rule applies to brand opinions.** The first event always sets the opinion, and page
+  visits and purchases are counted either way.
+- **Where:** `src/memory.ts` `updatePreference`, `updateOpinion`.
+
+### D47. Questions keep the plan's wording even after a "?" headline — `DECIDED`
+- `…the Magic Spoon post that says "Gave up cereal for keto?"?` doubles the punctuation (185
+  questions in round 0). This is the plan's template filled in literally.
+- Changing it would change every feed question's cache key and break comparison with the B1
+  spike, for a cosmetic gain.
+- **Where:** `src/feed.ts` `postRef`.
+
+### D48. Two state texts per shopper-day; the shopper row has one `state_text` — `OPEN` (for B4)
+- The engine keeps `{ feed, page }` per shopper (`Engine.lastState`). The contract's `shopper` row
+  has a single `state_text`, "the exact text Jev last read".
+- **Since D37, both states share their SHOPPER and MEMORY blocks.** B4 can store the page state
+  (the last one Jev reads) or the feed state, or add a column with A's agreement.
+- **Where:** `src/engine.ts`.

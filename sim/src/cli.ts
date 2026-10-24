@@ -1,5 +1,4 @@
 import { parseArgs } from "node:util";
-import { ZERO_OFFSETS } from "./calibrate.js";
 import { config, loadEnv } from "./config.js";
 import { Engine } from "./engine.js";
 import { loadWorld } from "./fixtures.js";
@@ -48,7 +47,7 @@ try {
   for (let round = 0; round < rounds; round++) {
     const roundStarted = performance.now();
     const days = await engine.runRound(round);
-    console.log(JSON.stringify(roundSummary(world, { run_id, seed, population, offsets: ZERO_OFFSETS }, days), null, 2));
+    console.log(JSON.stringify(roundSummary(world, { run_id, seed, population, offsets: engine.offsets }, days), null, 2));
     const decisions = days.flatMap((d) => d.decisions);
     const fresh = decisions.filter((d) => !d.cache_hit);
     const latencies = fresh.map((d) => d.latency_ms).sort((a, b) => a - b);

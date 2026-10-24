@@ -178,8 +178,9 @@ export function renderFeedState(
 
 function checkLength(state: string, shopper: Shopper): string {
   const words = wordCount(state);
-  if (words > config.render.maxWords) {
-    throw new Error(`state for ${shopper.shopper_id} is ${words} words, limit ${config.render.maxWords}`);
+  // Rule 1 says under 450, so exactly 450 is already too long.
+  if (words >= config.render.maxWords) {
+    throw new Error(`state for ${shopper.shopper_id} is ${words} words, limit under ${config.render.maxWords}`);
   }
   return state;
 }

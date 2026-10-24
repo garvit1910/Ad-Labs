@@ -49,7 +49,7 @@
     "brand_id": "br_wonderworks",
     "name": "Wonderworks Cereal Variety Pack",
     "price_usd": 0,
-    "subscription_price_usd": 0,
+    "subscription_price_usd": null,
     "rating": 0,
     "review_count": 0,
     "page_highlights": [],

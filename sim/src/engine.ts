@@ -188,7 +188,8 @@ export class Engine {
     const claimedOurs = this.claimed(ours);
     const claimedToday = [...new Set([...claimedOurs, ...options.flatMap((o) => this.claimed(o.creative))])];
     const feedState = renderFeedState(shopper, this.world, tick, options.map((o) => o.creative), claimedToday);
-    const pageState = renderPageState(shopper, this.world, tick, ours, product, claimedOurs);
+    // The page call keeps SHOPPER and MEMORY exactly as the feed call showed them.
+    const pageState = renderPageState(shopper, this.world, tick, ours, product, claimedToday);
     this.lastState.set(id, { feed: feedState, page: pageState });
     const [feed, page] = await Promise.all([
       this.jev.ask(feedState, feedQuestions(options, ours, this.world)),
@@ -297,7 +298,8 @@ export class Engine {
       shopper.engagements.push({ tick, creative_id: ours.creative_id, kind });
     };
     engage("tap");
-    // Tap without a stay is "left the page within seconds": no evidence, no price seen.
+    // Events are cumulative (D38): a tap that bounces keeps its TAP row; leaving within seconds
+    // adds nothing more and sees no price.
     if (!outcome.stayed) return;
     engage("stay");
     seePrice(shopper, product);
