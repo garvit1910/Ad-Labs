@@ -736,6 +736,17 @@ lists only `ping` until the merged module is published.
     → done, with `generate_creatives` queued;
   - claim races and bad input are rejected;
   - perceptions stay frozen.
+- **The wire contract,** read from the module definition SpacetimeDB publishes
+  (`buildRawModuleDefV10`):
+  - the case policy is snake_case;
+  - every table has exactly the fields of `docs/PLAN.md` "The contract", in order, parsed from the
+    plan itself;
+  - A's tables match the contract schemas the loader reads them with;
+  - every reducer the sim calls exists, with the parameters it sends, in order;
+  - every row the worker writes has exactly its table's columns, and the task payloads have the
+    plan's shapes.
+
+  A deliberate column rename fails four of these tests.
 - **What it can't cover:** row-level security, network behaviour and the real HTTP encoding (the
   live database has no tables yet). The real `spacetime build` and publish need the CLI and A's
   owner login.

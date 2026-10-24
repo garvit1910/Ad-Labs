@@ -182,3 +182,99 @@ describe("the SpacetimeDB module in the official test harness", () => {
     assert.equal([...h.db.creative_perception!.iter()][0]!.claims, '{"taste":0.1}');
   });
 });
+
+// The wire contract, read from the module definition SpacetimeDB publishes
+// (Schema.buildRawModuleDefV10), checked against docs/PLAN.md "The contract", the contract schemas
+// the loader reads A's rows with, and what the worker actually sends.
+describe("wire contract: published module vs the plan, the loader and the worker", async () => {
+  const { readFileSync, readdirSync } = await import("node:fs");
+  const contract = await import("../../src/contract.js");
+  type Section = { tag: string; value: unknown };
+  type Elements = { elements: { name: string; algebraicType: { tag: string } }[] };
+  const def = (spacetimedb as { buildRawModuleDefV10(e: object): { sections: Section[] } }).buildRawModuleDefV10(mod);
+  const section = <T>(tag: string) => def.sections.find((s) => s.tag === tag)!.value as T;
+  const types = section<{ types: { tag: string; value: Elements }[] }>("Typespace").types;
+  const columns = Object.fromEntries(
+    section<{ sourceName: string; productTypeRef: number }[]>("Tables").map((t) => [t.sourceName, types[t.productTypeRef]!.value.elements.map((e) => e.name)]),
+  );
+  const snake = (s: string) => s.replace(/[A-Z]/g, (c) => `_${c.toLowerCase()}`);
+  const reducers = Object.fromEntries(
+    section<{ sourceName: string; params: Elements }[]>("Reducers").map((r) => [snake(r.sourceName), r.params.elements.map((e) => e.name)]),
+  );
+
+  // docs/PLAN.md "The contract": | table | field, field (json …), … | rules |
+  const plan = readFileSync(new URL("../../../docs/PLAN.md", import.meta.url), "utf8");
+  const block = plan.slice(plan.indexOf("## The contract"), plan.indexOf("Payloads:", plan.indexOf("## The contract")));
+  const planFields: Record<string, string[]> = {};
+  for (const line of block.split("\n")) {
+    const m = /^\| ([a-z_\\]+) \| (.+?) \| /.exec(line);
+    if (!m) continue;
+    planFields[m[1]!.replaceAll("\\_", "_")] = m[2]!.replaceAll("\\_", "_").replace(/\s*\([^)]*\)/g, "").split(",").map((f) => f.trim());
+  }
+
+  test("names on the wire are snake_case (the module's case policy)", () => {
+    assert.deepEqual(section("CaseConversionPolicy"), { tag: "SnakeCase" });
+  });
+
+  test("every table has exactly the plan's contract fields, in the plan's order", () => {
+    assert.deepEqual(Object.keys(columns).sort(), Object.keys(planFields).sort());
+    for (const [table, fields] of Object.entries(planFields)) assert.deepEqual(columns[table], fields, table);
+  });
+
+  test("A's tables match the contract schemas the loader parses them with", () => {
+    const schemas = {
+      brand: contract.brandSchema,
+      concept: contract.conceptSchema,
+      segment: contract.segmentSchema,
+      arm: contract.armSchema,
+      creative: contract.creativeSchema,
+      product: contract.productSchema,
+    };
+    for (const [table, schema] of Object.entries(schemas)) {
+      assert.deepEqual(Object.keys((schema as unknown as { shape: object }).shape), columns[table], table);
+    }
+  });
+
+  test("every reducer the sim calls exists, with the parameters it sends, in order", () => {
+    const called = new Set<string>();
+    for (const f of readdirSync(new URL("../../src/", import.meta.url))) {
+      for (const m of readFileSync(new URL(`../../src/${f}`, import.meta.url), "utf8").matchAll(/call\("([a-z_]+)"/g)) called.add(m[1]!);
+    }
+    assert.ok(called.size >= 13, [...called].join());
+    for (const r of called) {
+      assert.ok(reducers[r], `the sim calls ${r}, which the module doesn't have`);
+      assert.deepEqual(reducers[r], PARAMS[r], `${r} parameters`);
+    }
+  });
+
+  test("every row the worker writes has exactly its table's columns", async () => {
+    const exports = mod as Record<string, unknown>;
+    const h = createModuleTestHarness(spacetimedb, exports) as Harness;
+    const inner = harnessDb(h, exports);
+    const sent: { reducer: string; args: unknown[] }[] = [];
+    const db: Db = { ...inner, name: inner.name, call: (r, a) => (sent.push({ reducer: r, args: a }), inner.call(r, a)), sql: (q) => inner.sql(q) };
+    await writer.enqueue(db, "tsk_run_run_w_r0", "run_round", { run_id: "run_w", round: 0 });
+    await new Worker({ db, jev: fakeJev(), source: "fixtures", log: () => {} }).tick();
+
+    for (const { reducer, args } of sent) assert.equal(args.length, PARAMS[reducer]!.length, `${reducer} argument count`);
+    const rows = (reducer: string, i: number) => sent.filter((c) => c.reducer === reducer).flatMap((c) => JSON.parse(String(c.args[i])) as object[]);
+    const keysOf = (rs: object[]) => [...new Set(rs.flatMap((r) => Object.keys(r)))].sort();
+    const without = (cols: string[], ...drop: string[]) => cols.filter((c) => !drop.includes(c)).sort();
+    // run_id and round come in as reducer arguments; created_at, started_at and the like are set by
+    // the server from ctx.timestamp.
+    assert.deepEqual(keysOf(rows("upsert_products", 0)), without(columns.product!));
+    assert.deepEqual(keysOf(rows("upsert_creative_perceptions", 0)), without(columns.creative_perception!));
+    const runRows = sent.filter((c) => c.reducer === "upsert_run").map((c) => JSON.parse(String(c.args[0])) as object);
+    assert.ok(runRows.length >= 1);
+    assert.deepEqual(keysOf(runRows), without(columns.run!, "created_at"));
+    assert.deepEqual(keysOf(rows("upsert_shoppers", 1)), without(columns.shopper!, "run_id"));
+    assert.deepEqual(keysOf(rows("insert_decisions", 0)), without(columns.decision!));
+    assert.deepEqual(keysOf(rows("replace_arm_stats", 2)), without(columns.arm_stat!));
+    assert.deepEqual(keysOf(rows("upsert_learnings", 0)), without(columns.learning!));
+    // Task payloads: the plan's shapes exactly.
+    const payload = (kind: string) => sent.filter((c) => c.reducer === "enqueue_task" && c.args[1] === kind).map((c) => JSON.parse(String(c.args[2])));
+    assert.deepEqual(keysOf(payload("run_round")), ["round", "run_id"]);
+    assert.deepEqual(keysOf(payload("generate_creatives")), ["arms", "learning_ids", "n_per_arm", "round", "run_id"]);
+    for (const p of payload("generate_creatives")) for (const a of p.arms) assert.deepEqual(Object.keys(a).sort(), ["arm_id", "segment_ids"]);
+  });
+});
