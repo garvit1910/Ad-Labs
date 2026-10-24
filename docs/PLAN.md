@@ -241,9 +241,9 @@ A turns Magic Spoon's public footprint into the rows the sim needs, writes the a
   | Three Wishes, HighKey, Schoolyard Snacks, Snack House, Lovebird, Nature's Path | — | none | — |
   | Wonderworks | no page of its own (General Mills line) | none | — |
 - Insurance datasets from A0 (Apify): Magic Spoon ads `3gFmofqMK6sEyeHto` (45), Catalina Crunch ads `1IPZWLnFfFMWN01fa` (5), Magic Spoon Trustpilot, English, `8XhvrGA89aht0K74A` (39 reviews).
-- [ ] Keep Magic Spoon's own ads out of market priors. Have the agent find how Adcero marks a brand's own page; if there's no flag, filter its competitor id in the market step.
+- [ ] Keep Magic Spoon's own ads out of market priors with Adcero's own flag: its `tracked_competitors` row gets `is_brand_self = true` and Magic Spoon's `brand_profile_id`. The market step skips self rows; the identity step reads their ad copy.
 - [ ] Run competitor sync → label → embed.
-- [ ] **If A1 slipped:** import the insurance datasets from A0 through the copied normalizers instead.
+- [ ] **If an actor fails or comes back empty:** import that source's A0 insurance dataset through the copied normalizers instead.
 
 **Done when** brand\_mentions has rows from at least 5 sources, and library\_ads has labelled, embedded ads for Magic Spoon's page and every competitor page.
 
@@ -834,16 +834,23 @@ Ad Lab, phase A2: ingest Magic Spoon and its seven competitors. Cal Hacks 13.0; 
 Read first: docs/PLAN.md "Locked decisions", "A2" and its gotchas.
 Also read: REUSE_MANIFEST.md §1, §2, §3, §10.
 ../adcero is read-only; use tests/fixtures/ad-library/apify-sample.json for a normalizer smoke test.
+Work on a new branch off feat/port-adcero-core (A1), and first merge origin/feat/setup-and-connections into it for the latest PLAN.md.
 Goal: a script scripts/a2-ingest.ts that, through the copied job types and the worker:
 - runs brand_presence_discover on magicspoon.com and confirms the profile;
-- sets up and confirms Reddit, Trustpilot, Google Maps, X, Instagram and TikTok sources (handles I give you where discovery misses them), with the plan's caps;
+- sets up and confirms Reddit, Trustpilot, Google Maps, X, Instagram and TikTok sources (handles I give you where discovery misses them), with the plan's caps. If Google Maps finds no place (Magic Spoon sells online), skip it cleanly;
 - pins TikTok comment field names with one ~20-item run before the real harvest;
-- creates Meta-only tracked_competitors for the competitor set locked in "Locked decisions" and Magic Spoon's own page, each by Meta page id (never keyword; ids in A2), with APIFY_AD_LIBRARY_MAX_ADS=50, and runs sync → label → embed;
-- keeps Magic Spoon's own ads out of market priors (find how Adcero marks a brand's own page; if no flag exists, filter it in the market step and tell me).
-If A1 slipped, instead import the Apify console datasets I give you through the copied normalizers.
+- creates Meta-only tracked_competitors for the seven locked competitors and Magic Spoon's own page (page ids in A2): each with meta_page_id set and no keyword, all tagged with Magic Spoon's brand_profile_id, and Magic Spoon's row with is_brand_self = true. Show me all eight pages (brand, page id, Ad Library link) and wait for my OK before the full scrape. Then, with APIFY_AD_LIBRARY_MAX_ADS=50, run sync → label → embed;
+- keeps Magic Spoon's own ads out of market priors through that is_brand_self flag (the market step skips self rows). Prove it with a query; don't edit the market step.
+Know before you start:
+- Use ADLAB_ORG_ID (lib/adlab/org.ts) and serviceSupabase() (lib/adlab/supabase.ts). Run the script the way npm run worker runs (node --env-file-if-exists=.env.local --import tsx), so .env.local loads before any copied module, and add an npm script for it.
+- worker/index.ts runs on import. If the script drains the queue in-process, move the loop into an exported function that npm run worker also uses; don't copy it.
+- Every competitor sync enqueues adlib_media_rehost jobs, which A1 didn't port (expiring Meta CDN links are fine for the weekend). Make the worker mark them cancelled as skipped, not failed.
+- Surreal is a UK brand. If its US sync returns no ads, set its country to GB and resync.
+- The ad labeller's industry classifier defaults to gpt-4o-mini, which A0's model check didn't cover. If it fails, override ADLIB_INDUSTRY_MODEL.
+- If an actor fails or comes back empty, import that source's A0 insurance dataset (ids in A2) through the copied normalizers, and tell me.
 Done when: brand_mentions has rows from at least 5 sources, and library_ads has labelled, embedded ads for Magic Spoon's page and every competitor page. Print the counts.
-Rules: write only scripts/, worker/ and config; secrets only in .env.local.
-Finish with: counts per source, anything skipped and why, and a commit "A2: ingest".
+Rules: write only scripts/, worker/ and config. Never edit copied Adcero files; stop and ask if one must change. Secrets only in .env.local.
+Finish with: counts per source and per page, anything skipped and why, and a commit "A2: ingest".
 ```
 
 ### A3 · Distill
