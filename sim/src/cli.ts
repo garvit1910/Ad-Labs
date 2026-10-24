@@ -47,7 +47,7 @@ store.close();
 const attempts: JevAttempt[] = [];
 const client = new JevClient({ cachePath: args["no-cache"] ? null : config.paths.cacheDb, onAttempt: (a) => attempts.push(a) });
 const run_id = `run_fixtures_s${seed}_p${population}`;
-const run = new SimRun(world, client, perceptions, { run_id, seed, population, roundsPlanned });
+const run = new SimRun(world, client, perceptions, { run_id, seed, population, roundsPlanned, perceiverId: keywordPerceiver.id });
 
 const segName = new Map(world.segments.map((s) => [s.segment_id, s.name]));
 const armName = new Map(world.arms.map((a) => [a.arm_id, a.strategy === "control" ? "control" : `${a.angle} × ${a.hook}`]));
@@ -100,7 +100,7 @@ function printRound(r: RoundReport) {
 try {
   const fit = await run.calibrate();
   if (!args.json) {
-    console.log(`run ${run_id}: warm-up + ${roundsPlanned} rounds, ${population} shoppers, seed ${seed}`);
+    console.log(`run ${run_id}: warm-up + ${roundsPlanned} rounds, ${population} shoppers, seed ${seed}, config ${run.configHash.slice(0, 12)}`);
     console.log(
       `calibration (fitted on ${fit.n} warm-up impressions): offsets tap ${fit.offsets.tap.toFixed(3)}, ` +
         `stay ${fit.offsets.stay.toFixed(3)}, buy ${fit.offsets.buy.toFixed(3)}`,

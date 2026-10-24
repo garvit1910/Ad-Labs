@@ -7,7 +7,7 @@ When a decision changes, edit its entry and status here in the same commit as th
 **Status:** `OPEN` needs an answer · `NEEDS A` needs Person A's agreement because it touches the
 contract or A's data · `DECIDED` taken by B and reversible · `FORCED` the plan couldn't be followed.
 
-Last updated: 2026-10-24, after B3 (bandit and learnings). B0 entries: commits `c82e80e`, `2a4f72a`; B1: `2dd85d2`; B2: `e7ca652`, `d5da10d`.
+Last updated: 2026-10-24, after checking B2 and B3 against `docs/sim-export/`. B0 entries: commits `c82e80e`, `2a4f72a`; B1: `2dd85d2`; B2: `e7ca652`, `d5da10d`; B3: `9cf9666`, `241045b`.
 
 ---
 
@@ -555,3 +555,61 @@ Last updated: 2026-10-24, after B3 (bandit and learnings). B0 entries: commits `
   and the plan says the offsets are frozen per run and never loosened.
 - Every round's report shows this as `funnel_cal`; the CLI prints it as "calibrated funnel".
 - **Where:** `src/summary.ts` `funnelCal`.
+
+---
+
+## ShopSim export in the repo (after A0 merged `docs/`)
+
+### D58. B2 and B3 are checked against `docs/sim-export/` — `DECIDED`
+- B2 and B3 were built from the same export pasted into the session: same ShopSim commit
+  (`b208e33`), same 597-line SIM_NOTES.md. Now that `docs/sim-export/` is in the repo,
+  `test/sim-export.test.ts` imports ShopSim's `contracts.ts` and SIM_NOTES.md, so a copied
+  constant can't drift.
+- **Carried over and checked:**
+  - evidence weights: TAP = CLICKED 0.10; STAY = VISITED = BROWSED 0.25 with opinion 0.75 → 0.6;
+    BUY = BOUGHT 1.00 with opinion 1.5 → 0.65; SEEN = SAW 0;
+  - E cap 8, ε 0.01, prior E0 2, cold start (0.5, 1.0), reference-price α 0.3;
+  - prior draw N(prior, 0.08) clipped to [0.05, 0.95];
+  - FUNNEL_BANDS (p_click, bounce_rate, visit_to_purchase), with every target inside its band;
+  - the $13.88 CPM;
+  - the golden chain's shared steps (0.45 → 0.476 → 0.532).
+- **Departures, each asserted in the test:**
+  - **No cart.** CARTED (0.50) has no event, so BUY lands at 0.672 where ShopSim's chain
+    reaches 0.714 through CART.
+  - **One STAY row for a page visit:** VISITED and BROWSED are identical rows in ShopSim (bug (b)).
+  - **No EXPECTS.** SAW and CLICK teach no expectation; the page call shows the exact tapped ad
+    instead (bug (e)).
+  - **No per-tick write cap.** ShopSim dropped writes past 6 (bug (c)); here a shopper writes at
+    most tap, stay and buy on one ad per day, and all are applied.
+- **Plan wins where they differ:** the budget floor is $15 (ShopSim $30), and `CLAIM_MIN` 0.5 is
+  "claimed" for memory and evidence, a different role from ShopSim's 0.05 retrieval floor.
+- **Where:** `test/sim-export.test.ts`; `src/memory.ts` exports `PRICE_KEEP` for it.
+
+### D59. Budgets vs a $39 price: 43% of impressions are guarded — `OPEN` (yours, with A)
+- SIM_NOTES rule 10: "Absolute-dollar gates need brand-scaled budgets. A premium catalog with
+  value-tier budgets reads as a broken funnel."
+- With the plan's $45 ± $15 a month against Magic Spoon's $39 one-time price, about 34% of shoppers
+  can't afford a box (41% in the seed-13 population). 43% of impressions are guarded in every
+  fixture round.
+- The guard is correct; the question is the budget. The plan says A hand-sets "near $45 ± $15; B
+  tunes". **Options:**
+  1. keep it, which means about two in five shoppers never buy;
+  2. scale budgets to the brand, e.g. $60 ± $15, which guards about 16%;
+  3. let A set budgets per persona from what customers say about price.
+  ShopSim deliberately kept deal segments below the price, so the price objection stays
+  informative.
+- Budgets never enter the state text (rendering rule 4), so a change re-uses most of the cache:
+  only dice, memory and later states move.
+
+### D60. The run manifest hashes every constant — `DECIDED`
+- **`config_hash`** = sha256 over:
+  - the Jev model; the run settings except the seed; population and rounds planned;
+  - shopper, render and reward config; the evidence table and its constants;
+  - the perception provider and `CLAIM_MIN`; calibration targets and clamp;
+  - bandit constants and floors; learning thresholds.
+- **Not in it:** the seed and calibration offsets, which the run row stores in their own columns,
+  and A's rows.
+- Every round report carries `jev_model` and `config_hash`, and the CLI prints the first 12
+  characters. B4 writes them to the run row.
+- ShopSim refused to resume a run when any manifest hash changed (SIM_NOTES rule 6, §8 rec. 9).
+- **Where:** `src/run.ts` `configHash`.

@@ -23,7 +23,7 @@ export const E_MAX = 8;
 export const EPSILON = 0.01;
 const PREFERENCE_TARGET = 1.0;
 // Expected price: the first sighting sets it, later ones blend 0.7 old + 0.3 seen.
-const PRICE_KEEP = 0.7;
+export const PRICE_KEEP = 0.7;
 
 export function blend(w: number, E: number, wt: number, target: number): { w: number; E: number } {
   return { w: (E * w + wt * target) / (E + wt), E: Math.min(E + wt, E_MAX) };

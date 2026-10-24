@@ -8,8 +8,9 @@ export type Offsets = Record<Gate, number>;
 
 export const ZERO_OFFSETS: Offsets = { tap: 0, stay: 0, buy: 0 };
 
-// Researched base-rate bands, copied from ShopSim's contracts.ts (FUNNEL_BANDS). Calibrate to
-// these; never "accelerate" to them. The cart bands have no gate here (tap → stay → buy).
+// Researched base-rate bands, copied from docs/sim-export/contracts.ts (FUNNEL_BANDS; a test checks
+// they still match). Calibrate to these; never "accelerate" to them. The cart bands have no gate
+// here (tap → stay → buy).
 export const FUNNEL_BANDS = {
   p_click: [0.005, 0.02],
   bounce_rate: [0.45, 0.55],

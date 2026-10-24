@@ -1,10 +1,22 @@
-import { Bandit } from "./bandit.js";
-import { type FitReport, ZERO_OFFSETS, fitOffsets } from "./calibrate.js";
+import { createHash } from "node:crypto";
+import { Bandit, FLOOR_CONTROL, FLOOR_OTHER, N0, P_BEST_DRAWS } from "./bandit.js";
+import { type FitReport, P_MAX, P_MIN, TARGETS, ZERO_OFFSETS, fitOffsets } from "./calibrate.js";
 import { config } from "./config.js";
 import { type ArmPolicy, type Asker, type DayResult, Engine, type Impression, balancedPolicy } from "./engine.js";
 import type { World } from "./fixtures.js";
-import { type Learning, LearningBook, costPerOrder, findLearnings } from "./learnings.js";
-import type { Perception } from "./perceive.js";
+import {
+  DOUBT_MAX_BELIEVES,
+  DOUBT_MIN_N,
+  type Learning,
+  LearningBook,
+  OBJECTION_MIN_CALLS,
+  WINNER_MIN_N,
+  WINNER_P_BEST,
+  costPerOrder,
+  findLearnings,
+} from "./learnings.js";
+import { EPSILON, EVIDENCE, E_MAX, PRICE_KEEP } from "./memory.js";
+import { CLAIM_MIN, type Perception, keywordPerceiver } from "./perceive.js";
 import { roundSummary } from "./summary.js";
 
 // One simulation run: the warm-up round fits calibration, then the bandit allocates rounds
@@ -16,7 +28,35 @@ import { roundSummary } from "./summary.js";
 // fitted offsets. Day 0 of the real pass reads exactly the probe's states, so it comes from
 // the cache.
 
-export type RunOptions = { run_id: string; seed: number; population: number; roundsPlanned: number };
+export type RunOptions = {
+  run_id: string;
+  seed: number;
+  population: number;
+  roundsPlanned: number;
+  // The perception provider's id (D35); part of the config hash.
+  perceiverId?: string;
+};
+
+// The run manifest's config_hash: every constant that shapes a run apart from the seed, the
+// calibration offsets (both stored on the run row in their own columns) and A's rows. ShopSim
+// hashed its evidence table and constants so a replay refuses a changed config (SIM_NOTES rule 6
+// and §8 recommendation 9).
+export function configHash(opts: Pick<RunOptions, "population" | "roundsPlanned" | "perceiverId">): string {
+  const { seed: _seed, ...run } = config.run;
+  const manifest = {
+    jev_model: config.jev.model,
+    run: { ...run, population: opts.population, roundsPlanned: opts.roundsPlanned },
+    shopper: config.shopper,
+    render: config.render,
+    reward: config.reward,
+    evidence: { table: EVIDENCE, E_MAX, EPSILON, PRICE_KEEP },
+    perception: { provider: opts.perceiverId ?? keywordPerceiver.id, CLAIM_MIN },
+    calibration: { TARGETS, P_MIN, P_MAX },
+    bandit: { N0, P_BEST_DRAWS, FLOOR_CONTROL, FLOOR_OTHER, MAX_GENERATION_ARMS },
+    learnings: { WINNER_P_BEST, WINNER_MIN_N, OBJECTION_MIN_CALLS, DOUBT_MAX_BELIEVES, DOUBT_MIN_N },
+  };
+  return createHash("sha256").update(JSON.stringify(manifest)).digest("hex");
+}
 
 // The contract's arm_stat row. A full set is produced at the end of every sim day (B4 writes
 // each day's); impressions and mean_reward cover the run so far, like the posterior (D52).
@@ -63,6 +103,7 @@ export class SimRun {
   probe = { calls: 0, input_tokens: 0 };
   readonly book: LearningBook;
   readonly impressions: Impression[] = [];
+  readonly configHash: string;
 
   constructor(
     readonly world: World,
@@ -71,6 +112,7 @@ export class SimRun {
     readonly opts: RunOptions,
   ) {
     this.book = new LearningBook(opts.run_id);
+    this.configHash = configHash(opts);
   }
 
   // The warm-up probe: every arm equally, zero offsets, then bisection per gate.
@@ -193,6 +235,9 @@ export class SimRun {
     const control = this.engine.arms.find((a) => a.strategy === "control");
     return {
       ...base,
+      // The run manifest (the run row's jev_model and config_hash; seed and offsets are above).
+      jev_model: config.jev.model,
+      config_hash: this.configHash,
       calibration: {
         // Full precision: replaying p_cal from the stored offsets must reproduce it exactly.
         offsets: this.fit.offsets,
