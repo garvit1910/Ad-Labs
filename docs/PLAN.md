@@ -10,7 +10,8 @@ Everything here is settled. Change a row only by editing this table, so both of 
 
 | Topic | Decision |
 | --- | --- |
-| Demo brand | Magic Spoon, against Catalina Crunch, Three Wishes and Wonderworks |
+| Demo brand | Magic Spoon, against competitors that run Meta ads today. **Competitor set is open** (unlocked Oct 24): of the original Catalina Crunch, Three Wishes and Wonderworks, only Catalina Crunch has live ads (5). Pick the new set from the candidates in A2, agree it with B, then lock it here. B's fixtures still use the old names |
+| Meta ads | Scraped only by the advertiser's own page (Ad Library `view_all_page_id`, or the facebook.com page the brand's website links to), never by keyword search. A keyword search returns mostly unrelated advertisers. Each page is shown to Person A before its full scrape |
 | Sponsor tracks | Apify, Fetch.ai, SpacetimeDB, Visa |
 | Shopper decisions | Jev (TypeSafe), pinned to `jev-1.13.0`. Not a sponsor track |
 | Sources | Reddit, Trustpilot, Google reviews, X, Instagram, TikTok, Meta Ad Library. About 300 items per source, up to 50 ads per competitor |
@@ -199,7 +200,7 @@ A turns Magic Spoon's public footprint into the rows the sim needs, writes the a
   - settings: `LLM_FLEX_TIER=0`, `APIFY_AD_LIBRARY_MAX_ADS=50`, `CREATIVE_JUDGE_GATE_MODE=off`
 - [ ] `npm run check:connections`: one tiny call per service, printed as a pass/fail table. Cover the Supabase select plus pgvector, SpacetimeDB ping, the Apify user, each OpenAI model the code uses, one Jev call and one ASI:One call.
 - [ ] A hello-world uAgent with the chat protocol, registered on Agentverse through a mailbox, that answers inside ASI:One. This takes Fetch's biggest unknown off the table early.
-- [ ] **Insurance:** start the Meta Ad Library actor for the 4 pages and the Trustpilot reviews actor from the Apify console, with the manifest's inputs. If the port slips, A2 imports these datasets.
+- [x] **Insurance:** start the Meta Ad Library actor for Magic Spoon's page and each competitor's page, and the Trustpilot reviews actor, with the manifest's inputs. If the port slips, A2 imports these datasets. Done Oct 24; dataset ids are under A2.
 
 **Done when** the connection check is all green and the agent replies in ASI:One.
 
@@ -224,13 +225,27 @@ A turns Magic Spoon's public footprint into the rows the sim needs, writes the a
 - [ ] Sources: Reddit, Trustpilot, Google Maps, X, Instagram, TikTok. Where discovery missed a handle, set it by hand and confirm it through the copied `confirm-source.ts` functions from a script.
 - [ ] Caps: Reddit and X about 300 each, reviews about 100–200, Instagram and TikTok comments from about 10 posts each (Adcero's planner defaults).
 - [ ] `tracked_competitors`, Meta only, with `APIFY_AD_LIBRARY_MAX_ADS=50`:
-  - Catalina Crunch, Three Wishes, Wonderworks
-  - Magic Spoon's own page, which feeds the control and double-down recipes
+  - the competitor set chosen under Locked decisions, each tracked by its Meta page id, never a keyword
+  - Magic Spoon's own page ("Magic Spoon Cereal", page id 1978160732305312), which feeds the control and double-down recipes
+- Competitor candidates, checked Oct 24. Page ids come from each brand's own website; "live" means running Meta ads that day:
+
+  | Brand | Page id | Live ads | Fit |
+  | --- | --- | --- | --- |
+  | Catalina Crunch | 140848183352200 | 5 (all it runs) | direct protein cereal |
+  | Seven Sundays | 215741341794742 | yes, about half on cereal | direct protein cereal |
+  | Surreal | 103157908647433 | yes, mostly cereal | direct high-protein, low-sugar cereal; UK brand |
+  | GHOST | 1453082168348885 | yes, mostly whey and supplements | protein-adjacent |
+  | Premier Protein | 78022578902 | yes, shakes | protein-adjacent |
+  | Legendary Foods | 435452713326784 | yes, protein mac & cheese | protein-adjacent |
+  | Quest Nutrition | 109793645727352 | yes, snacks | protein-adjacent |
+  | Three Wishes, HighKey, Schoolyard Snacks, Snack House, Lovebird, Nature's Path | — | none | — |
+  | Wonderworks | no page of its own (General Mills line) | none | — |
+- Insurance datasets from A0 (Apify): Magic Spoon ads `3gFmofqMK6sEyeHto` (45), Catalina Crunch ads `1IPZWLnFfFMWN01fa` (5), Magic Spoon Trustpilot, English, `8XhvrGA89aht0K74A` (39 reviews).
 - [ ] Keep Magic Spoon's own ads out of market priors. Have the agent find how Adcero marks a brand's own page; if there's no flag, filter its competitor id in the market step.
 - [ ] Run competitor sync → label → embed.
 - [ ] **If A1 slipped:** import the insurance datasets from A0 through the copied normalizers instead.
 
-**Done when** brand\_mentions has rows from at least 5 sources, and library\_ads has labelled, embedded ads for all 4 pages.
+**Done when** brand\_mentions has rows from at least 5 sources, and library\_ads has labelled, embedded ads for Magic Spoon's page and every competitor page.
 
 ### A3 · Sat 10:30 AM – 1 PM · Distill the brand context
 
@@ -823,10 +838,10 @@ Goal: a script scripts/a2-ingest.ts that, through the copied job types and the w
 - runs brand_presence_discover on magicspoon.com and confirms the profile;
 - sets up and confirms Reddit, Trustpilot, Google Maps, X, Instagram and TikTok sources (handles I give you where discovery misses them), with the plan's caps;
 - pins TikTok comment field names with one ~20-item run before the real harvest;
-- creates Meta-only tracked_competitors for Catalina Crunch, Three Wishes, Wonderworks and Magic Spoon's own page, with APIFY_AD_LIBRARY_MAX_ADS=50, and runs sync → label → embed;
+- creates Meta-only tracked_competitors for the competitor set locked in "Locked decisions" and Magic Spoon's own page, each by Meta page id (never keyword; ids in A2), with APIFY_AD_LIBRARY_MAX_ADS=50, and runs sync → label → embed;
 - keeps Magic Spoon's own ads out of market priors (find how Adcero marks a brand's own page; if no flag exists, filter it in the market step and tell me).
 If A1 slipped, instead import the Apify console datasets I give you through the copied normalizers.
-Done when: brand_mentions has rows from at least 5 sources, and library_ads has labelled, embedded ads for all 4 pages. Print the counts.
+Done when: brand_mentions has rows from at least 5 sources, and library_ads has labelled, embedded ads for Magic Spoon's page and every competitor page. Print the counts.
 Rules: write only scripts/, worker/ and config; secrets only in .env.local.
 Finish with: counts per source, anything skipped and why, and a commit "A2: ingest".
 ```
