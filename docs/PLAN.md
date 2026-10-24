@@ -1,6 +1,6 @@
 # Ad Lab — master plan
 
-Last updated Sat Oct 24, 2026, 3 PM PT
+Last updated Sat Oct 24, 2026, 3:45 PM PT
 
 Ad Lab tests Magic Spoon ad recipes on Jev-driven shoppers built from real customer voice, then keeps and refines the winners. Person A owns data and agents; Person B owns the simulation. Both halves are planned below, phase by phase, with a ready prompt for every phase in the "Appendix: Phase prompts" at the end of this file.
 
@@ -187,7 +187,7 @@ Finish with: what works, what is stubbed or skipped, the command that proves the
 | B2 Engine | Simulation design, The Jev calls | sim-export `SIM_NOTES.md` §0, §3, §4 | — |
 | B3 Bandit | Reward, bandit and learnings | sim-export `contracts.ts` (FUNNEL\_BANDS) | — |
 | B4 SpacetimeDB | The contract | SpacetimeDB TypeScript module and client docs; `spacetime/tables_a.ts` | — |
-| B5 Views | Live sim views | `components/ui/` and `app/globals.css`, already in the repo after A1 | ShopSim, for `web/components/{AllocationRiver,Inspector,charts}.tsx` and `web/lib/{market,selectors}.ts` |
+| B5 Views | Status, Live sim views | `components/ui/`, `app/globals.css`, `lib/spacetime/` | ShopSim (public: github.com/garvit1910/shopsim), for `web/components/{AllocationRiver,charts}.tsx`; `Inspector.tsx` for layout only |
 | B6 Demo | Demo, cut lines and risks | — | — |
 
 Paste text into a prompt only for things that live in no repo:
@@ -745,7 +745,15 @@ Run these on about 10 hand-built states before writing the engine:
 
 Build the five views in the next section on SpacetimeDB subscriptions. The browser client is ready in `lib/spacetime/` (see Status).
 
-**Done when** all five update live during a real round.
+Test them on a local bench before A4's rows reach the shared database:
+
+- a local SpacetimeDB server seeded with B's fixtures;
+- the real worker driving rounds against it;
+- a `/sim/dev` page showing which database the page is on, live row counts and the task board.
+
+Then point the same views at Maincloud.
+
+**Done when** all five update live during a real round: first on the local bench, then on Maincloud once A4's rows are there.
 
 ### B6 · Sat 10 PM – Sun 2 AM · Demo run and pinned shopper
 
@@ -1031,13 +1039,32 @@ Work on a branch off an up-to-date simulation, and run npm install at the root f
 The SpacetimeDB client is ready:
 - spacetimedb 2.13.0, whose spacetimedb/react has SpacetimeDBProvider and useTable;
 - the typed bindings in lib/spacetime/bindings (DbConnection.builder()), generated, so never edit them;
-- lib/spacetime/config.ts for the URI and database name, which need no env.
+- lib/spacetime/config.ts for the URI and database name. It reads NEXT_PUBLIC_SPACETIMEDB_URI and NEXT_PUBLIC_SPACETIMEDB_DB_NAME first and defaults to Maincloud, so Maincloud needs no env.
 If the module changes, A republishes and regenerates.
-../shopsim is read-only; use web/components/{AllocationRiver,Inspector,charts}.tsx and web/lib/{market,selectors}.ts as reference.
+ShopSim is a read-only reference: github.com/garvit1910/shopsim (public), cloned next to this repo as ../shopsim. Only its drawing code carries over, because its engine was a graph database and Ad Lab's is Jev:
+- adapt web/components/AllocationRiver.tsx, a dependency-free SVG stream of impressions per ad per day; feed it the decision feed rows counted per arm per sim day;
+- adapt web/components/charts.tsx (SVG sparklines, a line chart with bands, a palette) for the leaderboard ranges and the header strip;
+- use web/components/Inspector.tsx for layout ideas only. Its data (belief nodes, motif traces, formula dimensions) doesn't exist here, but its need-off counterfactual is the ancestor of the what-if toggle;
+- ignore web/lib/market.ts and web/lib/selectors.ts. They poll ShopSim's engine and parse its saw → click → browse → cart → buy events, while B5 subscribes to SpacetimeDB and Ad Lab's funnel is tap → stay → buy.
+If ../shopsim is missing, skip it: the "Live sim views" table and Adcero's components are enough.
 Goal: app/sim/ with the allocation river, the leaderboard per segment (control row included), the decision ticker (probabilities, not just outcomes), the shopper inspector with the exact state text, the questions, probabilities, dice and memory across rounds, plus a what-if toggle that removes one memory line and re-asks Jev through a small cached API route, and the learnings feed linked to the creatives that used them. A header strip with round, sim day, Jev calls, cost and cache hit rate. Live through SpacetimeDB subscriptions, no polling.
-Done when: all five views update live during a real round.
-Rules: write only app/sim/ and app/api/sim/. Reuse Adcero's components and tokens.
-Finish with: screenshots and a commit "B5: live sim views".
+Then build a local test bench, so the views can be tested before A4's rows reach the shared database. Never write to Maincloud while testing.
+1. Start a local SpacetimeDB on port 3100 (next dev uses 3000): spacetime start --listen-addr 127.0.0.1:3100 --in-memory. If the CLI is missing, install it from spacetimedb.com/install, then pin it: spacetime version install 2.13.0 && spacetime version use 2.13.0. Publish the module there: spacetime publish adlab-local --server http://127.0.0.1:3100 --module-path spacetime --yes. It's in memory, so restarting the server and republishing starts over.
+2. Seed it: write sim/src/local-seed.ts and an npm script for it in sim/package.json. It loads the fixture world's brands, concepts, segments, arms and creatives into the local database through A's upsert reducers; the worker writes products itself in --fixtures mode. Reuse the loading code in sim/test/module/module.test.ts. On the local bench this stands in for A4. It refuses to run unless SPACETIMEDB_URI is a localhost address.
+3. Drive rounds with the real worker: SPACETIMEDB_URI=http://127.0.0.1:3100 SPACETIMEDB_DB_NAME=adlab-local npm --prefix sim run sim:worker -- --fixtures --enqueue run_local --auto-next. The worker doesn't print where it writes yet: add a startup line naming the URI and database, and check it says local before letting it run. Fixture runs reuse the Jev cache, so reruns cost almost nothing.
+4. Point the web app at it: NEXT_PUBLIC_SPACETIMEDB_URI=http://127.0.0.1:3100 NEXT_PUBLIC_SPACETIMEDB_DB_NAME=adlab-local npm run dev, then open http://localhost:3000/sim.
+5. Build app/sim/dev/page.tsx, a small test-bench page, linked from /sim but not from the app's navigation. It shows:
+   - a banner naming the database it's connected to, green for LOCAL and red for MAINCLOUD;
+   - live row counts for all 14 tables;
+   - the task board (queued, claimed, done, failed) with each task's result or error;
+   - a "Queue next round" button that calls enqueue_task with the next run_round. The button is enabled only on a local database; against Maincloud the page is read-only.
+6. Walk it once:
+   - seed, then queue round 0, and watch all five views fill as the worker writes each sim day;
+   - let --auto-next run two more rounds;
+   - open /sim against Maincloud too, with no env overrides, and check it loads with empty tables and no errors.
+Done when: all five views update live during a real round on the local bench, and /sim loads cleanly against Maincloud. Once A4's rows are there, check them on Maincloud too.
+Rules: write only app/sim/, app/api/sim/, and in sim/ the seed script, its npm script and the worker's startup line. Reuse Adcero's components and tokens. A's tables are written only on the local database, as test stand-ins; never write A's tables, or anything at all, on Maincloud from the bench.
+Finish with: screenshots of /sim and /sim/dev on the local bench, the exact commands that bring the bench up, and a commit "B5: live sim views".
 ```
 
 ### B6 · Demo run and pinned shopper
