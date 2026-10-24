@@ -38,6 +38,19 @@ function objectionShares(imps: Impression[]): Record<Objection, number> {
   return out;
 }
 
+function funnelCal(imps: Impression[]) {
+  const sum = (f: (i: Impression) => number) => imps.reduce((a, i) => a + f(i), 0);
+  const visits = sum((i) => i.p_cal.tap);
+  const stays = sum((i) => i.p_cal.tap * i.p_cal.stay);
+  const buys = sum((i) => i.p_cal.tap * i.p_cal.stay * i.p_cal.buy);
+  return {
+    p_tap: round4(imps.length ? visits / imps.length : 0),
+    bounce_rate: round4(visits > 0 ? 1 - stays / visits : 0),
+    p_buy_given_stay: round4(stays > 0 ? buys / stays : 0),
+    visit_to_purchase: round4(visits > 0 ? buys / visits : 0),
+  };
+}
+
 export function roundSummary(
   world: World,
   run: { run_id: string; seed: number; population: number; offsets: Offsets },
@@ -60,6 +73,9 @@ export function roundSummary(
     seed: run.seed,
     population: run.population,
     calibration: run.offsets,
+    // Model-implied calibrated funnel this round, each rate conditional on the gate before it
+    // (as fitted in D49). Once the bandit picks better ads these can rise above the warm-up's.
+    funnel_cal: funnelCal(imps),
     in_market_impressions: imps.filter((i) => i.in_market).length,
     budget_guarded: imps.filter((i) => i.guard === 0).length,
     ...rates(imps),

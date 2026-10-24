@@ -66,6 +66,8 @@ function printRound(r: RoundReport) {
       `${rep.lost_to_competitor} lost to a competitor; ${rep.budget_guarded} budget-guarded`,
     `expected orders per impression ${rep.mean_reward_cal.toFixed(6)} ` +
       `(cost per order ${money(rep.mean_reward_cal > 0 ? config.reward.cpmUsd / 1000 / rep.mean_reward_cal : null)})`,
+    `calibrated funnel: P(tap) ${pct(rep.funnel_cal.p_tap, 2)}, bounce ${pct(rep.funnel_cal.bounce_rate, 1)}, ` +
+      `P(buy | stay) ${pct(rep.funnel_cal.p_buy_given_stay, 2)}, visit→purchase ${pct(rep.funnel_cal.visit_to_purchase, 2)}`,
     "leaderboard (cost per order from the posterior mean, ±2 sd range; share = this round's impressions):",
   ];
   for (const seg of rep.leaderboard) {

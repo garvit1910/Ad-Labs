@@ -8,7 +8,7 @@ import { applyEvidence, purchase, seePrice, updateNeed } from "./memory.js";
 import { type Perception, claimedConcepts } from "./perceive.js";
 import { type Shopper, makeShopper } from "./population.js";
 import { renderFeedState, renderPageState } from "./render.js";
-import { bernoulli, uniform } from "./rng.js";
+import { bernoulli, shuffle, uniform } from "./rng.js";
 
 // One sim day, step by step (docs/PLAN.md "Simulation design"), in memory. Every draw is
 // keyed by (seed, stream, shopper, tick, ...) and each shopper's day touches only its own
@@ -22,6 +22,34 @@ export type ArmPolicy = (shopper: Shopper, arms: readonly Arm[], ctx: { seed: nu
 // Until the bandit exists every live arm is equally likely, which is also the warm-up's rule.
 export const uniformPolicy: ArmPolicy = (shopper, arms, { seed, tick }) =>
   arms[Math.floor(uniform(seed, "arm", shopper.shopper_id, tick) * arms.length)]!;
+
+// The warm-up's rule: "every arm gets equal impressions". Per segment, the shoppers who scroll
+// each day (the engine's own keyed reach draw) are put in a keyed order and dealt arms
+// round-robin, continuing across the round's days from a keyed starting arm. Within a segment,
+// arm counts for the round differ by at most one.
+export function balancedPolicy(shoppers: () => readonly Shopper[]): ArmPolicy {
+  const deals = new Map<string, Map<string, number>>();
+  return (shopper, arms, { seed, tick }) => {
+    const segment = shopper.segment_id;
+    const key = `${segment}|${tick}`;
+    let deal = deals.get(key);
+    if (!deal) {
+      const scrolling = (t: number) =>
+        shoppers()
+          .filter((s) => s.segment_id === segment && bernoulli(config.run.reach, seed, "reach", s.shopper_id, t))
+          .map((s) => s.shopper_id);
+      const roundStart = tick - (tick % config.run.ticksPerRound);
+      let dealt = Math.floor(uniform(seed, "arm", "warm_up", segment, roundStart) * arms.length);
+      for (let t = roundStart; t < tick; t++) dealt += scrolling(t).length;
+      const order = shuffle(scrolling(tick), seed, "arm", "warm_up", segment, tick);
+      deal = new Map(order.map((id, i) => [id, (dealt + i) % arms.length]));
+      deals.set(key, deal);
+    }
+    const i = deal.get(shopper.shopper_id);
+    if (i === undefined) throw new Error(`${shopper.shopper_id} isn't scrolling at tick ${tick}`);
+    return arms[i]!;
+  };
+}
 
 // The contract's decision row: one per Jev call. `options` also carries the state's cache
 // key (the plan's "state hash"), and `draw` holds every uniform the call's dice used.

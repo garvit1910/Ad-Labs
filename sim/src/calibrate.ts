@@ -46,6 +46,9 @@ const BISECT_STEPS = 100;
 export function bisect(f: (b: number) => number, target: number): number {
   let lo = BISECT_LO;
   let hi = BISECT_HI;
+  if (!(f(lo) <= target && target <= f(hi))) {
+    throw new Error(`calibration target ${target} is out of reach: ${f(lo)} to ${f(hi)} over offsets ${lo} to ${hi}`);
+  }
   for (let i = 0; i < BISECT_STEPS; i++) {
     const mid = (lo + hi) / 2;
     if (f(mid) < target) lo = mid;

@@ -1,6 +1,7 @@
 import { Bandit } from "./bandit.js";
 import { type FitReport, ZERO_OFFSETS, fitOffsets } from "./calibrate.js";
-import { type ArmPolicy, type Asker, type DayResult, Engine, type Impression, uniformPolicy } from "./engine.js";
+import { config } from "./config.js";
+import { type ArmPolicy, type Asker, type DayResult, Engine, type Impression, balancedPolicy } from "./engine.js";
 import type { World } from "./fixtures.js";
 import { type Learning, LearningBook, costPerOrder, findLearnings } from "./learnings.js";
 import type { Perception } from "./perceive.js";
@@ -17,8 +18,8 @@ import { roundSummary } from "./summary.js";
 
 export type RunOptions = { run_id: string; seed: number; population: number; roundsPlanned: number };
 
-// The contract's arm_stat row, refreshed at the end of every sim day. impressions and
-// mean_reward cover the run so far, like the posterior (D52).
+// The contract's arm_stat row. A full set is produced at the end of every sim day (B4 writes
+// each day's); impressions and mean_reward cover the run so far, like the posterior (D52).
 export type ArmStat = {
   run_id: string;
   round: number;
@@ -44,6 +45,8 @@ export type GenerationRequest = {
 export type RoundReport = {
   round: number;
   days: DayResult[];
+  // One full set per sim day; the last is the round's.
+  dailyArmStats: ArmStat[][];
   armStats: ArmStat[];
   opened: Learning[];
   closed: Learning[];
@@ -56,6 +59,8 @@ export class SimRun {
   engine!: Engine;
   bandit!: Bandit;
   fit!: FitReport;
+  // The probe pass's Jev usage, which no round's summary includes.
+  probe = { calls: 0, input_tokens: 0 };
   readonly book: LearningBook;
   readonly impressions: Impression[] = [];
 
@@ -71,13 +76,26 @@ export class SimRun {
   // The warm-up probe: every arm equally, zero offsets, then bisection per gate.
   async calibrate(): Promise<FitReport> {
     const { run_id, seed, population } = this.opts;
-    const probe = new Engine(this.world, this.jev, this.perceptions, { run_id, seed, population, offsets: ZERO_OFFSETS });
+    const probe: Engine = new Engine(this.world, this.jev, this.perceptions, {
+      run_id,
+      seed,
+      population,
+      offsets: ZERO_OFFSETS,
+      policy: balancedPolicy(() => probe.shoppers),
+    });
     const days = await probe.runRound(0);
-    this.fit = fitOffsets(days.flatMap((d) => d.impressions));
+    this.probe = {
+      calls: days.reduce((n, d) => n + d.decisions.length, 0),
+      input_tokens: days.reduce((n, d) => n + d.inputTokens, 0),
+    };
+    const fit = fitOffsets(days.flatMap((d) => d.impressions));
+    Object.freeze(fit.offsets);
+    this.fit = Object.freeze(fit);
     this.bandit = new Bandit(probe.arms, this.world.segments.map((s) => s.segment_id), seed);
-    // Round 0 shows every arm equally; from round 1 the bandit picks.
+    // Round 0 deals every arm equally; from round 1 the bandit picks.
+    const warmUp = balancedPolicy(() => this.engine.shoppers);
     const policy: ArmPolicy = (shopper, arms, ctx) =>
-      ctx.round === 0 ? uniformPolicy(shopper, arms, ctx) : this.bandit.policy(shopper, arms, ctx);
+      ctx.round === 0 ? warmUp(shopper, arms, ctx) : this.bandit.policy(shopper, arms, ctx);
     this.engine = new Engine(this.world, this.jev, this.perceptions, { run_id, seed, population, offsets: this.fit.offsets, policy });
     return this.fit;
   }
@@ -85,12 +103,15 @@ export class SimRun {
   async runRound(round: number): Promise<RoundReport> {
     if (!this.engine) throw new Error("calibrate() before running rounds");
     const days: DayResult[] = [];
+    const dailyArmStats: ArmStat[][] = [];
     for (const tick of this.engine.ticksOf(round)) {
       const day = await this.engine.runDay(round, tick);
-      // End of day: the day's rows (B4 batches them to SpacetimeDB), then the bandit update.
+      // End of day: the day's rows (B4 batches them to SpacetimeDB), then the bandit update and
+      // the refreshed arm stats.
       this.bandit.update(day.impressions, tick);
       this.impressions.push(...day.impressions);
       days.push(day);
+      dailyArmStats.push(this.armStats(round));
     }
     const candidates = findLearnings({
       world: this.world,
@@ -103,7 +124,8 @@ export class SimRun {
     return {
       round,
       days,
-      armStats: this.armStats(round),
+      dailyArmStats,
+      armStats: dailyArmStats.at(-1)!,
       opened,
       closed,
       generation: round < this.opts.roundsPlanned ? this.generation(round) : null,
@@ -172,7 +194,14 @@ export class SimRun {
     return {
       ...base,
       calibration: {
-        offsets: Object.fromEntries(Object.entries(this.fit.offsets).map(([k, v]) => [k, round4(v)])),
+        // Full precision: replaying p_cal from the stored offsets must reproduce it exactly.
+        offsets: this.fit.offsets,
+        // The warm-up probe's calls, on top of every round's own (D50).
+        probe_jev: {
+          calls: this.probe.calls,
+          input_tokens: this.probe.input_tokens,
+          cost_usd: round4((this.probe.input_tokens / 1e6) * config.jev.usdPerMillionInputTokens),
+        },
         warm_up_fit: {
           n: this.fit.n,
           p_tap: round4(this.fit.p_tap),

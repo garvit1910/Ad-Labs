@@ -19,23 +19,6 @@ export const FLOOR_OTHER = 0.03;
 type Tally = { n: number; sum: number };
 export type Posterior = { mean: number; sd: number; n: number; cellMean: number | null };
 
-// Shares that respect the floors, as close to `p` as possible: arms under their floor are
-// raised to it and the rest are scaled down in proportion, repeated until nothing moves.
-export function applyFloors(p: Record<string, number>, floors: Record<string, number>): Record<string, number> {
-  const arms = Object.keys(p);
-  const fixed = new Set<string>();
-  for (;;) {
-    const fixedMass = [...fixed].reduce((s, a) => s + floors[a]!, 0);
-    const free = arms.filter((a) => !fixed.has(a));
-    const freeP = free.reduce((s, a) => s + p[a]!, 0);
-    const share = (a: string) =>
-      fixed.has(a) ? floors[a]! : freeP > 0 ? ((1 - fixedMass) * p[a]!) / freeP : (1 - fixedMass) / free.length;
-    const under = free.filter((a) => share(a) < floors[a]!);
-    if (under.length === 0) return Object.fromEntries(arms.map((a) => [a, share(a)]));
-    for (const a of under) fixed.add(a);
-  }
-}
-
 export class Bandit {
   private cells = new Map<string, Tally>();
   private armTotals = new Map<string, Tally>();
@@ -43,10 +26,11 @@ export class Bandit {
   private count = 0;
   private mean = 0;
   private m2 = 0;
-  // Per segment, refreshed at the end of each day: P(arm is best), and the floored shares.
+  // Per segment, refreshed at the end of each day: P(arm is best).
   private pBest = new Map<string, Record<string, number>>();
-  private shares = new Map<string, Record<string, number>>();
   readonly floors: Record<string, number>;
+  // Σ floors: the share of impressions the floors hand out (0.40 with 10 recipes + control).
+  readonly floorMass: number;
 
   constructor(
     readonly arms: readonly Arm[],
@@ -54,15 +38,15 @@ export class Bandit {
     readonly seed: number,
   ) {
     this.floors = Object.fromEntries(arms.map((a) => [a.arm_id, a.strategy === "control" ? FLOOR_CONTROL : FLOOR_OTHER]));
-    const floorSum = Object.values(this.floors).reduce((s, f) => s + f, 0);
-    if (floorSum > 1) throw new Error(`floors sum to ${floorSum} over ${arms.length} arms`);
+    this.floorMass = Object.values(this.floors).reduce((s, f) => s + f, 0);
+    if (this.floorMass > 1) throw new Error(`floors sum to ${this.floorMass} over ${arms.length} arms`);
   }
 
   get hasData(): boolean {
     return this.count > 0;
   }
 
-  // End of a sim day: fold in the day's rewards, then refresh p_best and the shares.
+  // End of a sim day: fold in the day's rewards, then refresh p_best.
   update(impressions: readonly Impression[], tick: number): void {
     for (const i of impressions) {
       const r = i.reward_cal;
@@ -73,11 +57,7 @@ export class Bandit {
       this.mean += d / this.count;
       this.m2 += d * (r - this.mean);
     }
-    for (const s of this.segmentIds) {
-      const pb = this.estimatePBest(s, tick);
-      this.pBest.set(s, pb);
-      this.shares.set(s, applyFloors(pb, this.floors));
-    }
+    for (const s of this.segmentIds) this.pBest.set(s, this.estimatePBest(s, tick));
   }
 
   sdPool(): number {
@@ -104,8 +84,13 @@ export class Bandit {
     return this.pBest.get(segmentId) ?? Object.fromEntries(this.arms.map((a) => [a.arm_id, 1 / this.arms.length]));
   }
 
+  // Expected share of impressions per arm: its floor plus its part of the Thompson remainder.
+  // p_best is the chance Thompson picks each arm (both come from the same posterior draws).
   sharesFor(segmentId: string): Record<string, number> {
-    return this.shares.get(segmentId) ?? applyFloors(this.pBestFor(segmentId), this.floors);
+    const q = this.pBestFor(segmentId);
+    return Object.fromEntries(
+      this.arms.map((a) => [a.arm_id, this.floors[a.arm_id]! + (1 - this.floorMass) * (q[a.arm_id] ?? 0)]),
+    );
   }
 
   // p_best: the share of 2,000 joint posterior draws in which each arm is highest.
@@ -128,31 +113,28 @@ export class Bandit {
     return Object.fromEntries(this.arms.map((a, k) => [a.arm_id, wins[k]! / P_BEST_DRAWS]));
   }
 
-  // Per impression: draw θ ~ N(μ, σ²) for every live arm and take the highest. The floors are
-  // then met exactly: a pick from an arm above its floored share is kept with probability
-  // share ÷ p_best, otherwise the impression goes to an arm below its floor, in proportion to
-  // how far below it is. The result is shown with each arm's floored share.
+  // Per impression. The floors are a mixture, so they hold exactly whatever the posterior: with
+  // probability Σ floors the impression goes to an arm drawn in proportion to its floor;
+  // otherwise draw θ ~ N(μ, σ²) for every live arm and show the highest. So
+  //   P(arm a) = floor_a + (1 − Σ floors) · P(Thompson picks a) ≥ floor_a.
   readonly policy: ArmPolicy = (shopper, arms, { seed, tick }) => {
-    if (!this.hasData) return arms[Math.floor(uniform(seed, "arm", shopper.shopper_id, tick) * arms.length)]!;
-    const segment = shopper.segment_id;
+    const id = shopper.shopper_id;
+    if (!this.hasData) return arms[Math.floor(uniform(seed, "arm", id, tick) * arms.length)]!;
+    const floors = arms.map((a) => this.floors[a.arm_id] ?? 0);
+    if (uniform(seed, "arm", id, tick, "floor") < this.floorMass) {
+      return arms[weightedIndex(floors, seed, "arm", id, tick, "floor_arm")]!;
+    }
     let pick = arms[0]!;
     let bestTheta = -Infinity;
     for (const a of arms) {
-      const p = this.posterior(segment, a.arm_id);
-      const theta = normal(p.mean, p.sd, seed, "arm", shopper.shopper_id, tick, a.arm_id);
+      const p = this.posterior(shopper.segment_id, a.arm_id);
+      const theta = normal(p.mean, p.sd, seed, "arm", id, tick, a.arm_id);
       if (theta > bestTheta) {
         bestTheta = theta;
         pick = a;
       }
     }
-    const q = this.pBestFor(segment);
-    const s = this.sharesFor(segment);
-    const qa = q[pick.arm_id] ?? 0;
-    const sa = s[pick.arm_id] ?? 0;
-    if (qa <= sa || uniform(seed, "arm", shopper.shopper_id, tick, "keep") < sa / qa) return pick;
-    const deficits = arms.map((a) => Math.max(0, (s[a.arm_id] ?? 0) - (q[a.arm_id] ?? 0)));
-    if (!deficits.some((d) => d > 0)) return pick;
-    return arms[weightedIndex(deficits, seed, "arm", shopper.shopper_id, tick, "floor")]!;
+    return pick;
   };
 }
 

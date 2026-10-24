@@ -349,12 +349,17 @@ Last updated: 2026-10-24, after B3 (bandit and learnings). B0 entries: commits `
 - Until B3, B2's taps run at raw rates (mean P(tap ours) 0.28), far above the 1% target. Only the
   dice and memory are affected, not the probabilities.
 
-### D43. Arms are picked uniformly until the bandit exists — `DECIDED`
-- `uniformPolicy` draws one live arm per impression from `(seed, "arm", shopper, tick)`. That is
-  also the warm-up's rule. B3 passes the bandit as the engine's `policy`.
-- An arm is live when it has a ranked Magic Spoon creative. Within an arm, the creative is drawn
-  from those written for the shopper's segment, else from all of the arm's (the control's live
-  ads have no segment).
+### D43. Arm picks: an even deal in the warm-up, the bandit after — `DECIDED` (revised in the B3 review)
+- **Warm-up (round 0, probe and real pass):** `balancedPolicy` deals arms round-robin. Per segment,
+  each day's scrolling shoppers (the engine's own keyed reach draw) are put in a keyed order, and
+  the deal continues across the round's days from a keyed starting arm. Within a segment, arm
+  counts for the round differ by at most one ("every arm gets equal impressions").
+  - B2 had used a uniform random pick, which gave 51–74 impressions per arm. `uniformPolicy` is
+    still the engine's default, for runs without a bandit.
+- **Rounds 1+:** the bandit (D51). An arm is live when it has a ranked Magic Spoon creative.
+  Within an arm, the creative is drawn from those written for the shopper's segment, else from
+  all of the arm's (the control's live ads have no segment). A test covers both cases.
+- **Where:** `src/engine.ts` `balancedPolicy`, `pickCreative`; `src/run.ts`.
 
 ### D44. Product fixtures from the brand sites — `DECIDED` (check before the demo)
 - Fetched 2026-10-24 from each brand's own product page and Shopify product JSON, never from
@@ -425,9 +430,13 @@ Last updated: 2026-10-24, after B3 (bandit and learnings). B0 entries: commits `
   guarded), at the bottom of its band.
 - **Competitor taps** use the same tap offset ("1% per ad"). The plan's "1 − P(none), then split"
   died with the Choice shape (D29).
-- **Fitted on the fixtures (728 impressions):** tap −3.932, stay −0.318, buy −1.820. That gives
-  P(tap) 1.00%, bounce 50.0%, P(buy | stay) 4.00% and visit→purchase 2.00%, all inside
+- **Fitted on the fixtures (728 warm-up impressions):** tap −3.965, stay −0.328, buy −1.852.
+  That gives P(tap) 1.00%, bounce 50.0%, P(buy | stay) 4.00% and visit→purchase 2.00%, all inside
   FUNNEL_BANDS.
+- **An unreachable target throws**, rather than returning a bisection bound (B3 review). Example:
+  every impression guarded, so no buy offset can reach 4%.
+- **Stored:** offsets are kept at full precision and frozen (`Object.freeze`). The report's
+  `calibration.offsets` is unrounded, so p_cal replays exactly from the stored values.
 - **Where:** `src/calibrate.ts` `fitOffsets`, `FUNNEL_BANDS`, `TARGETS`.
 
 ### D50. The warm-up is asked twice: a probe, then the real round 0 — `DECIDED`
@@ -441,26 +450,33 @@ Last updated: 2026-10-24, after B3 (bandit and learnings). B0 entries: commits `
   4. runs round 0 again, rolling the dice with calibrated values.
 - **Cost:** day 0 of the real pass reads exactly the probe's states, so it comes from the cache.
   Days 1–2 are mostly fresh: about 1,000 extra calls, $0.03.
+- **Counted:** no round's `jev` block includes the probe's 1,456 calls. Every report carries them
+  as `calibration.probe_jev` (calls, input tokens, cost).
 - **Where:** `src/run.ts`.
 
-### D51. Floors are met in expectation, exactly; a round's realised share varies — `DECIDED`
+### D51. Floors are a mixture, so they hold exactly — `DECIDED` (revised in the B3 review)
 - **Plan:** "the control arm gets at least 10% of impressions and every other live arm at least 3%".
 - **Code:**
-  - Each impression draws θ ~ N(μ, σ²) for every arm, with seeded draws, and takes the highest.
-  - The floored shares are p_best raised to the floors, with the rest scaled down in proportion.
-  - A pick from an arm above its share is kept with probability share ÷ p_best. Otherwise the
-    impression goes to an arm below its floor, in proportion to how far below it is.
-  - Each impression's arm then follows the floored shares exactly (unit test: 20,000 picks within
-    1 point).
-- **What a run shows:** realised per-round shares scatter around that. In the fixture run the
-  control got 9.6% over rounds 1–5 (3,614 impressions); by segment it ranged from 7.9% (531
-  impressions) to 11.3%, which is sampling noise.
-- **With 11 recipes plus the control, the floors cap any one arm at 60%.**
-- **Where:** `src/bandit.ts` `applyFloors`, `Bandit.policy`.
+  - With probability F = Σ floors (0.40 for 10 recipes plus the control), an impression goes to an
+    arm drawn in proportion to its floor.
+  - Otherwise every arm draws θ ~ N(μ, σ²) with its own key, and the highest θ wins.
+  - So P(arm a) = floor_a + (1 − F) · P(Thompson picks a) ≥ floor_a, whatever the posterior says.
+  - Expected shares (`sharesFor`) use p_best as P(Thompson picks a).
+- **Why it changed:** B3 first used water-filling, then a keep/redirect step driven by the
+  2,000-draw p_best. The review showed Monte Carlo error leaking into the shares, with some arms
+  getting 2.1% against a 3% floor. The mixture doesn't depend on p_best at all.
+- **Cap:** a recipe that always wins Thompson gets 3% + 60% = 63%; the control can reach 70%.
+- **Realised per-round shares still scatter around the expected shares** (sampling).
+- **Tests:** 60,000 picks land within 4 sd of every expected share, including arms Thompson never
+  picks. A spy shows every pick in a day sees the same bandit state: no same-day leakage.
+- **Where:** `src/bandit.ts` `policy`, `sharesFor`.
 
 ### D52. arm_stat covers the run so far; the leaderboard range is μ ± 2σ — `DECIDED`
 - `impressions` and `mean_reward` count the whole run so far, like the posterior they sit next to.
   Per-round counts are in the round summary.
+- **A full set of rows is produced at the end of every sim day** (`RoundReport.dailyArmStats`); the
+  last day's is the round's. B4 writes each day's set. Fixed in the B3 review: rows used to be
+  produced once per round.
 - `est_cost_per_order_usd` = $13.88 CPM ÷ 1000 ÷ μ (null when μ ≤ 0). The leaderboard's range is
   the cost per order at μ + 2σ and μ − 2σ ("n/a" when μ − 2σ ≤ 0).
 - **p_best** comes from 2,000 joint draws per segment at the end of each day. It drives the
@@ -472,7 +488,7 @@ Last updated: 2026-10-24, after B3 (bandit and learnings). B0 entries: commits `
   sha256 keys would take seconds per day.
 - **Code:** one sfc32 stream seeded from the key `(seed, "arm", "p_best", segment, tick)`. It is
   just as reproducible and independent of every other key. The per-impression θ draws still use
-  one key each: `(seed, "arm", shopper, tick, arm)`, plus `"keep"` and `"floor"` for the floors.
+  one key each: `(seed, "arm", shopper, tick, arm)`, plus `"floor"` and `"floor_arm"` for the floor mixture (D51).
 - **Where:** `src/rng.ts` `keyedStream`, `src/bandit.ts`.
 
 ### D54. Learning details the templates leave open — `DECIDED`, one `OPEN` point
@@ -484,8 +500,19 @@ Last updated: 2026-10-24, after B3 (bandit and learnings). B0 entries: commits `
 - **claim_doubt:** fires when mean `believes` is under 0.40 over ≥ 50 feed calls, grouped by the
   concept of each ad's strongest claimed concept (its "main promise").
 - **Wording:** segments read "{name} shoppers"; numbers are rounded to whole dollars and
-  percents; directives go through `numberFree`, which throws if a digit survives.
-- **Versioning:** a key is (segment, kind, arm or concept). A new version opens whenever the
+  percents; directives go through `numberFree`, which strips digits (so a segment named with digits
+  loses them in its directive, by design).
+- **Edges (fixed in the B3 review):**
+  - the winner's chance is shown as at most 99%, since 2,000 draws can't support "100%";
+  - claim_doubt's percent is rounded down, so a mean of 0.398 reads "only 39% do", never 40%.
+- **"mostly hesitate"** is the template's wording for the *most common* hesitation, even when it is
+  under half of page calls.
+- **Main promise:** an ad's strongest claimed concept. Ties break alphabetically, so with the
+  keyword stand-in, `cr_ms_live_1`'s main promise is flavor variety, not protein. This goes away
+  with a real perceiver (D35).
+- **learning_id** includes the run (`lrn_{run}_{segment}_{kind}_{subject}_v{n}`), so two runs can
+  share the learning table.
+- **Versioning:** a key is (run, segment, kind, arm or concept). A new version opens whenever the
   statement text changes, so a statement whose numbers move opens a new version each round;
   valid_from_round is the round whose data produced it. A key that stops firing is closed at that
   round. Nothing is deleted.
@@ -506,13 +533,25 @@ Last updated: 2026-10-24, after B3 (bandit and learnings). B0 entries: commits `
 ### D56. The planted winner replaces arm_11 — `DECIDED` (fixtures only)
 - **Change:** `arm_11` (gap) was convenience × question for deal seekers. It is now taste_indulgence
   × testimonial, still a gap recipe ("answers the taste-doubt objection"), so the strategy counts
-  stay inside the arm builder's limits. Adding a 12th recipe would have lowered the floor cap to
-  57%.
+  stay inside the arm builder's limits. Adding a 12th recipe would have lowered the cap.
 - **The creative:** `cr_gen_11` is written for the taste skeptic segment: their own "gravel" quote,
-  their roommates, taste, crunch, and the product page's real "4.6 stars, over 25,000" reviews.
-  `fixtures/magicspoon/planted.json` names it, and the CLI reports its share each round.
-- **Real Jev:** share in its segment 15% (warm-up), 44%, 63%, then **57% in round 3** (> 50%), then
-  65% and 65%; p_best 99.7% at round 3.
+  their roommates, taste, crunch, and "Rated 4.6 stars across over 25,000 reviews", which is the
+  product page's rating and review count (D44).
+  - The testimonial itself is invented, like every fixture ad.
+  - `fixtures/magicspoon/planted.json` names it, and the CLI reports its share each round.
+- **Real Jev (after the B3 review fixes):** share in its segment 8.8% (warm-up, an even 1/12), 47%,
+  59%, then **57.3% in round 3** (> 50%), then 69% and 64%; p_best 99.0% at round 3.
 - **Stub Jev:** `test/b3.test.ts` checks the same rule with a stub that only likes the planted ad
-  for that segment.
+  for that segment. That proves the mechanism; the real run proves the result.
 - **Where:** `fixtures/magicspoon/arms.json`, `creatives.json`, `planted.json`.
+
+### D57. Calibrated rates leave their bands once the bandit picks — `DECIDED`
+- The offsets are fitted on the warm-up, where every arm is shown equally, and then frozen. Once
+  the bandit shows better ads, the calibrated funnel rises. Fixture run, rounds 1–5:
+  - P(tap) 1.5–1.7% (band 0.5–2%);
+  - bounce 43.6–44.2% (band 45–55%, slightly below);
+  - visit→purchase 2.7–3.1% (band 1–3%, at the top).
+- That is the lift being measured, not a calibration error. Refitting each round would erase it,
+  and the plan says the offsets are frozen per run and never loosened.
+- Every round's report shows this as `funnel_cal`; the CLI prints it as "calibrated funnel".
+- **Where:** `src/summary.ts` `funnelCal`.

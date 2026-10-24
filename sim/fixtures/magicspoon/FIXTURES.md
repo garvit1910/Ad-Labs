@@ -33,8 +33,9 @@ contract marks json are stored parsed here; `""` and `null` both mean "empty".
 - Generated fixture creatives have `days_running: 0`, `image_url: null`, `pack_fingerprint: null`.
 - `subscription_price_usd` may be null for a brand without a subscription.
 - `arm_11` and `cr_gen_11` are the B3 planted winner: written to fit the taste skeptic segment
-  (`planted.json`; DECISIONS D56). Its "4.6 stars by over 25,000 customers" comes from the
-  product page (D44).
+  (`planted.json`; DECISIONS D56). Its "4.6 stars across over 25,000 reviews" is the product
+  page's rating and review count (D44, grouped across products on the site). The roommate
+  testimonial is invented, like every fixture ad.
 - json columns (`prior_weights`, `quotes`, `evidence`, `learning_ids`, `page_highlights`) may arrive as
   JSON strings from SpacetimeDB or parsed here; both load.
 - A segment missing a concept in `prior_weights` loads with a warning; that concept starts unheld (w 0.5, E 1.0).

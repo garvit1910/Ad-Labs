@@ -58,6 +58,8 @@ const words = (token: string) => token.replaceAll("_", " ");
 const article = (w: string) => (/^[aeiou]/i.test(w) ? "an" : "a");
 const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const pct = (x: number) => Math.round(x * 100);
+// p_best comes from 2,000 draws, so 100% would overstate it.
+const chance = (p: number) => Math.min(99, Math.round(p * 100));
 const usd = (x: number) => Math.round(x);
 
 // The same sentence with every number removed; throws if a digit survives.
@@ -115,7 +117,7 @@ export function findLearnings({ world, arms, bandit, impressions, mainConcept }:
         arm_id: arm.arm_id,
         kind: "winner",
         subject: arm.arm_id,
-        statement: `For ${who}, ${angle} × ${hook} leads: about $${usd(cpo)} per order${vsControl} (${pct(p)}% chance it's truly best).`,
+        statement: `For ${who}, ${angle} × ${hook} leads: about $${usd(cpo)} per order${vsControl} (${chance(p)}% chance it's truly best).`,
         directive: numberFree(`For ${who}, keep leading with ${angle} through ${article(hook)} ${hook} hook.`),
         evidence: { n: post.n, p_best: p, post_mean: post.mean, post_sd: post.sd, cpo_usd: cpo, cpo_control_usd: controlCpo },
       });
@@ -162,7 +164,8 @@ export function findLearnings({ world, arms, bandit, impressions, mainConcept }:
         arm_id: null,
         kind: "claim_doubt",
         subject: concept,
-        statement: `${Who} don't believe ${label} claims (only ${pct(mean)}% do).`,
+        // Rounded down, so a mean just under the 0.40 threshold never reads "only 40% do".
+        statement: `${Who} don't believe ${label} claims (only ${Math.floor(mean * 100)}% do).`,
         directive: numberFree(`${Who} doubt ${label} claims: back them with a concrete brand fact or drop them.`),
         evidence: { concept, mean_believes: mean, n: bs.length },
       });
@@ -200,7 +203,8 @@ export class LearningBook {
         closed.push(current);
       }
       const learning: Learning = {
-        learning_id: `lrn_${c.segment_id.replace(/^seg_/, "")}_${c.kind}_${c.subject.replace(/^arm_/, "")}_v${versions.length + 1}`,
+        // The run is part of the id, so two runs can share the learning table.
+        learning_id: `lrn_${this.run_id.replace(/^run_/, "")}_${c.segment_id.replace(/^seg_/, "")}_${c.kind}_${c.subject.replace(/^arm_/, "")}_v${versions.length + 1}`,
         run_id: this.run_id,
         segment_id: c.segment_id,
         arm_id: c.arm_id,

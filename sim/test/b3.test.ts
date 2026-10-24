@@ -1,10 +1,10 @@
 import assert from "node:assert/strict";
 import { describe, test } from "node:test";
-import { Bandit, N0, applyFloors } from "../src/bandit.js";
+import { Bandit, FLOOR_CONTROL, FLOOR_OTHER, N0 } from "../src/bandit.js";
 import { TARGETS, bisect, calibrate, fitOffsets, logit, sigmoid } from "../src/calibrate.js";
-import type { Impression } from "../src/engine.js";
+import { Engine, type Impression, balancedPolicy } from "../src/engine.js";
 import { loadWorld } from "../src/fixtures.js";
-import { type Candidate, LearningBook, findLearnings, numberFree } from "../src/learnings.js";
+import { type Candidate, LearningBook, WINNER_MIN_N, WINNER_P_BEST, findLearnings, numberFree } from "../src/learnings.js";
 import { perceiveAll } from "../src/perceive.js";
 import { makeShopper } from "../src/population.js";
 import { uniform } from "../src/rng.js";
@@ -77,6 +77,10 @@ describe("calibration: per-gate log-odds offsets by bisection", () => {
       assert.equal(Math.sign(calibrate(a, fit.offsets.tap) - calibrate(b, fit.offsets.tap)), Math.sign(a - b));
     }
   });
+  test("an unreachable target throws instead of returning a bound", () => {
+    const allGuarded = samples.map((x) => ({ ...x, guard: 0 as const }));
+    assert.throws(() => fitOffsets(allGuarded), /out of reach/);
+  });
   test("bisection solves a known case: one probability 0.3 to a 1% mean", () => {
     const b = bisect((x) => sigmoid(logit(0.3) + x), 0.01);
     assert.ok(Math.abs(b - (logit(0.01) - logit(0.3))) < 1e-9);
@@ -102,7 +106,7 @@ describe("bandit: pooled Gaussian Thompson sampling with floors", () => {
     const unseen = b.posterior(segA, "arm_05");
     assert.ok(Math.abs(unseen.mean - 0.01) < 1e-12);
   });
-  test("p_best sums to 1, is reproducible, and favours the better arm", () => {
+  test("p_best is reproducible and favours the better arm", () => {
     const make = () => {
       const b = new Bandit(world.arms, segIds, SEED);
       const rs = world.arms.flatMap((a) =>
@@ -112,37 +116,100 @@ describe("bandit: pooled Gaussian Thompson sampling with floors", () => {
       return b.pBestFor(segIds[0]!);
     };
     const p = make();
-    assert.ok(Math.abs(Object.values(p).reduce((a, b) => a + b, 0) - 1) < 1e-9);
     assert.deepEqual(make(), p);
     assert.ok(p.arm_03! > 0.95);
   });
-  test("applyFloors: floors met, the rest scaled in proportion, sums to 1", () => {
-    const floors = { arm_control: 0.1, a: 0.03, b: 0.03, c: 0.03 };
-    const s = applyFloors({ arm_control: 0, a: 0.9, b: 0.1, c: 0 }, floors);
-    assert.ok(Math.abs(Object.values(s).reduce((x, y) => x + y, 0) - 1) < 1e-12);
-    assert.equal(s.arm_control, 0.1);
-    assert.equal(s.c, 0.03);
-    assert.ok(Math.abs(s.a! - 0.9 * 0.87) < 1e-12 && Math.abs(s.b! - 0.1 * 0.87) < 1e-12);
-  });
-  test("per-impression picks land on the floored shares (control ≥ 10%, others ≥ 3%)", () => {
+  test("expected shares: each arm's floor plus its part of the Thompson remainder", () => {
     const b = new Bandit(world.arms, segIds, SEED);
     const seg = segIds[0]!;
     b.update(world.arms.flatMap((a) => Array.from({ length: 60 }, () => imp(seg, a.arm_id, a.arm_id === "arm_02" ? 0.05 : 0.01))), 3);
+    const q = b.pBestFor(seg);
     const shares = b.sharesFor(seg);
-    assert.equal(shares[control.arm_id], 0.1);
-    for (const a of recipes) if (a.arm_id !== "arm_02") assert.ok(Math.abs(shares[a.arm_id]! - 0.03) < 1e-12);
+    const F = FLOOR_CONTROL + FLOOR_OTHER * recipes.length;
+    assert.ok(Math.abs(b.floorMass - F) < 1e-12);
+    for (const a of world.arms) {
+      const f = a.strategy === "control" ? FLOOR_CONTROL : FLOOR_OTHER;
+      assert.ok(Math.abs(shares[a.arm_id]! - (f + (1 - F) * q[a.arm_id]!)) < 1e-12);
+    }
+    assert.ok(Math.abs(Object.values(shares).reduce((x, y) => x + y, 0) - 1) < 1e-9);
+  });
+  test("floors hold even for arms Thompson never picks: control ≥ 10%, others ≥ 3%", () => {
+    const b = new Bandit(world.arms, segIds, SEED);
+    const seg = segIds[0]!;
+    // arm_02 dominates, so every other arm's p_best is about 0 and only its floor serves it.
+    b.update(world.arms.flatMap((a) => Array.from({ length: 200 }, () => imp(seg, a.arm_id, a.arm_id === "arm_02" ? 0.05 : 0.01))), 3);
+    assert.ok(b.pBestFor(seg).arm_02! > 0.999);
     const counts = new Map<string, number>();
-    const N = 20_000;
+    const N = 60_000;
     const shopper = makeShopper(0, world, SEED);
     for (let i = 0; i < N; i++) {
-      const s = { ...shopper, shopper_id: `shp_${i}`, segment_id: seg };
-      const a = b.policy(s, world.arms, { seed: SEED, round: 1, tick: 4 });
+      const a = b.policy({ ...shopper, shopper_id: `shp_${i}`, segment_id: seg }, world.arms, { seed: SEED, round: 1, tick: 4 });
       counts.set(a.arm_id, (counts.get(a.arm_id) ?? 0) + 1);
     }
     for (const a of world.arms) {
       const got = (counts.get(a.arm_id) ?? 0) / N;
-      assert.ok(Math.abs(got - shares[a.arm_id]!) < 0.01, `${a.arm_id}: ${got} vs ${shares[a.arm_id]}`);
+      const want = b.sharesFor(seg)[a.arm_id]!;
+      const sd = Math.sqrt((want * (1 - want)) / N);
+      assert.ok(Math.abs(got - want) < 4 * sd, `${a.arm_id}: ${got} vs ${want}`);
     }
+    // The dominant arm's ceiling: its floor plus the whole Thompson remainder.
+    assert.ok(Math.abs(b.sharesFor(seg).arm_02! - (FLOOR_OTHER + 1 - b.floorMass)) < 1e-3);
+  });
+  test("estimates refresh only at the end of a day: no pick sees a same-day reward", async () => {
+    const run = new SimRun(world, fakeJev(), perceptions, { run_id: "run_t", seed: SEED, population: 120, roundsPlanned: 2 });
+    await run.calibrate();
+    const seen = new Map<number, Set<number>>();
+    const original = run.bandit.policy;
+    Object.defineProperty(run.bandit, "policy", {
+      value: (...args: Parameters<typeof original>) => {
+        const tick = args[2].tick;
+        seen.set(tick, (seen.get(tick) ?? new Set()).add(run.bandit.sdPool()));
+        return original(...args);
+      },
+    });
+    await run.runRound(0);
+    await run.runRound(1);
+    await run.runRound(2);
+    assert.deepEqual([...seen.keys()], [3, 4, 5, 6, 7, 8]);
+    for (const [tick, states] of seen) assert.equal(states.size, 1, `tick ${tick} saw ${states.size} bandit states`);
+    assert.equal(new Set([...seen.values()].map((v) => [...v][0])).size, 6, "each day sees the previous day's update");
+  });
+});
+
+describe("warm-up and creative choice", () => {
+  test("the warm-up deals every arm equally within each segment (counts differ by at most one)", async () => {
+    const engine: Engine = new Engine(world, fakeJev(), perceptions, {
+      run_id: "run_t",
+      seed: SEED,
+      population: 300,
+      policy: balancedPolicy(() => engine.shoppers),
+    });
+    const imps = (await engine.runRound(0)).flatMap((d) => d.impressions);
+    for (const seg of segIds) {
+      const counts = engine.arms.map((a) => imps.filter((i) => i.segment_id === seg && i.arm_id === a.arm_id).length);
+      assert.ok(Math.max(...counts) - Math.min(...counts) <= 1, `${seg}: ${counts}`);
+    }
+  });
+  test("within an arm, a creative written for the shopper's segment is preferred", async () => {
+    const extra = { ...world.creatives.find((c) => c.creative_id === "cr_gen_02")!, creative_id: "cr_gen_99", segment_id: "seg_protein_athlete" };
+    const w2 = { ...world, creatives: [...world.creatives, extra] };
+    const only02 = (_s: unknown, arms: readonly { arm_id: string }[]) => arms.find((a) => a.arm_id === "arm_02")!;
+    const engine = new Engine(w2, fakeJev(), await perceiveAll(w2), {
+      run_id: "run_t",
+      seed: SEED,
+      population: 300,
+      policy: only02 as never,
+    });
+    const picked = new Map<string, Set<string>>();
+    for (const s of engine.shoppers) {
+      for (let t = 0; t < 6; t++) {
+        const { creative } = engine.pickCreative(s, 0, t);
+        picked.set(s.segment_id, (picked.get(s.segment_id) ?? new Set()).add(creative.creative_id));
+      }
+    }
+    assert.deepEqual([...picked.get("seg_protein_athlete")!], ["cr_gen_99"]);
+    assert.deepEqual([...picked.get("seg_keto_low_carb")!], ["cr_gen_02"]);
+    assert.deepEqual([...picked.get("seg_deal_seeker")!].sort(), ["cr_gen_02", "cr_gen_99"], "no written creative: any of the arm's");
   });
 });
 
@@ -171,6 +238,26 @@ describe("learnings: templates, number-free directives, versioning", () => {
     assert.equal(kinds.get("claim_doubt"), undefined);
     for (const c of found) assert.ok(!/\d/.test(c.directive), c.directive);
   });
+  test("winner fires at p_best ≥ 0.8 and n ≥ 100, not below either", () => {
+    const stub = (p: number, n: number) =>
+      ({
+        pBestFor: () => Object.fromEntries(world.arms.map((a) => [a.arm_id, a.arm_id === "arm_11" ? p : 0])),
+        posterior: (_s: string, a: string) => ({ mean: 0.0005, sd: 0.0001, n: a === "arm_11" ? n : 0, cellMean: 0.0005 }),
+      }) as unknown as Bandit;
+    const winners = (p: number, n: number) =>
+      findLearnings({ world, arms: world.arms, bandit: stub(p, n), impressions: [], mainConcept: () => null }).filter((c) => c.kind === "winner");
+    assert.equal(winners(WINNER_P_BEST, WINNER_MIN_N).length, 6, "one per segment");
+    assert.equal(winners(WINNER_P_BEST - 0.001, 500).length, 0);
+    assert.equal(winners(0.99, WINNER_MIN_N - 1).length, 0);
+    assert.match(winners(0.9999, 100)[0]!.statement, /\(99% chance it's truly best\)/, "never claims 100%");
+  });
+  test("objection fires at 50 page calls, not 49", () => {
+    const b = new Bandit(world.arms, segIds, SEED);
+    const calls = (n: number) => Array.from({ length: n }, () => imp("seg_deal_seeker", "arm_09", 0, { objection: "price" }));
+    const has = (n: number) => findLearnings({ world, arms: world.arms, bandit: b, impressions: calls(n), mainConcept: () => null }).some((c) => c.kind === "objection");
+    assert.equal(has(49), false);
+    assert.equal(has(50), true);
+  });
   test("claim_doubt: mean believes under 0.40 over at least 50 feed calls", () => {
     const seg = "seg_keto_low_carb";
     const b = new Bandit(world.arms, segIds, SEED);
@@ -181,6 +268,9 @@ describe("learnings: templates, number-free directives, versioning", () => {
     assert.equal(c.directive, "Keto low-carb shoppers doubt low carb or keto claims: back them with a concrete brand fact or drop them.");
     const few = findLearnings({ world, arms: world.arms, bandit: b, impressions: doubt.slice(1), mainConcept: () => "low_carb_keto" });
     assert.ok(!few.some((x) => x.kind === "claim_doubt"), "49 feed calls are not enough");
+    const edge = Array.from({ length: 50 }, () => imp(seg, "arm_02", 0.001, { believes: 0.398 }));
+    const e = findLearnings({ world, arms: world.arms, bandit: b, impressions: edge, mainConcept: () => "low_carb_keto" });
+    assert.match(e.find((x) => x.kind === "claim_doubt")!.statement, /only 39% do/, "never reads 40% under a 0.40 threshold");
   });
   test("a new version closes the old one; a learning that stops firing is closed; nothing is deleted", () => {
     const book = new LearningBook("run_t");
@@ -196,10 +286,10 @@ describe("learnings: templates, number-free directives, versioning", () => {
     assert.equal(book.apply(0, [c("A (10% of page visits).")]).opened.length, 1);
     assert.deepEqual(book.apply(1, [c("A (10% of page visits).")]), { opened: [], closed: [] });
     const v2 = book.apply(2, [c("A (12% of page visits).")]);
-    assert.deepEqual(v2.closed.map((l) => [l.learning_id, l.valid_to_round]), [["lrn_keto_low_carb_objection_top_v1", 2]]);
-    assert.deepEqual(v2.opened.map((l) => [l.learning_id, l.valid_from_round, l.source]), [["lrn_keto_low_carb_objection_top_v2", 2, "simulated"]]);
+    assert.deepEqual(v2.closed.map((l) => [l.learning_id, l.valid_to_round]), [["lrn_t_keto_low_carb_objection_top_v1", 2]]);
+    assert.deepEqual(v2.opened.map((l) => [l.learning_id, l.valid_from_round, l.source]), [["lrn_t_keto_low_carb_objection_top_v2", 2, "simulated"]]);
     const gone = book.apply(3, []);
-    assert.deepEqual(gone.closed.map((l) => l.learning_id), ["lrn_keto_low_carb_objection_top_v2"]);
+    assert.deepEqual(gone.closed.map((l) => l.learning_id), ["lrn_t_keto_low_carb_objection_top_v2"]);
     assert.equal(book.all.length, 2);
     assert.deepEqual(book.live(), []);
   });
@@ -233,9 +323,8 @@ describe("planted winner (stub Jev)", () => {
       return { run, shares, gens };
     };
     const { run, shares, gens } = await play();
-    assert.ok(shares[0]! < 0.2, `warm-up shows every arm equally: ${shares[0]}`);
     assert.ok(shares[3]! > 0.5, `round 3 share ${shares[3]}`);
-    assert.ok(shares[3]! <= 0.6 + 0.08, "the floors cap any arm near 60%");
+    assert.ok(shares[3]! <= 0.63 + 0.08, "the floors cap a recipe at 3% + 60%");
     assert.ok(run.bandit.pBestFor(seg.segment_id).arm_11! > 0.9);
     // It also wins the learnings and the generation request.
     assert.ok(run.book.live().some((l) => l.kind === "winner" && l.arm_id === "arm_11" && l.segment_id === seg.segment_id));
