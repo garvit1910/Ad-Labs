@@ -1,0 +1,53 @@
+{
+  "_meta": {
+    "sourceCommit": "f9bb088c93f40f1c2ae41886ba4a21b7556e102f",
+    "how": "Every bare import specifier found in the files listed in files.txt (import/export-from/dynamic import/require/CSS @import), mapped to Adcero's package.json range and the version package-lock.json actually resolved. 'range' is what to put in package.json; 'resolved' is the exact version Adcero runs today.",
+    "notes": [
+      "Creative-engine follow-up (CREATIVE_MANIFEST.md, 2026-10-24): the 65 creative files appended to files.txt import NO new npm packages — their bare imports are zod, undici (via the image providers' safe fetch) and @supabase/supabase-js (type-only, strategy-sources.ts + live-facts.ts). Text-only mode needs no image SDK; @google/genai stays optional (only lib/llm/clients/gemini.ts, a stub). They also need no new stubs: the only cut point they reach is the existing lib/llm/clients.ts stub (they call openAIChatCompletion only).",
+      "undici is NOT a direct dependency in Adcero (it resolves transitively at 6.29.1); lib/video-fetch-utils.ts imports it, so the new project must declare it.",
+      "@supabase/supabase-js is imported by the processors (mostly `import type { SupabaseClient }`, plus the client you construct). Keep it if you run the processors unchanged against Supabase/PostgREST; drop it only if you rewrite the db layer.",
+      "@google/genai is only needed by video labelling (video-label.ts type imports + your lib/llm/clients/gemini.ts stub); drop it if you skip video labels.",
+      "sharp is used by services/job-processor/ad-library/label/media.ts for poster dimensions (aspect_ratio).",
+      "Install React-peered packages with `npm install --prefer-dedupe`: in Adcero a plain install produced duplicate Radix copies and broke dismiss-on-outside-click across Dialog/Popover/Select.",
+      "Not needed (only reached by the skipped classic overview or tailwind.config.ts): framer-motion, date-fns, tailwindcss-animate, @tailwindcss/typography.",
+      "Adcero's package.json `overrides` (react pins for @supabase/auth-ui-react and react-day-picker) are NOT needed: neither package is in files.txt."
+    ]
+  },
+  "dependencies": {
+    "next": { "range": "^16.4.2", "resolved": "16.4.2", "usedBy": "pages, next/link, next/navigation, next/dynamic, next/headers (i18n/request.ts), next/font (lib/fonts-online.ts)" },
+    "react": { "range": "^19.3.1", "resolved": "19.3.1", "usedBy": "all components and hooks" },
+    "react-dom": { "range": "^19.3.1", "resolved": "19.3.1", "usedBy": "app/brand-identity/competitor-analysis/page.tsx (createPortal for the filter slot) + Radix portals" },
+    "next-intl": { "range": "^4.14.8", "resolved": "4.14.8", "usedBy": "useTranslations/useFormatter in every page component; i18n/request.ts; global.d.ts" },
+    "@tanstack/react-query": { "range": "^5.76.1", "resolved": "5.90.3", "usedBy": "hooks/brand-identity/*, hooks/brand-object/*, hooks/brand-presence/*" },
+    "zustand": { "range": "^5.0.8", "resolved": "5.0.8", "usedBy": "stores/brandProfileStore.ts, stores/currencyStore.ts" },
+    "zod": { "range": "^3.25.67", "resolved": "3.25.76", "usedBy": "job payload schemas, label parse gate, lib/brand-presence/client-schemas.ts, LLM response schemas" },
+    "recharts": { "range": "^2.15.3", "resolved": "2.15.4", "usedBy": "DimensionPerformancePanel, LongevityDistributionChart, desk/SurvivalCurveChart (all via DynamicPanels, ssr:false)" },
+    "lucide-react": { "range": "^0.503.0", "resolved": "0.503.0", "usedBy": "every icon on both pages + navigation.ts" },
+    "sonner": { "range": "^2.0.3", "resolved": "2.0.7", "usedBy": "toast() in hooks and BrandInsightsDashboard; mount one <Toaster/>" },
+    "clsx": { "range": "^2.1.1", "resolved": "2.1.1", "usedBy": "lib/utils.ts cn()" },
+    "tailwind-merge": { "range": "^3.2.0", "resolved": "3.3.1", "usedBy": "lib/utils.ts cn()" },
+    "class-variance-authority": { "range": "^0.7.1", "resolved": "0.7.1", "usedBy": "components/ui/button.tsx, badge.tsx, sheet.tsx" },
+    "@radix-ui/react-dialog": { "range": "^1.1.13", "resolved": "1.1.15", "usedBy": "components/ui/dialog.tsx, components/ui/sheet.tsx" },
+    "@radix-ui/react-popover": { "range": "^1.1.11", "resolved": "1.1.15", "usedBy": "components/ui/popover.tsx" },
+    "@radix-ui/react-progress": { "range": "^1.1.6", "resolved": "1.1.7", "usedBy": "components/ui/progress.tsx" },
+    "@radix-ui/react-select": { "range": "^2.2.2", "resolved": "2.2.6", "usedBy": "components/ui/select.tsx" },
+    "@radix-ui/react-separator": { "range": "^1.1.6", "resolved": "1.1.7", "usedBy": "components/ui/separator.tsx" },
+    "@radix-ui/react-slot": { "range": "^1.2.0", "resolved": "1.2.3", "usedBy": "components/ui/button.tsx, badge.tsx" },
+    "@radix-ui/react-tabs": { "range": "^1.1.9", "resolved": "1.1.13", "usedBy": "components/ui/tabs.tsx" },
+    "@radix-ui/react-tooltip": { "range": "^1.2.6", "resolved": "1.2.8", "usedBy": "components/ui/tooltip.tsx" },
+    "apify-client": { "range": "^2.23.4", "resolved": "2.23.4", "usedBy": "services/ad-library/apify-config.ts createApifyClient + every *-apify-provider.ts" },
+    "@supabase/supabase-js": { "range": "^2.49.4", "resolved": "2.75.0", "usedBy": "processors, fact-writer, retrieval/service.ts, live-facts.ts, queue modules (SupabaseClient param)", "optional": true },
+    "@google/genai": { "range": "^1.38.0", "resolved": "1.38.0", "usedBy": "services/job-processor/ad-library/video-label.ts (types) + your lib/llm/clients/gemini.ts stub", "optional": true },
+    "sharp": { "range": "^0.35.3", "resolved": "0.35.5", "usedBy": "services/job-processor/ad-library/label/media.ts" },
+    "undici": { "range": "^6.29.1", "resolved": "6.29.1", "usedBy": "lib/video-fetch-utils.ts (SSRF-safe pinned fetch used by lib/brand-summary/fetch-website.ts)", "note": "transitive-only in Adcero; declare it" }
+  },
+  "devDependencies": {
+    "tailwindcss": { "range": "^4", "resolved": "4.1.14", "usedBy": "app/globals.css @import 'tailwindcss' (Tailwind v4, CSS-first; no tailwind.config needed)" },
+    "@tailwindcss/postcss": { "range": "^4", "resolved": "4.1.14", "usedBy": "postcss.config.mjs" },
+    "tw-animate-css": { "range": "^1.2.8", "resolved": "1.4.0", "usedBy": "app/globals.css @import 'tw-animate-css'" },
+    "typescript": { "range": "^5", "resolved": "5.9.3" },
+    "@types/react": { "range": "^19.3.0", "resolved": "19.3.0" },
+    "@types/react-dom": { "range": "^19.3.0", "resolved": "19.3.0" },
+    "@types/node": { "range": "^20", "resolved": "20.19.21" }
+  }
+}

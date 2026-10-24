@@ -1,0 +1,727 @@
+{
+  "_meta": {
+    "description": "Creative OUTPUT side: one TextCreative per strategy group. Copy text is HAND-AUTHORED stand-in for gpt-4o output, passed through the REAL generateBrandCopy guards: group 1's first attempt cites 15g (a real brand fact that did not make this pack's 3 fact slots) and is rejected, then retried; group 3's visualConcept contains a digit and is dropped, so its visual line falls back to the variation text. gateResults from real runGates (judge gate off — text-only). rank from real rankHeuristically (heuristic-v1, which is what Adcero's text rank judge falls back to today). simRewards are invented numbers fed through the real rollupPairs → buildCellBeliefs → armsFromBeliefs → thompsonPick / widestCurvePick.",
+    "brand": "Halden Oat Co. (invented; .example domains)",
+    "sourceCommit": "f9bb088c93f40f1c2ae41886ba4a21b7556e102f",
+    "generatedAt": "2026-10-24T12:00:00.000Z",
+    "contract": "reuse-export/contracts-creative.ts CreativeOutputFixture"
+  },
+  "creatives": [
+    {
+      "id": "00000000-0000-4000-c000-000000000001",
+      "briefId": "00000000-0000-4000-b000-000000000001",
+      "segment": "persona_the_macro_tracker",
+      "arm": {
+        "angleUniversal": "health",
+        "hookArchetype": "statistic",
+        "key": "health|statistic"
+      },
+      "format": "lifestyle_static",
+      "headline": "High-protein clusters that last until lunch",
+      "primaryText": "Halden oat clusters are built for people who want breakfast to keep them full until lunch, not until the next coffee break.",
+      "cta": "Shop Now",
+      "visualDescription": "A bright kitchen counter with a full bowl of oat clusters and milk being poured, soft morning light from a side window.",
+      "visualDescriptionSource": "visual_concept",
+      "copySource": "llm",
+      "copyText": "High-protein clusters that last until lunch\nHalden oat clusters are built for people who want breakfast to keep them full until lunch, not until the next coffee break.\nCTA: Shop Now",
+      "gateResults": [
+        {
+          "gate": "prohibited_claims",
+          "status": "pass"
+        },
+        {
+          "gate": "disclaimer",
+          "status": "pass"
+        },
+        {
+          "gate": "lexicon",
+          "status": "pass"
+        },
+        {
+          "gate": "copy_grounding",
+          "status": "pass"
+        },
+        {
+          "gate": "genome_complete",
+          "status": "pass"
+        },
+        {
+          "gate": "product_fidelity",
+          "status": "unverified",
+          "reason": "No product reference image supplied; visual fidelity unverified."
+        },
+        {
+          "gate": "policy",
+          "status": "unverified",
+          "reason": "No policy-check seam injected."
+        }
+      ],
+      "rank": {
+        "score": 15,
+        "judgeVersion": "heuristic-v1",
+        "rationale": "Heuristic: 6/24 brief keywords in copy, hook absent, 2 unverified gate(s)."
+      },
+      "genome": {
+        "briefId": "00000000-0000-4000-b000-000000000001",
+        "brandFactIds": [],
+        "angle": "Lead with the health angle proven by winning ads in this market",
+        "persona": "Busy professionals and commuters who track their protein",
+        "style": "polished_studio",
+        "provider": "text-only",
+        "model": "gpt-4o",
+        "generationParams": {
+          "variation": "statistic__lifestyle_static",
+          "strategyKey": "statistic__lifestyle_static",
+          "format": "lifestyle_static",
+          "prompt": "Product in a realistic in-use scene: the exact moment a customer uses it, natural light, candid framing. Make the brand fact's number physically tangible — quantity, volume, or scale shown through real objects arranged with the product; never render digits, charts, or text.",
+          "packFingerprint": "6154a1afb260047d75cd67f309177ee47b224f9eb8e0012f2dd59dc5bb8be725",
+          "copySource": "llm",
+          "visualConcept": true,
+          "textOnly": true
+        },
+        "hookArchetype": "statistic",
+        "format": "lifestyle_static",
+        "angleUniversal": "health",
+        "personaUniversal": "professionals",
+        "genomeProvenance": {
+          "angleUniversal": "strategy",
+          "personaUniversal": "brief",
+          "hookArchetype": "strategy",
+          "format": "strategy"
+        }
+      },
+      "packFingerprint": "6154a1afb260047d75cd67f309177ee47b224f9eb8e0012f2dd59dc5bb8be725",
+      "status": "ranked",
+      "intendedImagePrompt": "Photorealistic commercial meta ad photograph. Audience: Gym-goer hitting a daily protein target who is tired of shakes and bars.. Hero subject: the brand's product. Key claim this image should make visible through the scene (never as written text): \"Halden Oat Co. makes high-protein oat clusters for people who want a breakfast that keeps them full until lunch.\". Mood: Warm, practical and lightly playful. Product in a realistic in-use scene: the exact moment a customer uses it, natural light, candid framing. Make the brand fact's number physically tangible — quantity, volume, or scale shown through real objects arranged with the product; never render digits, charts, or text. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. No product reference images were provided, so the product's packaging must be CLEAN and UNBRANDED with NO readable text — never invent a brand name, logo, label text, slogan, or disclaimer. A plain, text-free package is correct; invented text is a failure. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter."
+    },
+    {
+      "id": "00000000-0000-4000-c000-000000000002",
+      "briefId": "00000000-0000-4000-b000-000000000001",
+      "segment": "persona_the_macro_tracker",
+      "arm": {
+        "angleUniversal": "health",
+        "hookArchetype": "social_proof",
+        "key": "health|social_proof"
+      },
+      "format": "product_only_static",
+      "headline": "Rated 4.7 by more than 3,000 breakfast people",
+      "primaryText": "They come for the protein and stay for the crunch: oat clusters baked in small batches with whole rolled oats.",
+      "cta": "Learn More",
+      "visualDescription": "Overhead still life of a ceramic bowl of oat clusters beside a folded linen napkin and a spoon, soft studio light.",
+      "visualDescriptionSource": "visual_concept",
+      "copySource": "llm",
+      "copyText": "Rated 4.7 by more than 3,000 breakfast people\nThey come for the protein and stay for the crunch: oat clusters baked in small batches with whole rolled oats.\nCTA: Learn More",
+      "gateResults": [
+        {
+          "gate": "prohibited_claims",
+          "status": "pass"
+        },
+        {
+          "gate": "disclaimer",
+          "status": "pass"
+        },
+        {
+          "gate": "lexicon",
+          "status": "pass"
+        },
+        {
+          "gate": "copy_grounding",
+          "status": "pass"
+        },
+        {
+          "gate": "genome_complete",
+          "status": "pass"
+        },
+        {
+          "gate": "product_fidelity",
+          "status": "unverified",
+          "reason": "No product reference image supplied; visual fidelity unverified."
+        },
+        {
+          "gate": "policy",
+          "status": "unverified",
+          "reason": "No policy-check seam injected."
+        }
+      ],
+      "rank": {
+        "score": 8,
+        "judgeVersion": "heuristic-v1",
+        "rationale": "Heuristic: 3/24 brief keywords in copy, hook absent, 2 unverified gate(s)."
+      },
+      "genome": {
+        "briefId": "00000000-0000-4000-b000-000000000001",
+        "brandFactIds": [],
+        "angle": "Lead with the health angle proven by winning ads in this market",
+        "persona": "Busy professionals and commuters who track their protein",
+        "style": "polished_studio",
+        "provider": "text-only",
+        "model": "gpt-4o",
+        "generationParams": {
+          "variation": "social_proof__product_only_static",
+          "strategyKey": "social_proof__product_only_static",
+          "format": "product_only_static",
+          "prompt": "Product hero on a clean seamless studio background, soft directional lighting, gentle shadow, label facing camera. Evidence of genuine, repeated use — a well-loved, half-finished product in a real setting where it clearly belongs; no people, stars, ratings, or text.",
+          "packFingerprint": "6154a1afb260047d75cd67f309177ee47b224f9eb8e0012f2dd59dc5bb8be725",
+          "copySource": "llm",
+          "visualConcept": true,
+          "textOnly": true
+        },
+        "hookArchetype": "social_proof",
+        "format": "product_only_static",
+        "angleUniversal": "health",
+        "personaUniversal": "professionals",
+        "genomeProvenance": {
+          "angleUniversal": "strategy",
+          "personaUniversal": "brief",
+          "hookArchetype": "strategy",
+          "format": "strategy"
+        }
+      },
+      "packFingerprint": "6154a1afb260047d75cd67f309177ee47b224f9eb8e0012f2dd59dc5bb8be725",
+      "status": "ranked",
+      "intendedImagePrompt": "Photorealistic commercial meta ad photograph. Audience: Gym-goer hitting a daily protein target who is tired of shakes and bars.. Hero subject: the brand's product. Key claim this image should make visible through the scene (never as written text): \"Halden Oat Co. makes high-protein oat clusters for people who want a breakfast that keeps them full until lunch.\". Mood: Warm, practical and lightly playful. Product hero on a clean seamless studio background, soft directional lighting, gentle shadow, label facing camera. Evidence of genuine, repeated use — a well-loved, half-finished product in a real setting where it clearly belongs; no people, stars, ratings, or text. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. No product reference images were provided, so the product's packaging must be CLEAN and UNBRANDED with NO readable text — never invent a brand name, logo, label text, slogan, or disclaimer. A plain, text-free package is correct; invented text is a failure. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter."
+    },
+    {
+      "id": "00000000-0000-4000-c000-000000000003",
+      "briefId": "00000000-0000-4000-b000-000000000002",
+      "segment": "persona_the_macro_tracker",
+      "arm": {
+        "angleUniversal": "convenience",
+        "hookArchetype": "problem_callout",
+        "key": "convenience|problem_callout"
+      },
+      "format": "lifestyle_static",
+      "headline": "Hungry again by mid-morning?",
+      "primaryText": "Swap the sugary bowl for high-protein oat clusters baked with whole rolled oats, and make lunch the next time you think about food.",
+      "cta": "Order Now",
+      "visualDescription": "Product in a realistic in-use scene: the exact moment a customer uses it, natural light, candid framing. Capture the exact moment of the everyday frustration this product removes, with the product visibly present as the fix — the tension resolving in one frame.",
+      "visualDescriptionSource": "variation_text",
+      "copySource": "llm",
+      "copyText": "Hungry again by mid-morning?\nSwap the sugary bowl for high-protein oat clusters baked with whole rolled oats, and make lunch the next time you think about food.\nCTA: Order Now",
+      "gateResults": [
+        {
+          "gate": "prohibited_claims",
+          "status": "pass"
+        },
+        {
+          "gate": "disclaimer",
+          "status": "pass"
+        },
+        {
+          "gate": "lexicon",
+          "status": "pass"
+        },
+        {
+          "gate": "copy_grounding",
+          "status": "pass"
+        },
+        {
+          "gate": "genome_complete",
+          "status": "pass"
+        },
+        {
+          "gate": "product_fidelity",
+          "status": "unverified",
+          "reason": "No product reference image supplied; visual fidelity unverified."
+        },
+        {
+          "gate": "policy",
+          "status": "unverified",
+          "reason": "No policy-check seam injected."
+        }
+      ],
+      "rank": {
+        "score": 8,
+        "judgeVersion": "heuristic-v1",
+        "rationale": "Heuristic: 3/24 brief keywords in copy, hook absent, 2 unverified gate(s)."
+      },
+      "genome": {
+        "briefId": "00000000-0000-4000-b000-000000000002",
+        "brandFactIds": [],
+        "angle": "Lead with the convenience angle proven by winning ads in this market",
+        "persona": "Busy professionals and commuters who track their protein",
+        "style": "polished_studio",
+        "provider": "text-only",
+        "model": "gpt-4o",
+        "generationParams": {
+          "variation": "problem_callout__lifestyle_static",
+          "strategyKey": "problem_callout__lifestyle_static",
+          "format": "lifestyle_static",
+          "prompt": "Product in a realistic in-use scene: the exact moment a customer uses it, natural light, candid framing. Capture the exact moment of the everyday frustration this product removes, with the product visibly present as the fix — the tension resolving in one frame.",
+          "packFingerprint": "60a0cd12c6ef60021e2b33e9eedb0fe97cdefead66f49cf8ff46db27277a9d85",
+          "copySource": "llm",
+          "visualConcept": false,
+          "textOnly": true
+        },
+        "hookArchetype": "problem_callout",
+        "format": "lifestyle_static",
+        "angleUniversal": "convenience",
+        "personaUniversal": "professionals",
+        "genomeProvenance": {
+          "angleUniversal": "strategy",
+          "personaUniversal": "brief",
+          "hookArchetype": "strategy",
+          "format": "strategy"
+        }
+      },
+      "packFingerprint": "60a0cd12c6ef60021e2b33e9eedb0fe97cdefead66f49cf8ff46db27277a9d85",
+      "status": "ranked",
+      "intendedImagePrompt": "Photorealistic commercial meta ad photograph. Audience: Gym-goer hitting a daily protein target who is tired of shakes and bars.. Hero subject: the brand's product. Key claim this image should make visible through the scene (never as written text): \"Halden Oat Co. makes high-protein oat clusters for people who want a breakfast that keeps them full until lunch.\". Mood: Warm, practical and lightly playful. Product in a realistic in-use scene: the exact moment a customer uses it, natural light, candid framing. Capture the exact moment of the everyday frustration this product removes, with the product visibly present as the fix — the tension resolving in one frame. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. No product reference images were provided, so the product's packaging must be CLEAN and UNBRANDED with NO readable text — never invent a brand name, logo, label text, slogan, or disclaimer. A plain, text-free package is correct; invented text is a failure. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter."
+    },
+    {
+      "id": "00000000-0000-4000-c000-000000000004",
+      "briefId": "00000000-0000-4000-b000-000000000002",
+      "segment": "persona_the_macro_tracker",
+      "arm": {
+        "angleUniversal": "convenience",
+        "hookArchetype": "pov_relatable",
+        "key": "convenience|pov_relatable"
+      },
+      "format": "product_only_static",
+      "headline": "POV: breakfast that survives your commute",
+      "primaryText": "Crunchy in milk, easy to grab dry on the way out, and baked with whole rolled oats instead of seed oils.",
+      "cta": "Shop Now",
+      "visualDescription": "A hand grabbing a pouch of oat clusters from a tidy pantry shelf next to a set of keys, natural daylight.",
+      "visualDescriptionSource": "visual_concept",
+      "copySource": "llm",
+      "copyText": "POV: breakfast that survives your commute\nCrunchy in milk, easy to grab dry on the way out, and baked with whole rolled oats instead of seed oils.\nCTA: Shop Now",
+      "gateResults": [
+        {
+          "gate": "prohibited_claims",
+          "status": "pass"
+        },
+        {
+          "gate": "disclaimer",
+          "status": "pass"
+        },
+        {
+          "gate": "lexicon",
+          "status": "pass"
+        },
+        {
+          "gate": "copy_grounding",
+          "status": "pass"
+        },
+        {
+          "gate": "genome_complete",
+          "status": "pass"
+        },
+        {
+          "gate": "product_fidelity",
+          "status": "unverified",
+          "reason": "No product reference image supplied; visual fidelity unverified."
+        },
+        {
+          "gate": "policy",
+          "status": "unverified",
+          "reason": "No policy-check seam injected."
+        }
+      ],
+      "rank": {
+        "score": 8,
+        "judgeVersion": "heuristic-v1",
+        "rationale": "Heuristic: 3/24 brief keywords in copy, hook absent, 2 unverified gate(s)."
+      },
+      "genome": {
+        "briefId": "00000000-0000-4000-b000-000000000002",
+        "brandFactIds": [],
+        "angle": "Lead with the convenience angle proven by winning ads in this market",
+        "persona": "Busy professionals and commuters who track their protein",
+        "style": "polished_studio",
+        "provider": "text-only",
+        "model": "gpt-4o",
+        "generationParams": {
+          "variation": "pov_relatable__product_only_static",
+          "strategyKey": "pov_relatable__product_only_static",
+          "format": "product_only_static",
+          "prompt": "Product hero on a clean seamless studio background, soft directional lighting, gentle shadow, label facing camera. The persona's own vantage over their table, desk, or counter with the product in their everyday spot, framed as they would see it — no person visible.",
+          "packFingerprint": "60a0cd12c6ef60021e2b33e9eedb0fe97cdefead66f49cf8ff46db27277a9d85",
+          "copySource": "llm",
+          "visualConcept": true,
+          "textOnly": true
+        },
+        "hookArchetype": "pov_relatable",
+        "format": "product_only_static",
+        "angleUniversal": "convenience",
+        "personaUniversal": "professionals",
+        "genomeProvenance": {
+          "angleUniversal": "strategy",
+          "personaUniversal": "brief",
+          "hookArchetype": "strategy",
+          "format": "strategy"
+        }
+      },
+      "packFingerprint": "60a0cd12c6ef60021e2b33e9eedb0fe97cdefead66f49cf8ff46db27277a9d85",
+      "status": "ranked",
+      "intendedImagePrompt": "Photorealistic commercial meta ad photograph. Audience: Gym-goer hitting a daily protein target who is tired of shakes and bars.. Hero subject: the brand's product. Key claim this image should make visible through the scene (never as written text): \"Halden Oat Co. makes high-protein oat clusters for people who want a breakfast that keeps them full until lunch.\". Mood: Warm, practical and lightly playful. Product hero on a clean seamless studio background, soft directional lighting, gentle shadow, label facing camera. The persona's own vantage over their table, desk, or counter with the product in their everyday spot, framed as they would see it — no person visible. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. No product reference images were provided, so the product's packaging must be CLEAN and UNBRANDED with NO readable text — never invent a brand name, logo, label text, slogan, or disclaimer. A plain, text-free package is correct; invented text is a failure. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter."
+    }
+  ],
+  "simRewards": [
+    {
+      "creativeId": "00000000-0000-4000-c000-000000000001",
+      "armKey": "health|statistic",
+      "segment": "persona_the_macro_tracker",
+      "simulatedAt": "2026-10-24T12:00:00.000Z",
+      "impressions": 1000,
+      "clicks": 46,
+      "conversions": 6,
+      "source": "text_sim_fixture"
+    },
+    {
+      "creativeId": "00000000-0000-4000-c000-000000000002",
+      "armKey": "health|social_proof",
+      "segment": "persona_the_macro_tracker",
+      "simulatedAt": "2026-10-24T12:00:00.000Z",
+      "impressions": 1000,
+      "clicks": 31,
+      "conversions": 3,
+      "source": "text_sim_fixture"
+    },
+    {
+      "creativeId": "00000000-0000-4000-c000-000000000003",
+      "armKey": "convenience|problem_callout",
+      "segment": "persona_the_macro_tracker",
+      "simulatedAt": "2026-10-24T12:00:00.000Z",
+      "impressions": 1000,
+      "clicks": 22,
+      "conversions": 1,
+      "source": "text_sim_fixture"
+    },
+    {
+      "creativeId": "00000000-0000-4000-c000-000000000004",
+      "armKey": "convenience|pov_relatable",
+      "segment": "persona_the_macro_tracker",
+      "simulatedAt": "2026-10-24T12:00:00.000Z",
+      "impressions": 1000,
+      "clicks": 38,
+      "conversions": 4,
+      "source": "text_sim_fixture"
+    }
+  ],
+  "rollups": [
+    {
+      "platform": "sim",
+      "source": "genome",
+      "dimension": "angle_hook",
+      "dimensionValue": "convenience|pov_relatable",
+      "candidateCount": 1,
+      "adCount": 1,
+      "spend": 0,
+      "impressions": 1000,
+      "clicks": 38,
+      "purchases": 4,
+      "purchaseValue": 0,
+      "enhancedPurchases": null,
+      "enhancedPurchaseValue": null,
+      "enhancedCoverage": 0,
+      "captureRatio": null,
+      "basis": "platform",
+      "decayedSpend": 0,
+      "decayedImpressions": 975.5486,
+      "decayedClicks": 37.0708,
+      "decayedPurchases": 3.9022,
+      "decayedPurchaseValue": 0,
+      "meanRankScore": null,
+      "windowStart": "2026-10-24",
+      "windowEnd": "2026-10-24",
+      "fatigue": null
+    },
+    {
+      "platform": "sim",
+      "source": "genome",
+      "dimension": "angle_hook",
+      "dimensionValue": "convenience|problem_callout",
+      "candidateCount": 1,
+      "adCount": 1,
+      "spend": 0,
+      "impressions": 1000,
+      "clicks": 22,
+      "purchases": 1,
+      "purchaseValue": 0,
+      "enhancedPurchases": null,
+      "enhancedPurchaseValue": null,
+      "enhancedCoverage": 0,
+      "captureRatio": null,
+      "basis": "platform",
+      "decayedSpend": 0,
+      "decayedImpressions": 975.5486,
+      "decayedClicks": 21.4621,
+      "decayedPurchases": 0.9755,
+      "decayedPurchaseValue": 0,
+      "meanRankScore": null,
+      "windowStart": "2026-10-24",
+      "windowEnd": "2026-10-24",
+      "fatigue": null
+    },
+    {
+      "platform": "sim",
+      "source": "genome",
+      "dimension": "angle_hook",
+      "dimensionValue": "health|social_proof",
+      "candidateCount": 1,
+      "adCount": 1,
+      "spend": 0,
+      "impressions": 1000,
+      "clicks": 31,
+      "purchases": 3,
+      "purchaseValue": 0,
+      "enhancedPurchases": null,
+      "enhancedPurchaseValue": null,
+      "enhancedCoverage": 0,
+      "captureRatio": null,
+      "basis": "platform",
+      "decayedSpend": 0,
+      "decayedImpressions": 975.5486,
+      "decayedClicks": 30.242,
+      "decayedPurchases": 2.9266,
+      "decayedPurchaseValue": 0,
+      "meanRankScore": null,
+      "windowStart": "2026-10-24",
+      "windowEnd": "2026-10-24",
+      "fatigue": null
+    },
+    {
+      "platform": "sim",
+      "source": "genome",
+      "dimension": "angle_hook",
+      "dimensionValue": "health|statistic",
+      "candidateCount": 1,
+      "adCount": 1,
+      "spend": 0,
+      "impressions": 1000,
+      "clicks": 46,
+      "purchases": 6,
+      "purchaseValue": 0,
+      "enhancedPurchases": null,
+      "enhancedPurchaseValue": null,
+      "enhancedCoverage": 0,
+      "captureRatio": null,
+      "basis": "platform",
+      "decayedSpend": 0,
+      "decayedImpressions": 975.5486,
+      "decayedClicks": 44.8752,
+      "decayedPurchases": 5.8533,
+      "decayedPurchaseValue": 0,
+      "meanRankScore": null,
+      "windowStart": "2026-10-24",
+      "windowEnd": "2026-10-24",
+      "fatigue": null
+    }
+  ],
+  "arms": [
+    {
+      "dimension": "angle_hook",
+      "value": "convenience|pov_relatable",
+      "beliefs": {
+        "v": 1,
+        "basis": "platform",
+        "click": {
+          "alpha": 38.0708,
+          "beta": 939.4778,
+          "mean": 0.0389,
+          "ci95": [
+            0.0268,
+            0.0511
+          ],
+          "source": "vague",
+          "priorEss": 2
+        },
+        "purchase": {
+          "alpha": 4.9022,
+          "beta": 34.1686,
+          "mean": 0.1255,
+          "ci95": [
+            0.0229,
+            0.228
+          ],
+          "source": "vague",
+          "priorEss": 2
+        }
+      }
+    },
+    {
+      "dimension": "angle_hook",
+      "value": "convenience|problem_callout",
+      "beliefs": {
+        "v": 1,
+        "basis": "platform",
+        "click": {
+          "alpha": 22.4621,
+          "beta": 955.0865,
+          "mean": 0.023,
+          "ci95": [
+            0.0136,
+            0.0324
+          ],
+          "source": "vague",
+          "priorEss": 2
+        },
+        "purchase": {
+          "alpha": 1.9755,
+          "beta": 21.4866,
+          "mean": 0.0842,
+          "ci95": [
+            0,
+            0.1942
+          ],
+          "source": "vague",
+          "priorEss": 2
+        }
+      }
+    },
+    {
+      "dimension": "angle_hook",
+      "value": "health|social_proof",
+      "beliefs": {
+        "v": 1,
+        "basis": "platform",
+        "click": {
+          "alpha": 31.242,
+          "beta": 946.3066,
+          "mean": 0.032,
+          "ci95": [
+            0.0209,
+            0.043
+          ],
+          "source": "vague",
+          "priorEss": 2
+        },
+        "purchase": {
+          "alpha": 3.9266,
+          "beta": 28.3154,
+          "mean": 0.1218,
+          "ci95": [
+            0.0106,
+            0.233
+          ],
+          "source": "vague",
+          "priorEss": 2
+        }
+      }
+    },
+    {
+      "dimension": "angle_hook",
+      "value": "health|statistic",
+      "beliefs": {
+        "v": 1,
+        "basis": "platform",
+        "click": {
+          "alpha": 45.8752,
+          "beta": 931.6734,
+          "mean": 0.0469,
+          "ci95": [
+            0.0337,
+            0.0602
+          ],
+          "source": "vague",
+          "priorEss": 2
+        },
+        "purchase": {
+          "alpha": 6.8533,
+          "beta": 40.0219,
+          "mean": 0.1462,
+          "ci95": [
+            0.0461,
+            0.2463
+          ],
+          "source": "vague",
+          "priorEss": 2
+        }
+      }
+    }
+  ],
+  "nextDecision": {
+    "exploit": {
+      "strategy": "thompson",
+      "layer": "click",
+      "picked": {
+        "dimension": "angle_hook",
+        "value": "health|statistic"
+      },
+      "mode": "exploit",
+      "arms": [
+        {
+          "value": "convenience|pov_relatable",
+          "draw": 0.030675434533632834,
+          "mean": 0.0389,
+          "ci95": [
+            0.0268,
+            0.0511
+          ]
+        },
+        {
+          "value": "convenience|problem_callout",
+          "draw": 0.020087723084325004,
+          "mean": 0.023,
+          "ci95": [
+            0.0136,
+            0.0324
+          ]
+        },
+        {
+          "value": "health|social_proof",
+          "draw": 0.028959124606294066,
+          "mean": 0.032,
+          "ci95": [
+            0.0209,
+            0.043
+          ]
+        },
+        {
+          "value": "health|statistic",
+          "draw": 0.046446036782643876,
+          "mean": 0.0469,
+          "ci95": [
+            0.0337,
+            0.0602
+          ]
+        }
+      ]
+    },
+    "explore": {
+      "strategy": "widest",
+      "layer": "click",
+      "picked": {
+        "dimension": "angle_hook",
+        "value": "health|statistic"
+      },
+      "mode": "explore",
+      "arms": [
+        {
+          "value": "convenience|pov_relatable",
+          "mean": 0.0389,
+          "ci95": [
+            0.0268,
+            0.0511
+          ]
+        },
+        {
+          "value": "convenience|problem_callout",
+          "mean": 0.023,
+          "ci95": [
+            0.0136,
+            0.0324
+          ]
+        },
+        {
+          "value": "health|social_proof",
+          "mean": 0.032,
+          "ci95": [
+            0.0209,
+            0.043
+          ]
+        },
+        {
+          "value": "health|statistic",
+          "mean": 0.0469,
+          "ci95": [
+            0.0337,
+            0.0602
+          ]
+        }
+      ]
+    },
+    "seed": 42,
+    "layer": "click"
+  }
+}

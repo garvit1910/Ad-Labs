@@ -1,0 +1,36 @@
+{
+  "name": "adlab",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "check:connections": "tsx scripts/check-connections.mts",
+    "setup:supabase": "tsx scripts/setup-supabase.mts",
+    "spacetime:publish": "spacetime publish adlab-calhacks13 --server maincloud --module-path spacetime --yes",
+    "spacetime:publish:clear": "spacetime publish adlab-calhacks13 --server maincloud --module-path spacetime --delete-data --yes",
+    "agent": "uv run --project agents python agents/hello_agent.py",
+    "sim:smoke": "npm --prefix sim run sim:smoke"
+  },
+  "dependencies": {
+    "next": "16.4.3",
+    "pg": "8.23.1",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "24.19.2",
+    "@types/pg": "8.23.1",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "tailwindcss": "4.3.3",
+    "tsx": "4.23.15",
+    "typescript": "5.9.3"
+  }
+}
