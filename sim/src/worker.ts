@@ -7,7 +7,7 @@ import { type World, loadWorld } from "./fixtures.js";
 import { JevClient } from "./jev.js";
 import { PerceptionStore, keywordPerceiver, perceiveAll } from "./perceive.js";
 import { SimRun } from "./run.js";
-import { type Db, SpacetimeError, SpacetimeHttp, loadWorldFromDb, sqlString, writer } from "./spacetime.js";
+import { type Db, SpacetimeError, SpacetimeHttp, isLocalUri, loadWorldFromDb, sqlString, writer } from "./spacetime.js";
 
 // The sim worker (docs/PLAN.md "B4"): claims run_round tasks from the task board, runs the round
 // on A's rows, writes B's tables and the round summary, then queues generate_creatives with the
@@ -201,6 +201,9 @@ if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.ur
   });
   loadEnv();
   const db = await SpacetimeHttp.connect();
+  // Say where this worker writes before it touches anything (the B5 bench must read LOCAL).
+  const where = `${process.env.SPACETIMEDB_URI} / ${process.env.SPACETIMEDB_DB_NAME}`;
+  console.log(`sim worker ${db.name} → ${where} (${isLocalUri(process.env.SPACETIMEDB_URI ?? "") ? "LOCAL" : "MAINCLOUD"})`);
   if (args.enqueue) {
     const round = Number(args.round);
     const task_id = `tsk_run_${args.enqueue}_r${round}`;

@@ -771,3 +771,45 @@ lists only `ping` until the merged module is published.
 - **Needed:** one landing product per competitor A actually uses as a `landing_product_id`, with
   price, rating and highlights from each brand's site (D44's method). Only Magic Spoon's page is
   ever shown today, so the competitors' rows matter only for completeness.
+
+## B5: live sim views
+
+### D72. The worker's identity token is kept per server — `DECIDED` (your call)
+- The worker caches its SpacetimeDB token in `.cache/spacetime-identity.json`. A token minted by
+  Maincloud is not valid on a local server, and the reverse, so the local bench would have broken
+  the Maincloud token (or used the wrong one).
+- `identityPath(uri)` keeps the existing file for Maincloud and uses
+  `.cache/spacetime-identity.<host>.json` for any other server (e.g. `…127.0.0.1_3100.json`).
+- The worker prints `sim worker … → <URI> / <DB> (LOCAL|MAINCLOUD)` before it writes anything.
+
+### D73. The local test bench writes A's tables only on localhost — `DECIDED`
+- `npm run sim:local-seed` refuses unless `SPACETIMEDB_URI`'s host is localhost, 127.0.0.1 or
+  [::1]. It loads the fixture brands, concepts, segments, arms and creatives through A's own
+  `upsert_*` reducers, as test stand-ins.
+- `/sim/dev`'s "Queue next round" button is disabled unless the page's URI is local. It queues
+  the newest run's next round, or round 0 of `run_local_<n+1>` once that run is done.
+
+### D74. The what-if re-asks Jev through a small cached route — `DECIDED` (in-memory cache, your call)
+- `POST /api/sim/whatif {state, questions}` only passes the sim's own question shapes: the feed's
+  `tap_A..C` / `believes` Nouls (matched by pattern) or exactly `PAGE_QUESTIONS`. States must start
+  with `SHOPPER` and stay under 6,000 characters. The model is pinned to `jev-1.13.0` and checked on
+  the way back; the key stays on the server.
+- Answers are cached in memory by sha256 of the exact request (500 entries, oldest dropped
+  first), so a repeated toggle never calls Jev again. The cache resets when the server restarts.
+- The inspector asks both sides live, with and without the line, so the comparison is like for like:
+  the page state is `shopper.state_text` (D65); the feed state is its SHOPPER + MEMORY blocks plus
+  RIGHT NOW rebuilt from the latest feed decision's `options.order`. Both are calibrated with the
+  run's offsets. Four Jev calls per new toggle (about $0.0001).
+
+### D75. What the views can and can't show from the tables — `DECIDED`
+- **Memory across rounds** is rebuilt from the decision rows (every impression's raw and
+  calibrated chances, dice and outcome). The full state text is stored only for the latest page
+  call (D65), so earlier states aren't shown word for word.
+- **Header cost** is exact from `round.summary` once a round is done, and an estimate
+  (700 tokens a call) while a round runs. Probe calls from `run.calibration` are included.
+- **Learnings → creatives** links come from `creative.learning_ids`, which A's creative worker
+  writes. On the bench nothing generates creatives, so every learning shows "No creative has used
+  it yet"; the link is unit-tested in `app/sim/_lib/selectors.test.ts`.
+- **Data volume:** `/sim` subscribes to the selected run's rows only. `/sim/dev` subscribes to
+  every table so it can count them; a full run is about 8,700 decision rows and loads in a second
+  locally.

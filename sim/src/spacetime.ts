@@ -96,6 +96,23 @@ export function decodeRows(result: { schema: AlgebraicType; rows: unknown[] }): 
 
 export const sqlString = (s: string) => `'${s.replaceAll("'", "''")}'`;
 
+// A localhost server is the B5 test bench; anything else (Maincloud) is the shared database.
+export function isLocalUri(uri: string): boolean {
+  try {
+    return ["localhost", "127.0.0.1", "[::1]"].includes(new URL(uri).hostname);
+  } catch {
+    return false;
+  }
+}
+
+// One identity token per server: a token minted by Maincloud isn't valid on the local bench, and the
+// other way round (DECISIONS D75). The Maincloud file keeps its pre-B5 name.
+export function identityPath(uri: string): string {
+  const host = new URL(uri).host;
+  if (host === "maincloud.spacetimedb.com") return config.paths.spacetimeIdentity;
+  return config.paths.spacetimeIdentity.replace(/\.json$/, `.${host.replace(/[^a-z0-9.-]/gi, "_")}.json`);
+}
+
 export class SpacetimeHttp implements Db {
   private token: string | null;
   readonly name: string;
@@ -110,13 +127,13 @@ export class SpacetimeHttp implements Db {
     this.name = opts.name ?? "sim-worker";
   }
 
-  // The worker's identity token is kept in .cache (git-ignored), so it claims tasks as the same
-  // identity across restarts.
+  // The worker's identity token is kept in .cache (git-ignored), one per server, so it claims
+  // tasks as the same identity across restarts.
   static async connect(name = "sim-worker"): Promise<SpacetimeHttp> {
     const uri = process.env.SPACETIMEDB_URI?.trim();
     const db = process.env.SPACETIMEDB_DB_NAME?.trim();
     if (!uri || !db) throw new SpacetimeError("SPACETIMEDB_URI and SPACETIMEDB_DB_NAME must be set in .env.local");
-    const path = config.paths.spacetimeIdentity;
+    const path = identityPath(uri);
     let token: string | null = null;
     let identity = "";
     if (existsSync(path)) ({ token, identity } = JSON.parse(readFileSync(path, "utf8")));
