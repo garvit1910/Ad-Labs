@@ -1,6 +1,6 @@
 # Ad Lab — master plan
 
-Last updated Sat Oct 24, 2026, 3:45 PM PT
+Last updated Sat Oct 24, 2026, 4:44 PM PT
 
 Ad Lab tests Magic Spoon ad recipes on Jev-driven shoppers built from real customer voice, then keeps and refines the winners. Person A owns data and agents; Person B owns the simulation. Both halves are planned below, phase by phase, with a ready prompt for every phase in the "Appendix: Phase prompts" at the end of this file.
 
@@ -17,11 +17,12 @@ Everything here is settled. Change a row only by editing this table, so both of 
 | Sources | Reddit, Trustpilot, Google reviews, X, Instagram, TikTok, Meta Ad Library. About 300 items per source, up to 50 ads per competitor |
 | Reused from Adcero | Scraping, structuring, competitor analysis, creative generation, the bandit arm enums, and the look of the brand identity and competitor pages |
 | Storage | A fresh Supabase project for raw data and the reused pipeline; SpacetimeDB for everything live and shared |
-| Screens | ASI:One chat starts runs and shows summary cards. The web app shows the Adcero-style pages and the live sim |
+| Screens | ASI:One chat starts runs and shows summary cards. The web app shows the Adcero-style pages, the agents at work (`/agents`) and the live sim (`/sim`) |
+| Agents (Fetch.ai) | Four uAgents run the loop as an agent-to-agent system. **Ad Lab**, the only one in the ASI:One chat, delegates to three others. **Scout** triggers the Apify runs and distillation through the job queue. **Strategist** builds recipes, queues and watches rounds, and decides when to stop. **Copywriter** claims each round's creative task and writes the ads. They talk in typed protocols, and each is registered on Agentverse. Every message, agent status and Apify job is mirrored into SpacetimeDB, where `/agents` shows them live. The bulk scrape is pre-run through the same jobs; the demo refreshes it live |
 | Simulation | Rebuilt from scratch on Jev, no graph database. ShopSim's rules carry over, its code does not |
 | Language | TypeScript everywhere, except a thin Python layer for Fetch's uAgents |
 | Split | Person A: setup, Apify, Fetch, everything up to segments, arms and creatives landing in SpacetimeDB. Person B: simulation, bandit, learnings, live sim views |
-| Out of scope | Mana, backtest, a custom Apify actor, a Visa shopper-facing product (maybe later), images inside the sim. Payment Protocol only if time remains |
+| Out of scope | Mana, backtest, a custom Apify actor, a Visa shopper-facing product (maybe later), images inside the sim. The Payment Protocol is A6's last step, only if time remains |
 | Recipes (bandit arms) | Angle × hook. Angles are Adcero's food-industry tokens (taste\_indulgence, health\_nutrition, …), hooks are HOOK\_ARCHETYPES limited to the ones Adcero's copywriter can produce. 10–12 recipes plus a control |
 | Creative generation | Adcero's text-only path, one brief per (persona, angle). Image judge and ranking off; the sim ranks. Competitor market-prior statements never reach copy. Learnings reach copy only as number-free notes. Numbers are checked on whole-number boundaries |
 
@@ -31,7 +32,7 @@ As of Sat Oct 24, 3 PM PT.
 
 | | Done | In progress | Next |
 | --- | --- | --- | --- |
-| A | A0 setup, A1 Adcero port, A's half of the contract in SpacetimeDB (`tables_a.ts`, `reducers_a.ts`) | A2 ingest, on its own agent (`feat/a2-ingest`) | A3 distill, then A4 writes the contract rows |
+| A | A0 setup, A1 Adcero port, A's half of the contract in SpacetimeDB (`tables_a.ts`, `reducers_a.ts`) | A2 ingest, on its own agent (`feat/a2-ingest`) | A3 distill, then A4 writes the contract rows. A5 and A6 can start in parallel, on fixtures first |
 | B | B0–B4: fixtures, Jev spike, engine, calibration, bandit, learnings, task board and worker | — | B5 live sim views. B4's integration step waits on A4's rows |
 
 **Branches.** `simulation` is the integration branch: B commits there, and every A phase opens its PR against it. `B`, GitHub's default branch, is stale; don't branch from it or target it.
@@ -41,6 +42,7 @@ As of Sat Oct 24, 3 PM PT.
 - 14 public tables: A's 5 and B's 9, the task board included.
 - 20 reducers: `ping`, A's 6 and B's 13.
 - Every table was empty at publish time. Rows arrive with A4 and B's first real round.
+- A6 adds three A tables for the agents (`agent`, `agent_message`, `ingest_job`; see The contract) and publishes them in place.
 
 How to work with it:
 
@@ -48,6 +50,8 @@ How to work with it:
 - **Clients.** B's worker and A's agents call reducers and SQL over HTTP. The web app subscribes through the `spacetimedb` SDK, using the generated client in `lib/spacetime/`. After any module change, run `npm run spacetime:generate` and commit the result.
 
 **Supabase.** The 17 Adcero tables, `library_ads_enriched` and `job_queue` are applied (`npm run db:migrate`). A2 is filling them.
+
+**Agents.** Since Oct 24, 4:30 PM, Fetch's agents run the loop as an agent-to-agent system, mirrored in SpacetimeDB: see Locked decisions ("Agents") and A6.
 
 ## How A and B fit together
 
@@ -59,24 +63,33 @@ A and B never call each other's code. A writes segments, recipes and creatives; 
  | Ingest + analysts     |-------->| Written by A          |------->| Sim worker            |
  | Apify scrapes,        |         | segment · arm         |        | builds shoppers, asks |
  | personas, recipes,    |         | creative · brand      |        | Jev, rolls the dice   |
- | first creatives       |         | concept               |        |                       |
+ | first creatives       |         | concept · agent tables|        |                       |
  +-----------------------+         +-----------------------+        +-----------------------+
  +-----------------------+  tasks  +-----------------------+ tasks  +-----------------------+
- | Fetch orchestrator    |<------->| Task board            |<------>| Bandit                |
- | starts runs in        |         | run_round             |        | picks recipes, queues |
- | ASI:One, posts cards  |         | generate_creatives    |        | new creatives         |
+ | Fetch agents (A2A)    |<------->| Task board            |<------>| Bandit                |
+ | Ad Lab, Scout,        |         | run_round             |        | picks recipes, queues |
+ | Strategist and        |         | generate_creatives    |        | new creatives         |
+ | Copywriter            |         |                       |        |                       |
  +-----------------------+         +-----------------------+        +-----------------------+
  +-----------------------+  reads  +-----------------------+ writes +-----------------------+
- | Creative engine       |<--------| Written by B          |<-------| Learnings + views     |
- | reads learnings,      |         | decision · arm_stat   |        | writes findings; live |
- | writes next variants  |         | learning · round      |        | sim views read them   |
- |                       |         | shopper · product     |        |                       |
+ | Copywriter agent +    |<--------| Written by B          |<-------| Learnings + views     |
+ | creative engine       |         | decision · arm_stat   |        | writes findings; live |
+ | reads learnings,      |         | learning · round      |        | sim views read them   |
+ | writes next variants  |         | shopper · product     |        |                       |
  +-----------------------+         +-----------------------+        +-----------------------+
 ```
 
 Person A and Person B only meet in SpacetimeDB. Each side writes only its own tables; the task board passes the baton between them each round.
 
-Each round crosses the middle twice: B's bandit queues new creatives for A, and A's creative engine queues the next round for B. That's also the SpacetimeDB pitch: agents coordinating through one live, shared world state.
+Each round crosses the middle twice: B's bandit queues new creatives for A, and A's Copywriter agent queues the next round for B. That's also the SpacetimeDB pitch: agents coordinating through one live, shared world state.
+
+Three layers, each with one job:
+
+- **Fetch agents decide and talk.** Ad Lab, Scout, Strategist and Copywriter message each other in typed protocols (A6).
+- **SpacetimeDB is the shared world they act on.** It holds the contract rows and the task board, plus a live record of every agent message, agent status and Apify job.
+- **Workers do the heavy compute.** The job worker runs the Apify actors and Adcero's processors; B's sim worker asks Jev.
+
+An agent never calls another person's code: it messages an agent or writes a row.
 
 ## The contract
 
@@ -109,18 +122,26 @@ These SpacetimeDB tables are the entire interface between A and B. Each side wri
 
 | Table | Fields | Rules |
 | --- | --- | --- |
-| task | task\_id, run\_id, kind (run\_round / generate\_creatives), payload (json), status (queued / claimed / done / failed), claimed\_by, result (json), created\_at, updated\_at | Claimed only through one `claim_task` reducer, so two workers can never take the same task |
+| task | task\_id, run\_id, kind (run\_round / generate\_creatives), payload (json), status (queued / claimed / done / failed), claimed\_by, result (json), created\_at, updated\_at | Claimed only through one `claim_task` reducer, so two workers can never take the same task. claimed\_by names the agent or worker holding it, for example `copywriter` |
 
 Payloads:
 
 - `run_round`: `{run_id, round}`
 - `generate_creatives`: `{run_id, round, arms: [{arm_id, segment_ids}], n_per_arm, learning_ids}`
 
+**Written by A's agents, read by anyone (the `/agents` view)**
+
+| Table | Fields | Rules |
+| --- | --- | --- |
+| agent | agent\_id, name, role, address, status (idle / working / error), current\_step, updated\_at | One row per agent: `agt_ad_lab`, `agt_scout`, `agt_strategist`, `agt_copywriter`. address is its `agent1q…` address. Each agent updates its row whenever its step changes |
+| agent\_message | message\_id, run\_id, from\_agent, to\_agent, protocol, kind (request / reply / progress / result), summary, payload (json), created\_at | One row per message between agents, written by the sender as it sends, so nothing happens off the record. `user` stands for the ASI:One user, so the chat shows up too. summary is one readable line of at most 140 characters; payload is at most 4 KB. run\_id is empty outside a run |
+| ingest\_job | job\_id, requested\_by, job\_type, target, actor, status (pending / processing / completed / failed / skipped), items, error, created\_at, updated\_at | One row per Supabase `job_queue` job an agent starts, keyed by that job's id. target is readable ("Catalina Crunch · Meta ads"). actor names the Apify actor, empty for steps that don't call Apify. items is the rows the step added when it reports them, else 0. The endpoint writes the row when it enqueues the job; the worker updates it |
+
 Housekeeping:
 
-- One SpacetimeDB module in `spacetime/src/`. `schema.ts` builds it from `tables_a.ts` (A) and `tables_b.ts` (B). Each side's reducers are in `reducers_a.ts` and `reducers_b.ts`, and `index.ts` exports both. Add columns; don't drop them mid-hackathon (SpacetimeDB can't drop columns automatically). In development, republish with data cleared instead.
+- One SpacetimeDB module in `spacetime/src/`. `schema.ts` builds it from `tables_a.ts` (A) and `tables_b.ts` (B). Each side's reducers are in `reducers_a.ts` and `reducers_b.ts`, and `index.ts` exports both. The agent tables live in `tables_a.ts` and `reducers_a.ts` too. Add columns; don't drop them mid-hackathon (SpacetimeDB can't drop columns automatically). In development, republish with data cleared instead.
 - Empty values and reducer arguments differ by side, as each table file documents. A's tables write `""` for an empty value and their upsert reducers take typed row arrays. B's tables use options for empty values and their batch reducers take one JSON string (`rows_json`). Fields marked json are JSON strings on both sides.
-- Ids are strings with a prefix (`seg_`, `arm_`, `cr_`, `shp_`).
+- Ids are strings with a prefix (`seg_`, `arm_`, `cr_`, `shp_`, `agt_`, `msg_`).
 - How Adcero's creative output maps onto the creative fields gets confirmed when the creative export lands.
 
 ## Running a phase with a coding agent
@@ -139,6 +160,7 @@ Each phase is one prompt to a coding agent working in the new repo. The agent re
 /                      Next app at the root, Adcero layout (app/, components/, hooks/, lib/, services/, messages/, i18n/)
 app/sim/               B: live sim views
 app/api/agent/         A: HTTP API the Python agents call
+app/agents/             A: the live agent view (/agents)
 lib/adlab/             A: Ad Lab glue (the constant org id, the service-role Supabase client)
 lib/spacetime/         shared: the web app's SpacetimeDB client (generated bindings and config)
 sim/                   B: simulation engine (TypeScript)
@@ -180,7 +202,7 @@ Finish with: what works, what is stubbed or skipped, the command that proves the
 | A3 Distill | Person A | REUSE\_MANIFEST §4, §5 | Adcero, for `scripts/brand-object-{build,promote,distill}.ts`, the in-process run harness that wasn't copied |
 | A4 Contract rows | The contract, Simulation design, Person A | reuse-export `contracts.ts` (PersonaDetails, EnrichedAd); `spacetime/tables_b.ts` | — |
 | A5 Creatives | The contract, Reward bandit and learnings, Person A | CREATIVE\_MANIFEST.md (§1b, §2–§6, §8, §9, Text-only mode, §11.3–§11.5), contracts-creative.ts, the two creative fixtures | Adcero |
-| A6 Fetch agents | The contract, Demo | Fetch hackpack requirements and quick-start code; ASI:One Interactive Cards docs; one sample round summary JSON from B | — |
+| A6 Fetch agents | Locked decisions, How A and B fit together, The contract, A6, Demo | Fetch hackpack requirements; Innovation Lab docs on uAgent-to-uAgent communication, mailbox agents, ASI-compatible agents and Interactive Cards; `agents/hello_agent.py`; B's `sim/SAMPLE_ROUND_SUMMARY.json`; A2's `scripts/a2-ingest.ts` and `worker/loop.ts` | — |
 | A7 Adcero pages | Person A | REUSE\_MANIFEST §5.5 (dashboard rewrite), §7; the two fixtures | Adcero, for the original `app/api/brand-identity/` routes, `design.md`, `.claude/brand-book.md` |
 | B0 Setup | Locked decisions, The contract, Simulation design, The Jev calls | TypeSafe Jev docs (request and response shapes) | — |
 | B1 Spike | The Jev calls | — | — |
@@ -355,49 +377,80 @@ Also in this phase:
 - [ ] **Smoke test first:** run the orchestrator on `fixtures/creative-brief.json` and diff against `creative-output.json` before touching real data.
 - [ ] **Round 0 by about 4 PM:** one creative per (recipe, segment). With 10–12 recipes and 3 segments that's 30–45 creatives, about 2¢ each, written in parallel. B then re-runs the warm-up on real creatives.
 - [ ] Run the worker with `NODE_ENV=production` and `CREATIVE_JUDGE_GATE_MODE=off`.
+- [ ] Export the whole sequence as `runGenerateCreatives(taskId)`. The worker loop and A6's Copywriter agent (through `app/api/agent/creatives`) both call it. The worker claims a `generate_creatives` task only after it has sat unclaimed for 60 seconds, so the Copywriter goes first and a stopped agent never stalls the loop.
 - [ ] **If time remains:** a `competitorReference` for steal recipes (the winning ad's angle, hook and execution notes, competitor names scrubbed with `sanitizeExecutionNotes`), rendered in the same strategy block.
 
 **Done when** a `generate_creatives` task turns into ranked creative rows and a queued `run_round` with nobody touching it.
 
-### A6 · Sat 5:30 – 10:30 PM · Fetch agents in ASI:One
+### A6 · Sat 5:30 – 10:30 PM · Fetch agents: A2A orchestration in ASI:One
 
-- [ ] HTTP API in `app/api/agent/`:
-  - brand-summary: top pains, desires and objections with quotes, via retrieveBrandSlice
-  - competitor-summary: winners and top recipes
-  - arms
-  - start-rounds: queues `run_round` on the task board
-  - round-status and round-summary
-- [ ] Three uAgents in one process, each registered on Agentverse with the chat protocol:
-  - **Ad Lab:** the only agent that talks to the user in ASI:One
-  - **Scout:** brand and competitor intelligence
-  - **Strategist:** recipes, rounds and results
-- [ ] The agents message each other, which earns Fetch's multi-agent bonus.
-- [ ] Long steps: acknowledge at once, send short progress messages, then the result.
-- [ ] Interactive Cards for:
+Four uAgents run the loop by messaging each other. SpacetimeDB is the shared world they act on and the record of everything they say; the workers do the heavy compute. A6 can start in parallel with A3–A5, in its own worktree: each endpoint serves the fixtures until its phase lands.
+
+| Agent | Talks to | Owns | Decisions it makes |
+| --- | --- | --- | --- |
+| **Ad Lab** | the user in ASI:One, and every agent | the conversation, the run plan, the cards | what to delegate, when to ask the user, what to show |
+| **Scout** | Ad Lab | Apify refreshes and distillation, through the job queue; brand and competitor intelligence | which pages and sources are stale enough to refresh (`last_synced_at`), when the brand context is ready |
+| **Strategist** | Ad Lab, Copywriter | the recipes (A4's arm builder), the rounds on the task board, the results | how many rounds, stopping early once p\_best ≥ 0.8 in every segment, the winners per segment |
+| **Copywriter** | Strategist, Ad Lab | each round's `generate_creatives` task | which learnings' directives to apply, how many variants per arm within the task's n\_per\_arm |
+
+The loop, as one chat:
+
+1. The user asks in ASI:One. Ad Lab acknowledges at once and sends Scout an intel request.
+2. Scout refreshes the stalest Meta pages and sources through `ingest/refresh`, which enqueues the copied Adcero jobs; the job worker runs the Apify actors. While they run, Scout reports from the corpus already distilled, and Ad Lab posts the brand profile and competitor winners cards.
+3. Ad Lab asks Strategist for a plan. Strategist builds the recipes (`contract/build`), and Ad Lab posts the recipes card.
+4. On the user's go, Strategist queues `run_round` for round 0 on the task board, and B's sim worker claims it.
+5. After each round, B's bandit queues `generate_creatives`. The Copywriter claims it, writes the variants through `creatives/generate`, completes the task and queues the next `run_round`, then tells Strategist.
+6. Strategist sends each round's result, and Ad Lab posts the leaderboard card. When the winners are clear, or after rounds\_planned, Strategist reports the winners and Ad Lab posts the winning ads per segment.
+
+Every hop is a typed message, logged to `agent_message` as it's sent, so `/agents` shows the conversation between the agents live, beside the chat.
+
+- [ ] **SpacetimeDB:** the `agent`, `agent_message` and `ingest_job` tables (The contract) and their reducers in `tables_a.ts` and `reducers_a.ts`. Publish in place and regenerate the client.
+- [ ] **HTTP API** in `app/api/agent/`, called by the agents. Every job an endpoint starts gets an `ingest_job` row.
+  - ingest/refresh: a small live refresh (the stalest pages and sources, small limits) through the copied queue functions, reusing A2's steps
+  - distill/start: `brand_object_crawl` with chain: true, when the brand context is missing or stale
+  - jobs: the status of a set of job ids
+  - brand-summary (top pains, desires and objections with quotes, via retrieveBrandSlice) and competitor-summary (winners and top recipes)
+  - contract/build: A4's segment builder, arm builder and live-ad rows
+  - creatives/generate: A5's `runGenerateCreatives` for a claimed task
+  - rounds: start (queues `run_round` on the task board), status and summary
+- [ ] **Job mirror:** `worker/loop.ts` reports each claim and finish, and the job's `ingest_job` row follows it.
+- [ ] **Four uAgents** in `agents/`, started together by `npm run agents`:
+  - each with its own seed, address and mailbox, registered on Agentverse in the Innovation Lab category;
+  - typed protocols (uAgents Models) for every hop: intel request and report, progress, plan request and recipe plan, start run, round result, creatives written, run finished;
+  - each also speaks the chat protocol, so judges can ask Scout or Strategist directly in ASI:One. The primary flow goes through Ad Lab only;
+  - one helper sends every message and logs it to `agent_message` in the same step, and each agent keeps its `agent` row current;
+  - Strategist and Copywriter watch SpacetimeDB (round rows, queued tasks) every few seconds and act on changes.
+- [ ] **The ASI:One flow:** Ad Lab acknowledges every request at once and turns each hop between agents into a one-line progress message ("Scout started 4 Apify runs: Meta ads for Catalina Crunch, …"). Interactive Cards for:
   - the brand profile
   - competitor winners
   - the recipes
   - each round's leaderboard
   - the final winning ads per segment
-- [ ] README:
-  - agent names and addresses
+- [ ] **/agents** in `app/agents/`, a live view built on `lib/spacetime`, with Adcero's components and a nav link next to `/sim`. It shows:
+  - the four agents, with their status and current step
+  - the message stream between them (from → to, kind, summary)
+  - the ingest jobs, with their Apify actors and status
+  - the task board
+- [ ] **README:**
+  - each agent's name, address and job
   - the innovationlab and hackathon badges
   - how to run it
+- [ ] **If time remains:** the Payment Protocol. Ad Lab asks the user to approve a small fee before each test run.
 
-**Done when** the whole primary flow, from "analyze Magic Spoon" to the winning ads, runs inside one ASI:One chat with no other screen.
+**Done when** one ASI:One message ("find ads that beat Magic Spoon's current ones") makes the agents refresh the data on Apify, post the brand and competitor cards, propose recipes, run the rounds with the Copywriter writing between them, and post the winners, with no other screen needed. Every hop also shows up live on `/agents` and in `agent_message`.
 
 ### A7 · Sat 10:30 PM – Sun 1 AM · The two Adcero pages, live
 
 - [ ] Route handlers for the endpoints in REUSE\_MANIFEST §7.4. Serve the fixtures first, then switch to Supabase. dashboard and competitors/list use the §5.5 rewrite.
 - [ ] The Competitor Analysis page first, then Brand Identity.
-- [ ] A nav link to `/sim`.
+- [ ] Nav links to `/sim` and `/agents`.
 
 **Done when** both pages render Magic Spoon's real data in Adcero's look.
 
 ### A8 · Sun 1 – 8 AM · Demo and submission, with B
 
-- [ ] A full cached run, and a rehearsed ASI:One flow.
-- [ ] Videos: 3–5 minutes for Fetch, and the 3-minute pitch for judging.
+- [ ] A full cached run, and a rehearsed ASI:One flow with `/agents` beside the chat. If time allows, re-run the final dataset end to end through the agents, so the demo's data came through them.
+- [ ] Videos: 3–5 minutes for Fetch (the ASI:One chat beside `/agents`), and the 3-minute pitch for judging.
 - [ ] Devpost: repo, image, video, and the Apify, Fetch.ai, SpacetimeDB and Visa tracks. Register with the ASI:One submission agent too.
 
 **Done when** everything is submitted by 8 AM.
@@ -409,10 +462,12 @@ If A falls behind, cut in this order:
 1. The competitor reference in copy
 2. The Brand Identity page (keep Competitor Analysis)
 3. TikTok and X
-4. Three agents down to one
-5. Interactive Cards (send plain messages instead)
+4. The Payment Protocol
+5. The Copywriter as claimer: the A5 worker claims every creative task, and the Copywriter only reports what was written
+6. Interactive Cards (send plain messages instead)
+7. Polish on `/agents` (keep the message stream)
 
-Never cut: real scraped data behind the segments and recipes, the identity crawl (it supplies the brand facts every ad is built from), the task-board loop, and the ASI:One primary flow.
+Never cut: real scraped data behind the segments and recipes, the identity crawl (it supplies the brand facts every ad is built from), the task-board loop, the ASI:One primary flow, and the agents messaging each other with every message in SpacetimeDB.
 
 ### Person A risks
 
@@ -425,6 +480,10 @@ Never cut: real scraped data behind the segments and recipes, the identity crawl
 | Fewer than 5 competitor winners, so no market priors | Build the steal recipes from the dashboard's over-index rows instead |
 | Copy keeps failing the number check and falls back to the brief's own text | Check that proof-point facts exist and reach the pack through keyMessageRef |
 | ASI:One times out on long steps | Acknowledge, send progress messages, and read precomputed results in the demo |
+| An agent process dies mid-run | The loop never waits on it: the A5 worker claims creative tasks left unclaimed for 60 seconds, B's worker is independent, and the mailbox holds messages until `npm run agents` restarts it |
+| The live Apify refresh is slow on stage | Small limits, and Scout answers from the corpus already distilled while the refresh runs; the demo never waits on it |
+| Agentverse or ASI:One delivery lags | Ad Lab acknowledges at once, and `/agents` shows the work even when the chat is slow |
+| Judges read the agents as a thin wrapper | Each agent makes real decisions (what to refresh, when to stop, which learnings to apply), and `agent_message` shows every one |
 | Apify spend climbs | Keep the caps; check usage in the Apify console after A2 |
 
 ## Simulation design
@@ -787,7 +846,17 @@ The what-if toggle is the most Jev-native feature in the build. Remove one line,
 
 ## Demo, cut lines and risks
 
-The sim gets about 75 seconds of the 3-minute pitch. Every number in it comes from the cached run, so it replays identically.
+The sim gets about 75 seconds of the 3-minute pitch. Every number in it comes from the cached run, so it replays identically. The agents open the pitch (about 45 seconds), and the Fetch video shows the whole chat.
+
+### Agent demo beats
+
+The ASI:One chat on one side of the screen, `/agents` on the other.
+
+1. **Ask:** "Find ads that can beat Magic Spoon's current ones." Ad Lab acknowledges and hands off to Scout; the first messages appear on `/agents`.
+2. **Scout goes to work:** it picks the stalest pages and sources and starts a live refresh on Apify. The jobs appear on `/agents` with their actors and status, while Scout's brand profile and competitor winners cards land in the chat.
+3. **Strategist plans:** the recipes card, built from the competitor winners and the customers' pains. The user says go; Strategist queues round 0, and `/sim` starts filling.
+4. **The loop runs itself:** after each round the Copywriter claims the creative task, writes new variants from the learnings and hands the next round back, and Strategist posts the leaderboard card.
+5. **Done:** Strategist stops once the winners are clear, and Ad Lab posts the winning ads per segment. Honest line: "The agents ran the full scrape earlier through the same jobs; on stage they refresh it live."
 
 ### Sim demo beats
 
@@ -924,6 +993,7 @@ Read first: docs/PLAN.md "The contract", "Reward, bandit and learnings" (the rou
 Also read: CREATIVE_MANIFEST.md §1b, §2–§6, §9, "Text-only mode" and §11.3–§11.5; contracts-creative.ts; fixtures/creative-brief.json and creative-output.json.
 ../adcero is read-only; arena/driver/operator.ts L73–100 is the model for strategyFromArms.
 Goal: worker/creatives/ that claims generate_creatives tasks and follows the A5 steps exactly: drop market_prior facts, derivePackHints, group by (segment, angle), strategyFromArms accepting the food-industry angle tokens, compile with personaRef = segment id, angleTheme = the food token and keyMessageRef = the strongest proof_point/usp fact, generateBrandCopy per hook in parallel, gates without image or judge, no ranking, write creative rows, then queue run_round. The only edit to copied Adcero code: an optional notes list in buildStrategyBlock (generation/brand-copy.ts) for the learnings' directives.
+Export the sequence as runGenerateCreatives(taskId), called by both the worker loop and A6's Copywriter agent (app/api/agent/creatives). The worker claims a generate_creatives task only after it has sat unclaimed for 60 seconds, so the Copywriter goes first.
 First run it on fixtures/creative-brief.json and diff against creative-output.json. Then generate round 0: one creative per (recipe, segment).
 Env: NODE_ENV=production, CREATIVE_JUDGE_GATE_MODE=off.
 Done when: a generate_creatives task becomes ranked creative rows plus a queued run_round with nobody touching it.
@@ -933,14 +1003,33 @@ Finish with: the fixture diff, round-0 counts (ranked vs gated_out), cost, and a
 ### A6 · Fetch agents
 
 ```
-Ad Lab, phase A6: Fetch agents in ASI:One. Cal Hacks 13.0; hard deadline Sun Oct 25, 9 AM PT. You are Person A's coding agent.
-Read first: docs/PLAN.md "The contract" (the task board), "A6" and "Demo, cut lines and risks".
-Also read: the Fetch hackpack's mandatory requirements and quick-start code, the ASI:One Interactive Cards docs, and the sample round summary JSON pasted below.
-Goal: the HTTP API in app/api/agent/ (brand-summary, competitor-summary, arms, start-rounds, round-status, round-summary); three uAgents in agents/ (Ad Lab, Scout, Strategist), each registered on Agentverse with the chat protocol, messaging each other, with only Ad Lab talking to the user; acknowledge long steps at once, send progress, then results; Interactive Cards for the brand profile, competitor winners, recipes, each round's leaderboard and the final winning ads per segment; README with agent names, addresses, the innovationlab and hackathon badges, and run steps.
-Done when: the whole flow, from "analyze Magic Spoon" to the winning ads, runs inside one ASI:One chat with no other screen.
-Rules: write only app/api/agent/, agents/ and README. Never write B's tables; queue rounds only through the task board.
-Finish with: a transcript of one full chat and a commit "A6: Fetch agents".
-[paste B's sample round summary JSON here]
+Ad Lab, phase A6: Fetch agents, the A2A orchestration in ASI:One. Cal Hacks 13.0; hard deadline Sun Oct 25, 9 AM PT. You are Person A's coding agent.
+Read first: docs/PLAN.md "Locked decisions", "How A and B fit together", "The contract" (the task board and the agent tables), "A6" and "Demo, cut lines and risks".
+Also read: the Fetch hackpack requirements (https://www.fetch.ai/events/hackathons/calhacks-13-0/hackpack); the Innovation Lab docs on uAgent-to-uAgent communication, mailbox agents, ASI:One compatible agents and Interactive Cards; agents/hello_agent.py (A0's working chat-protocol agent); sim/SAMPLE_ROUND_SUMMARY.json; scripts/a2-ingest.ts (A2's ingest steps) and worker/loop.ts.
+Work on a branch off simulation, and open the PR against simulation. You can start before A3–A5 land: each endpoint serves the fixtures until its phase is merged.
+Goal, in this order:
+1. SpacetimeDB: the agent, agent_message and ingest_job tables ("The contract") in spacetime/src/tables_a.ts, with reducers in reducers_a.ts. Publish in place with npm run spacetime:publish (only A's login can), then regenerate the client with npm run spacetime:generate.
+2. The HTTP API in app/api/agent/:
+   - ingest/refresh: a small live refresh of the stalest Meta pages and sources, through the copied queue functions and reusing A2's steps;
+   - distill/start, jobs, brand-summary and competitor-summary;
+   - contract/build (A4's builders) and creatives/generate (A5's runGenerateCreatives);
+   - rounds start, status and summary.
+   Every job an endpoint starts gets an ingest_job row.
+3. worker/loop.ts reports each claim and finish, and the job's ingest_job row follows it.
+4. Four uAgents in agents/ (Ad Lab, Scout, Strategist, Copywriter), started together by npm run agents:
+   - each has its own seed, address and mailbox, and is registered on Agentverse in the Innovation Lab category;
+   - each speaks the chat protocol, plus typed protocols (uAgents Models) for every hop between them;
+   - one helper sends each message and logs it to agent_message in the same step; each agent keeps its agent row current;
+   - Strategist and Copywriter watch SpacetimeDB and act on new round rows and queued generate_creatives tasks. The Copywriter claims through claim_task, calls creatives/generate, completes the task and queues the next run_round;
+   - each agent makes the decisions in A6's table.
+5. The ASI:One flow, through Ad Lab only: acknowledge at once, send a one-line progress message for each hop between agents, and use Interactive Cards for the brand profile, competitor winners, recipes, each round's leaderboard and the final winning ads per segment.
+6. app/agents/: the live /agents view from lib/spacetime (the agents and their steps, the message stream, the ingest jobs with their Apify actors, the task board), with a nav link next to /sim.
+7. README: each agent's name, address and job, the innovationlab and hackathon badges, and how to run it.
+8. Only if time remains: the Payment Protocol, with Ad Lab asking the user to approve a small fee before each test run.
+New env names (a seed per agent, the local API URL) go in .env.example; ask me for the values.
+Done when: one ASI:One message ("find ads that beat Magic Spoon's current ones") makes the agents refresh the data on Apify, post the brand and competitor cards, propose recipes, run the rounds with the Copywriter writing between them, and post the winners, with no other screen needed. Every hop also shows up live on /agents and in agent_message.
+Rules: write only app/api/agent/, app/agents/, agents/, worker/, spacetime/src/tables_a.ts and reducers_a.ts, README and config. Never write B's tables; touch the task board only through its reducers.
+Finish with: a transcript of one full chat, a screenshot of /agents mid-run, the agent addresses, and a commit "A6: Fetch agents".
 ```
 
 ### A7 · The two Adcero pages
@@ -950,7 +1039,7 @@ Ad Lab, phase A7: the Brand Identity and Competitor Analysis pages, live. Cal Ha
 Read first: docs/PLAN.md "A7".
 Also read: REUSE_MANIFEST.md §5.5 (the dashboard rewrite) and §7 (routes, component trees, endpoints, look); docs/reuse-export/fixtures/.
 ../adcero is read-only; use the original app/api/brand-identity/ routes, design.md and .claude/brand-book.md as reference.
-Goal: route handlers for every §7.4 endpoint, serving the fixtures first and then Supabase (dashboard and competitors/list via the §5.5 rewrite). The Competitor Analysis page first, then Brand Identity. A nav link to /sim.
+Goal: route handlers for every §7.4 endpoint, serving the fixtures first and then Supabase (dashboard and competitors/list via the §5.5 rewrite). The Competitor Analysis page first, then Brand Identity. Nav links to /sim and /agents.
 Done when: both pages render Magic Spoon's real data in Adcero's look.
 Rules: no edits to copied components beyond imports; write only app/api/ and the page shell.
 Finish with: screenshots of both pages and a commit "A7: Adcero pages".
@@ -961,7 +1050,7 @@ Finish with: screenshots of both pages and a commit "A7: Adcero pages".
 ```
 Ad Lab, phase A8: demo and submission prep. Cal Hacks 13.0; submit by Sun Oct 25, 8 AM PT. You are Person A's coding agent.
 Read first: docs/PLAN.md "Demo, cut lines and risks" and "A8".
-Goal: a scripts/demo.sh that warms the cache and replays the full run; a README pass covering what each sponsor technology does in the product (Apify, Fetch.ai, SpacetimeDB, Visa), what's real vs simulated, and how to run; a checklist of Devpost fields and the ASI:One submission-agent steps.
+Goal: a scripts/demo.sh that warms the cache and replays the full run, shown as the ASI:One chat beside /agents and /sim; if time allows, a re-run of the final dataset end to end through the agents; a README pass covering what each sponsor technology does in the product (Apify, Fetch.ai, SpacetimeDB, Visa), what's real vs simulated, and how to run; a checklist of Devpost fields and the ASI:One submission-agent steps.
 Done when: a fresh clone runs the demo from the README.
 Finish with: the checklist and a commit "A8: demo and README".
 ```
