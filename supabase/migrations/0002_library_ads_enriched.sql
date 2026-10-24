@@ -1,0 +1,7 @@
+-- Ad Lab A1: the library_ads_enriched view, verbatim from REUSE_MANIFEST §13.1
+-- (Adcero drizzle/0139_awesome_ironclad.sql, latest definition). One row per
+-- library ad with its label, longevity_days and is_active.
+CREATE VIEW "public"."library_ads_enriched" WITH (security_invoker = true) AS (SELECT la.id, la.organization_id, la.competitor_id, la.external_ad_id, la.platform, la.ad_snapshot_url, la.creative_bodies, la.creative_link_titles, la.page_name, la.publisher_platforms, la.delivery_start, la.delivery_stop, la.eu_total_reach, la.currency, la.spend_range, la.media_type, la.media_urls, la.video_urls, la.hosted_media_urls, la.hosted_video_urls, la.num_served_days, la.landing_url, la.landing_domain, la.raw_ref, la.first_seen_at, la.last_seen_at, al.hook_archetype, al.angle, al.angle_universal, al.persona, al.persona_universal, al.funnel_stage, al.format, al.style, al.aspect_ratio, al.fingerprint, al.offer_type, al.hook_text, al.summary, al.confidence, al.model AS label_model, al.labeled_at, GREATEST(0, EXTRACT(EPOCH FROM (COALESCE(la.delivery_stop, CASE WHEN COALESCE(la.last_seen_at, now()) > now() - interval '32 days' THEN now() ELSE la.last_seen_at END) - la.delivery_start)) / 86400)::int AS longevity_days, (la.delivery_stop IS NULL AND la.last_seen_at > now() - interval '32 days') AS is_active FROM library_ads la LEFT JOIN ad_labels al ON al.library_ad_id = la.id);
+
+revoke all on table public.library_ads_enriched from anon, authenticated;
+grant select on table public.library_ads_enriched to service_role;
