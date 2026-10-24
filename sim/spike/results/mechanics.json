@@ -1,0 +1,140 @@
+{
+  "model": "jev-1.13.0",
+  "runSeed": 859394654,
+  "ramp": [
+    {
+      "concurrency": 16,
+      "requests": 512,
+      "attempts": 512,
+      "http200": 512,
+      "http429": 0,
+      "otherStatuses": [],
+      "retryAfterValues": [],
+      "failedAfterRetries": 0,
+      "failureMessages": [],
+      "wallSeconds": 2.7,
+      "requestsPerSecond": 187,
+      "p50_ms": 68,
+      "p95_ms": 113,
+      "max_ms": 501
+    },
+    {
+      "concurrency": 32,
+      "requests": 512,
+      "attempts": 512,
+      "http200": 512,
+      "http429": 0,
+      "otherStatuses": [],
+      "retryAfterValues": [],
+      "failedAfterRetries": 0,
+      "failureMessages": [],
+      "wallSeconds": 1.6,
+      "requestsPerSecond": 310.9,
+      "p50_ms": 78,
+      "p95_ms": 150,
+      "max_ms": 355
+    },
+    {
+      "concurrency": 64,
+      "requests": 512,
+      "attempts": 512,
+      "http200": 512,
+      "http429": 0,
+      "otherStatuses": [],
+      "retryAfterValues": [],
+      "failedAfterRetries": 0,
+      "failureMessages": [],
+      "wallSeconds": 1,
+      "requestsPerSecond": 497.5,
+      "p50_ms": 82,
+      "p95_ms": 172,
+      "max_ms": 401
+    },
+    {
+      "concurrency": 128,
+      "requests": 512,
+      "attempts": 512,
+      "http200": 512,
+      "http429": 0,
+      "otherStatuses": [],
+      "retryAfterValues": [],
+      "failedAfterRetries": 0,
+      "failureMessages": [],
+      "wallSeconds": 0.7,
+      "requestsPerSecond": 697.9,
+      "p50_ms": 114,
+      "p95_ms": 272,
+      "max_ms": 454
+    },
+    {
+      "concurrency": 256,
+      "requests": 512,
+      "attempts": 512,
+      "http200": 512,
+      "http429": 0,
+      "otherStatuses": [],
+      "retryAfterValues": [],
+      "failedAfterRetries": 0,
+      "failureMessages": [],
+      "wallSeconds": 2,
+      "requestsPerSecond": 259.9,
+      "p50_ms": 137,
+      "p95_ms": 328,
+      "max_ms": 1896
+    }
+  ],
+  "determinism": {
+    "identical": false,
+    "distinct": [
+      "{\"tap_A\":{\"type\":\"noul\",\"noul\":0.17},\"tap_B\":{\"type\":\"noul\",\"noul\":0.2},\"tap_C\":{\"type\":\"noul\",\"noul\":0.69},\"believes\":{\"type\":\"noul\",\"noul\":0.58}}",
+      "{\"tap_A\":{\"type\":\"noul\",\"noul\":0.16},\"tap_B\":{\"type\":\"noul\",\"noul\":0.21},\"tap_C\":{\"type\":\"noul\",\"noul\":0.68},\"believes\":{\"type\":\"noul\",\"noul\":0.52}}"
+    ]
+  },
+  "errors": [
+    {
+      "label": "bad API key",
+      "status": 401,
+      "body": "{\"detail\":{\"error_type\":\"authentication_error\",\"message\":\"Cannot authenticate with the server. Please check your API key and try again.\"}}"
+    },
+    {
+      "label": "unknown model",
+      "status": 400,
+      "body": "{\"detail\":{\"error_type\":\"api_usage_error\",\"message\":\"Unknown model: jev-9.9.9\"}}"
+    },
+    {
+      "label": "missing state",
+      "status": 422,
+      "body": "{\"detail\":[{\"type\":\"missing\",\"loc\":[\"body\",\"state\"],\"msg\":\"Field required\",\"input\":\"{\\\"model\\\":\\\"jev-1.13.0\\\",\\\"questions\\\":{\\\"q\\\":{\\\"type\\\":\\\"noul\\\",\\\"instructions\\\":\\\"Is this about cereal?\\\"}}}\"}]}"
+    },
+    {
+      "label": "empty questions",
+      "status": 422,
+      "body": "{\"detail\":[{\"type\":\"too_short\",\"loc\":[\"body\",\"questions\"],\"msg\":\"Dictionary should have at least 1 item after validation, not 0\",\"input\":\"{}\",\"ctx\":{\"field_type\":\"Dictionary\",\"min_length\":1,\"actual_length\":0}}]}"
+    },
+    {
+      "label": "choice without criteria",
+      "status": 422,
+      "body": "{\"detail\":[{\"type\":\"missing\",\"loc\":[\"body\",\"questions\",\"q\",\"choice\",\"criteria\"],\"msg\":\"Field required\",\"input\":\"{\\\"type\\\":\\\"choice\\\",\\\"instructions\\\":\\\"?\\\"}\"}]}"
+    },
+    {
+      "label": "choice with 256 options",
+      "status": 422,
+      "body": "{\"detail\":[{\"type\":\"too_long\",\"loc\":[\"body\",\"questions\",\"q\",\"choice\",\"criteria\"],\"msg\":\"Dictionary should have at most 255 items after validation, not 256\",\"input\":\"{\\\"o0\\\":null,\\\"o1\\\":null,\\\"o2\\\":null,\\\"o3\\\":null,\\\"o4\\\":null,\\\"o5\\\":null,\\\"o6\\\":null,\\\"o7\\\":null,\\\"o8\\\":null,\\\"o9\\\":null,\\\"o10\\\":null,\\\"o11\\\":null,\\\"o12\\\":null,\\\"o13\\\":null,\\\"o14\\\":null,\\\"o15\\\":null,\\\"o16\\\":null,\\\"o17\\\":null,\\\"o18\\\":nu"
+    },
+    {
+      "label": "score with 11 levels",
+      "status": 422,
+      "body": "{\"detail\":[{\"type\":\"too_long\",\"loc\":[\"body\",\"questions\",\"q\",\"score\",\"criteria\"],\"msg\":\"List should have at most 10 items after validation, not 11\",\"input\":\"[\\\"level 0\\\",\\\"level 1\\\",\\\"level 2\\\",\\\"level 3\\\",\\\"level 4\\\",\\\"level 5\\\",\\\"level 6\\\",\\\"level 7\\\",\\\"level 8\\\",\\\"level 9\\\",\\\"level 10\\\"]\",\"ctx\":{\"field_type\":\"List\",\"max_length\":10,\"actual_length\":11}}]}"
+    },
+    {
+      "label": "malformed JSON",
+      "status": 422,
+      "body": "{\"detail\":[{\"type\":\"json_invalid\",\"loc\":[\"body\",1],\"msg\":\"JSON decode error\",\"input\":\"{}\",\"ctx\":{\"error\":\"Expecting property name enclosed in double quotes\"}}]}"
+    },
+    {
+      "label": "state over 64k tokens",
+      "status": 400,
+      "body": "{\"detail\":{\"error_type\":\"max_tokens_exceeded\"}}"
+    }
+  ]
+}

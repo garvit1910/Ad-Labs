@@ -1,0 +1,1321 @@
+{
+  "model": "jev-1.13.0",
+  "neighbours": [
+    "cr_cc_live_2",
+    "cr_tw_live_1"
+  ],
+  "choice": {
+    "order": {
+      "pass": false,
+      "worst": {
+        "creative_id": "cr_tw_live_1",
+        "mean": 0.0267,
+        "min": 0.01,
+        "max": 0.05,
+        "maxRelDev": 0.875,
+        "judged": true
+      },
+      "positionMeans": [
+        0.2874,
+        0.2762,
+        0.2836
+      ],
+      "perState": [
+        {
+          "state": "seg_keto_low_carb",
+          "ours": "cr_gen_02",
+          "stats": [
+            {
+              "creative_id": "cr_gen_02",
+              "mean": 0.8717,
+              "min": 0.85,
+              "max": 0.9,
+              "maxRelDev": 0.033,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.02,
+              "min": 0.01,
+              "max": 0.03,
+              "maxRelDev": 0.5,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0.0017,
+              "min": 0,
+              "max": 0.01,
+              "maxRelDev": 5,
+              "judged": false
+            }
+          ],
+          "byPosition": [
+            0.2967,
+            0.2933,
+            0.3033
+          ],
+          "pNoneMean": 0.1067,
+          "pOurs": 0.8717
+        },
+        {
+          "state": "seg_keto_low_carb+need",
+          "ours": "cr_gen_02",
+          "stats": [
+            {
+              "creative_id": "cr_gen_02",
+              "mean": 0.985,
+              "min": 0.97,
+              "max": 1,
+              "maxRelDev": 0.015,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.0083,
+              "min": 0,
+              "max": 0.02,
+              "maxRelDev": 1.4,
+              "judged": false
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0,
+              "min": 0,
+              "max": 0,
+              "maxRelDev": 0,
+              "judged": false
+            }
+          ],
+          "byPosition": [
+            0.3383,
+            0.3267,
+            0.3283
+          ],
+          "pNoneMean": 0.0067,
+          "pOurs": 0.985
+        },
+        {
+          "state": "seg_protein_athlete",
+          "ours": "cr_gen_03",
+          "stats": [
+            {
+              "creative_id": "cr_gen_03",
+              "mean": 0.8567,
+              "min": 0.69,
+              "max": 0.93,
+              "maxRelDev": 0.195,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.0033,
+              "min": 0,
+              "max": 0.01,
+              "maxRelDev": 2,
+              "judged": false
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0,
+              "min": 0,
+              "max": 0,
+              "maxRelDev": 0,
+              "judged": false
+            }
+          ],
+          "byPosition": [
+            0.2483,
+            0.3033,
+            0.3083
+          ],
+          "pNoneMean": 0.14,
+          "pOurs": 0.8567
+        },
+        {
+          "state": "seg_protein_athlete+need",
+          "ours": "cr_gen_03",
+          "stats": [
+            {
+              "creative_id": "cr_gen_03",
+              "mean": 0.9867,
+              "min": 0.97,
+              "max": 0.99,
+              "maxRelDev": 0.017,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.0017,
+              "min": 0,
+              "max": 0.01,
+              "maxRelDev": 5,
+              "judged": false
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0,
+              "min": 0,
+              "max": 0,
+              "maxRelDev": 0,
+              "judged": false
+            }
+          ],
+          "byPosition": [
+            0.3317,
+            0.3267,
+            0.33
+          ],
+          "pNoneMean": 0.0117,
+          "pOurs": 0.9867
+        },
+        {
+          "state": "seg_nostalgic_adult",
+          "ours": "cr_gen_04",
+          "stats": [
+            {
+              "creative_id": "cr_gen_04",
+              "mean": 0.9383,
+              "min": 0.92,
+              "max": 0.96,
+              "maxRelDev": 0.023,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.0083,
+              "min": 0,
+              "max": 0.02,
+              "maxRelDev": 1.4,
+              "judged": false
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0,
+              "min": 0,
+              "max": 0,
+              "maxRelDev": 0,
+              "judged": false
+            }
+          ],
+          "byPosition": [
+            0.3233,
+            0.3117,
+            0.3117
+          ],
+          "pNoneMean": 0.0533,
+          "pOurs": 0.9383
+        },
+        {
+          "state": "seg_nostalgic_adult+need",
+          "ours": "cr_gen_04",
+          "stats": [
+            {
+              "creative_id": "cr_gen_04",
+              "mean": 0.9767,
+              "min": 0.95,
+              "max": 1,
+              "maxRelDev": 0.027,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.015,
+              "min": 0,
+              "max": 0.04,
+              "maxRelDev": 1.667,
+              "judged": false
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0,
+              "min": 0,
+              "max": 0,
+              "maxRelDev": 0,
+              "judged": false
+            }
+          ],
+          "byPosition": [
+            0.345,
+            0.3233,
+            0.3233
+          ],
+          "pNoneMean": 0.0083,
+          "pOurs": 0.9767
+        },
+        {
+          "state": "seg_healthy_family",
+          "ours": "cr_gen_05",
+          "stats": [
+            {
+              "creative_id": "cr_gen_05",
+              "mean": 0.7317,
+              "min": 0.63,
+              "max": 0.8,
+              "maxRelDev": 0.139,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.005,
+              "min": 0,
+              "max": 0.01,
+              "maxRelDev": 1,
+              "judged": false
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0.0433,
+              "min": 0.01,
+              "max": 0.07,
+              "maxRelDev": 0.769,
+              "judged": true
+            }
+          ],
+          "byPosition": [
+            0.2767,
+            0.2533,
+            0.25
+          ],
+          "pNoneMean": 0.22,
+          "pOurs": 0.7317
+        },
+        {
+          "state": "seg_healthy_family+need",
+          "ours": "cr_gen_05",
+          "stats": [
+            {
+              "creative_id": "cr_gen_05",
+              "mean": 0.9483,
+              "min": 0.91,
+              "max": 0.98,
+              "maxRelDev": 0.04,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.0033,
+              "min": 0,
+              "max": 0.01,
+              "maxRelDev": 2,
+              "judged": false
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0.0267,
+              "min": 0.01,
+              "max": 0.05,
+              "maxRelDev": 0.875,
+              "judged": true
+            }
+          ],
+          "byPosition": [
+            0.3433,
+            0.3233,
+            0.3117
+          ],
+          "pNoneMean": 0.0217,
+          "pOurs": 0.9483
+        },
+        {
+          "state": "seg_taste_skeptic",
+          "ours": "cr_gen_01",
+          "stats": [
+            {
+              "creative_id": "cr_gen_01",
+              "mean": 0.355,
+              "min": 0.32,
+              "max": 0.37,
+              "maxRelDev": 0.099,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.08,
+              "min": 0.05,
+              "max": 0.1,
+              "maxRelDev": 0.375,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0.025,
+              "min": 0.02,
+              "max": 0.03,
+              "maxRelDev": 0.2,
+              "judged": true
+            }
+          ],
+          "byPosition": [
+            0.1567,
+            0.1483,
+            0.155
+          ],
+          "pNoneMean": 0.5383,
+          "pOurs": 0.355
+        },
+        {
+          "state": "seg_taste_skeptic+need",
+          "ours": "cr_gen_01",
+          "stats": [
+            {
+              "creative_id": "cr_gen_01",
+              "mean": 0.5033,
+              "min": 0.43,
+              "max": 0.57,
+              "maxRelDev": 0.146,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.1117,
+              "min": 0.07,
+              "max": 0.13,
+              "maxRelDev": 0.373,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0.0283,
+              "min": 0.02,
+              "max": 0.04,
+              "maxRelDev": 0.412,
+              "judged": true
+            }
+          ],
+          "byPosition": [
+            0.2183,
+            0.2033,
+            0.2217
+          ],
+          "pNoneMean": 0.3567,
+          "pOurs": 0.5033
+        },
+        {
+          "state": "seg_deal_seeker",
+          "ours": "cr_gen_09",
+          "stats": [
+            {
+              "creative_id": "cr_gen_09",
+              "mean": 0.6667,
+              "min": 0.54,
+              "max": 0.77,
+              "maxRelDev": 0.19,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.02,
+              "min": 0.01,
+              "max": 0.03,
+              "maxRelDev": 0.5,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0.0083,
+              "min": 0,
+              "max": 0.01,
+              "maxRelDev": 1,
+              "judged": false
+            }
+          ],
+          "byPosition": [
+            0.2517,
+            0.1933,
+            0.25
+          ],
+          "pNoneMean": 0.305,
+          "pOurs": 0.6667
+        },
+        {
+          "state": "seg_deal_seeker+need",
+          "ours": "cr_gen_09",
+          "stats": [
+            {
+              "creative_id": "cr_gen_09",
+              "mean": 0.9017,
+              "min": 0.87,
+              "max": 0.93,
+              "maxRelDev": 0.035,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.0267,
+              "min": 0.02,
+              "max": 0.05,
+              "maxRelDev": 0.875,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0.0083,
+              "min": 0,
+              "max": 0.01,
+              "maxRelDev": 1,
+              "judged": false
+            }
+          ],
+          "byPosition": [
+            0.3183,
+            0.3083,
+            0.31
+          ],
+          "pNoneMean": 0.0633,
+          "pOurs": 0.9017
+        }
+      ]
+    },
+    "sensitivity": {
+      "pass": true,
+      "perState": [
+        {
+          "state": "seg_keto_low_carb",
+          "fit": "cr_gen_02",
+          "pFit": 0.8717,
+          "pOther": 0.49,
+          "ratio": 1.78,
+          "h2hFit": 0.905,
+          "h2hOther": 0.015,
+          "h2hRatio": 60.33
+        },
+        {
+          "state": "seg_keto_low_carb+need",
+          "fit": "cr_gen_02",
+          "pFit": 0.985,
+          "pOther": 0.5667,
+          "ratio": 1.74,
+          "h2hFit": 0.99,
+          "h2hOther": 0.0067,
+          "h2hRatio": 148.5
+        },
+        {
+          "state": "seg_nostalgic_adult",
+          "fit": "cr_gen_04",
+          "pFit": 0.9383,
+          "pOther": 0.145,
+          "ratio": 6.47,
+          "h2hFit": 0.95,
+          "h2hOther": 0.0017,
+          "h2hRatio": 570
+        },
+        {
+          "state": "seg_nostalgic_adult+need",
+          "fit": "cr_gen_04",
+          "pFit": 0.9767,
+          "pOther": 0.125,
+          "ratio": 7.81,
+          "h2hFit": 0.99,
+          "h2hOther": 0,
+          "h2hRatio": null
+        }
+      ]
+    },
+    "memory": {
+      "pass": true,
+      "perState": [
+        {
+          "state": "seg_protein_athlete",
+          "without": 0.8567,
+          "with": 0.8517,
+          "change": -0.006
+        },
+        {
+          "state": "seg_protein_athlete+need",
+          "without": 0.9867,
+          "with": 0.985,
+          "change": -0.002
+        },
+        {
+          "state": "seg_keto_low_carb",
+          "without": 0.735,
+          "with": 0.6467,
+          "change": -0.12
+        }
+      ]
+    },
+    "feedNeed": [
+      {
+        "segment": "seg_keto_low_carb",
+        "off": 0.8717,
+        "on": 0.985
+      },
+      {
+        "segment": "seg_protein_athlete",
+        "off": 0.8567,
+        "on": 0.9867
+      },
+      {
+        "segment": "seg_nostalgic_adult",
+        "off": 0.9383,
+        "on": 0.9767
+      },
+      {
+        "segment": "seg_healthy_family",
+        "off": 0.7317,
+        "on": 0.9483
+      },
+      {
+        "segment": "seg_taste_skeptic",
+        "off": 0.355,
+        "on": 0.5033
+      },
+      {
+        "segment": "seg_deal_seeker",
+        "off": 0.6667,
+        "on": 0.9017
+      }
+    ]
+  },
+  "noul": {
+    "order": {
+      "pass": false,
+      "worst": {
+        "creative_id": "cr_cc_live_2",
+        "mean": 0.175,
+        "min": 0.15,
+        "max": 0.24,
+        "maxRelDev": 0.371,
+        "judged": true
+      },
+      "positionMeans": [
+        0.3158,
+        0.3328,
+        0.3268
+      ],
+      "perState": [
+        {
+          "state": "seg_keto_low_carb",
+          "ours": "cr_gen_02",
+          "stats": [
+            {
+              "creative_id": "cr_gen_02",
+              "mean": 0.685,
+              "min": 0.65,
+              "max": 0.72,
+              "maxRelDev": 0.051,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.2583,
+              "min": 0.22,
+              "max": 0.3,
+              "maxRelDev": 0.161,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0.1333,
+              "min": 0.11,
+              "max": 0.15,
+              "maxRelDev": 0.175,
+              "judged": true
+            }
+          ],
+          "byPosition": [
+            0.3467,
+            0.365,
+            0.365
+          ],
+          "pNoneMean": null,
+          "pOurs": 0.685
+        },
+        {
+          "state": "seg_keto_low_carb+need",
+          "ours": "cr_gen_02",
+          "stats": [
+            {
+              "creative_id": "cr_gen_02",
+              "mean": 0.715,
+              "min": 0.69,
+              "max": 0.73,
+              "maxRelDev": 0.035,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.2767,
+              "min": 0.26,
+              "max": 0.29,
+              "maxRelDev": 0.06,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0.1517,
+              "min": 0.13,
+              "max": 0.17,
+              "maxRelDev": 0.143,
+              "judged": true
+            }
+          ],
+          "byPosition": [
+            0.375,
+            0.3833,
+            0.385
+          ],
+          "pNoneMean": null,
+          "pOurs": 0.715
+        },
+        {
+          "state": "seg_protein_athlete",
+          "ours": "cr_gen_03",
+          "stats": [
+            {
+              "creative_id": "cr_gen_03",
+              "mean": 0.5233,
+              "min": 0.42,
+              "max": 0.61,
+              "maxRelDev": 0.197,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.175,
+              "min": 0.17,
+              "max": 0.19,
+              "maxRelDev": 0.086,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0.115,
+              "min": 0.1,
+              "max": 0.13,
+              "maxRelDev": 0.13,
+              "judged": true
+            }
+          ],
+          "byPosition": [
+            0.24,
+            0.2817,
+            0.2917
+          ],
+          "pNoneMean": null,
+          "pOurs": 0.5233
+        },
+        {
+          "state": "seg_protein_athlete+need",
+          "ours": "cr_gen_03",
+          "stats": [
+            {
+              "creative_id": "cr_gen_03",
+              "mean": 0.5767,
+              "min": 0.5,
+              "max": 0.64,
+              "maxRelDev": 0.133,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.1833,
+              "min": 0.17,
+              "max": 0.21,
+              "maxRelDev": 0.145,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0.1317,
+              "min": 0.12,
+              "max": 0.14,
+              "maxRelDev": 0.089,
+              "judged": true
+            }
+          ],
+          "byPosition": [
+            0.265,
+            0.3117,
+            0.315
+          ],
+          "pNoneMean": null,
+          "pOurs": 0.5767
+        },
+        {
+          "state": "seg_nostalgic_adult",
+          "ours": "cr_gen_04",
+          "stats": [
+            {
+              "creative_id": "cr_gen_04",
+              "mean": 0.5833,
+              "min": 0.57,
+              "max": 0.59,
+              "maxRelDev": 0.023,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.22,
+              "min": 0.19,
+              "max": 0.25,
+              "maxRelDev": 0.136,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0.1633,
+              "min": 0.16,
+              "max": 0.17,
+              "maxRelDev": 0.041,
+              "judged": true
+            }
+          ],
+          "byPosition": [
+            0.32,
+            0.3217,
+            0.325
+          ],
+          "pNoneMean": null,
+          "pOurs": 0.5833
+        },
+        {
+          "state": "seg_nostalgic_adult+need",
+          "ours": "cr_gen_04",
+          "stats": [
+            {
+              "creative_id": "cr_gen_04",
+              "mean": 0.685,
+              "min": 0.67,
+              "max": 0.71,
+              "maxRelDev": 0.036,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.255,
+              "min": 0.23,
+              "max": 0.28,
+              "maxRelDev": 0.098,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0.18,
+              "min": 0.17,
+              "max": 0.2,
+              "maxRelDev": 0.111,
+              "judged": true
+            }
+          ],
+          "byPosition": [
+            0.3683,
+            0.3767,
+            0.375
+          ],
+          "pNoneMean": null,
+          "pOurs": 0.685
+        },
+        {
+          "state": "seg_healthy_family",
+          "ours": "cr_gen_05",
+          "stats": [
+            {
+              "creative_id": "cr_gen_05",
+              "mean": 0.535,
+              "min": 0.5,
+              "max": 0.58,
+              "maxRelDev": 0.084,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.1567,
+              "min": 0.14,
+              "max": 0.19,
+              "maxRelDev": 0.213,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0.3017,
+              "min": 0.26,
+              "max": 0.37,
+              "maxRelDev": 0.227,
+              "judged": true
+            }
+          ],
+          "byPosition": [
+            0.325,
+            0.3483,
+            0.32
+          ],
+          "pNoneMean": null,
+          "pOurs": 0.535
+        },
+        {
+          "state": "seg_healthy_family+need",
+          "ours": "cr_gen_05",
+          "stats": [
+            {
+              "creative_id": "cr_gen_05",
+              "mean": 0.65,
+              "min": 0.63,
+              "max": 0.67,
+              "maxRelDev": 0.031,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.175,
+              "min": 0.15,
+              "max": 0.24,
+              "maxRelDev": 0.371,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0.3283,
+              "min": 0.28,
+              "max": 0.39,
+              "maxRelDev": 0.188,
+              "judged": true
+            }
+          ],
+          "byPosition": [
+            0.375,
+            0.3917,
+            0.3867
+          ],
+          "pNoneMean": null,
+          "pOurs": 0.65
+        },
+        {
+          "state": "seg_taste_skeptic",
+          "ours": "cr_gen_01",
+          "stats": [
+            {
+              "creative_id": "cr_gen_01",
+              "mean": 0.3117,
+              "min": 0.27,
+              "max": 0.35,
+              "maxRelDev": 0.134,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.2117,
+              "min": 0.19,
+              "max": 0.25,
+              "maxRelDev": 0.181,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0.2033,
+              "min": 0.19,
+              "max": 0.22,
+              "maxRelDev": 0.082,
+              "judged": true
+            }
+          ],
+          "byPosition": [
+            0.2317,
+            0.2567,
+            0.2383
+          ],
+          "pNoneMean": null,
+          "pOurs": 0.3117
+        },
+        {
+          "state": "seg_taste_skeptic+need",
+          "ours": "cr_gen_01",
+          "stats": [
+            {
+              "creative_id": "cr_gen_01",
+              "mean": 0.4117,
+              "min": 0.36,
+              "max": 0.44,
+              "maxRelDev": 0.126,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.2333,
+              "min": 0.21,
+              "max": 0.27,
+              "maxRelDev": 0.157,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0.215,
+              "min": 0.2,
+              "max": 0.23,
+              "maxRelDev": 0.07,
+              "judged": true
+            }
+          ],
+          "byPosition": [
+            0.2767,
+            0.3017,
+            0.2817
+          ],
+          "pNoneMean": null,
+          "pOurs": 0.4117
+        },
+        {
+          "state": "seg_deal_seeker",
+          "ours": "cr_gen_09",
+          "stats": [
+            {
+              "creative_id": "cr_gen_09",
+              "mean": 0.4283,
+              "min": 0.41,
+              "max": 0.46,
+              "maxRelDev": 0.074,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.2383,
+              "min": 0.2,
+              "max": 0.29,
+              "maxRelDev": 0.217,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0.1917,
+              "min": 0.18,
+              "max": 0.2,
+              "maxRelDev": 0.061,
+              "judged": true
+            }
+          ],
+          "byPosition": [
+            0.2933,
+            0.285,
+            0.28
+          ],
+          "pNoneMean": null,
+          "pOurs": 0.4283
+        },
+        {
+          "state": "seg_deal_seeker+need",
+          "ours": "cr_gen_09",
+          "stats": [
+            {
+              "creative_id": "cr_gen_09",
+              "mean": 0.6033,
+              "min": 0.58,
+              "max": 0.64,
+              "maxRelDev": 0.061,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_cc_live_2",
+              "mean": 0.27,
+              "min": 0.26,
+              "max": 0.3,
+              "maxRelDev": 0.111,
+              "judged": true
+            },
+            {
+              "creative_id": "cr_tw_live_1",
+              "mean": 0.2283,
+              "min": 0.22,
+              "max": 0.24,
+              "maxRelDev": 0.051,
+              "judged": true
+            }
+          ],
+          "byPosition": [
+            0.3733,
+            0.37,
+            0.3583
+          ],
+          "pNoneMean": null,
+          "pOurs": 0.6033
+        }
+      ]
+    },
+    "sensitivity": {
+      "pass": false,
+      "perState": [
+        {
+          "state": "seg_keto_low_carb",
+          "fit": "cr_gen_02",
+          "pFit": 0.685,
+          "pOther": 0.41,
+          "ratio": 1.67,
+          "h2hFit": 0.6767,
+          "h2hOther": 0.3267,
+          "h2hRatio": 2.07
+        },
+        {
+          "state": "seg_keto_low_carb+need",
+          "fit": "cr_gen_02",
+          "pFit": 0.715,
+          "pOther": 0.4983,
+          "ratio": 1.43,
+          "h2hFit": 0.7167,
+          "h2hOther": 0.3567,
+          "h2hRatio": 2.01
+        },
+        {
+          "state": "seg_nostalgic_adult",
+          "fit": "cr_gen_04",
+          "pFit": 0.5833,
+          "pOther": 0.21,
+          "ratio": 2.78,
+          "h2hFit": 0.545,
+          "h2hOther": 0.21,
+          "h2hRatio": 2.6
+        },
+        {
+          "state": "seg_nostalgic_adult+need",
+          "fit": "cr_gen_04",
+          "pFit": 0.685,
+          "pOther": 0.2567,
+          "ratio": 2.67,
+          "h2hFit": 0.6683,
+          "h2hOther": 0.235,
+          "h2hRatio": 2.84
+        }
+      ]
+    },
+    "memory": {
+      "pass": true,
+      "perState": [
+        {
+          "state": "seg_protein_athlete",
+          "without": 0.5233,
+          "with": 0.5033,
+          "change": -0.038
+        },
+        {
+          "state": "seg_protein_athlete+need",
+          "without": 0.5767,
+          "with": 0.565,
+          "change": -0.02
+        },
+        {
+          "state": "seg_keto_low_carb",
+          "without": 0.5017,
+          "with": 0.44,
+          "change": -0.123
+        }
+      ]
+    },
+    "feedNeed": [
+      {
+        "segment": "seg_keto_low_carb",
+        "off": 0.685,
+        "on": 0.715
+      },
+      {
+        "segment": "seg_protein_athlete",
+        "off": 0.5233,
+        "on": 0.5767
+      },
+      {
+        "segment": "seg_nostalgic_adult",
+        "off": 0.5833,
+        "on": 0.685
+      },
+      {
+        "segment": "seg_healthy_family",
+        "off": 0.535,
+        "on": 0.65
+      },
+      {
+        "segment": "seg_taste_skeptic",
+        "off": 0.3117,
+        "on": 0.4117
+      },
+      {
+        "segment": "seg_deal_seeker",
+        "off": 0.4283,
+        "on": 0.6033
+      }
+    ]
+  },
+  "page": {
+    "pass": true,
+    "perSegment": [
+      {
+        "segment": "seg_keto_low_carb",
+        "off": {
+          "stays": 0.66,
+          "buys": 0.35,
+          "objection": "not_now",
+          "objectionP": {
+            "price": 0.01,
+            "taste_doubt": 0,
+            "trust": 0.01,
+            "not_now": 0.97,
+            "other_brand": 0,
+            "nothing": 0.01
+          }
+        },
+        "on": {
+          "stays": 0.71,
+          "buys": 0.46,
+          "objection": "nothing",
+          "objectionP": {
+            "price": 0.28,
+            "taste_doubt": 0.12,
+            "trust": 0.12,
+            "not_now": 0.01,
+            "other_brand": 0,
+            "nothing": 0.47
+          }
+        }
+      },
+      {
+        "segment": "seg_protein_athlete",
+        "off": {
+          "stays": 0.56,
+          "buys": 0.28,
+          "objection": "not_now",
+          "objectionP": {
+            "price": 0.01,
+            "taste_doubt": 0,
+            "trust": 0.01,
+            "not_now": 0.98,
+            "other_brand": 0,
+            "nothing": 0
+          }
+        },
+        "on": {
+          "stays": 0.55,
+          "buys": 0.31,
+          "objection": "price",
+          "objectionP": {
+            "price": 0.47,
+            "taste_doubt": 0.05,
+            "trust": 0.2,
+            "not_now": 0.01,
+            "other_brand": 0.01,
+            "nothing": 0.26
+          }
+        }
+      },
+      {
+        "segment": "seg_nostalgic_adult",
+        "off": {
+          "stays": 0.56,
+          "buys": 0.23,
+          "objection": "not_now",
+          "objectionP": {
+            "price": 0,
+            "taste_doubt": 0,
+            "trust": 0,
+            "not_now": 1,
+            "other_brand": 0,
+            "nothing": 0
+          }
+        },
+        "on": {
+          "stays": 0.67,
+          "buys": 0.42,
+          "objection": "price",
+          "objectionP": {
+            "price": 0.42,
+            "taste_doubt": 0.11,
+            "trust": 0.14,
+            "not_now": 0,
+            "other_brand": 0,
+            "nothing": 0.33
+          }
+        }
+      },
+      {
+        "segment": "seg_healthy_family",
+        "off": {
+          "stays": 0.59,
+          "buys": 0.24,
+          "objection": "not_now",
+          "objectionP": {
+            "price": 0.01,
+            "taste_doubt": 0,
+            "trust": 0.01,
+            "not_now": 0.98,
+            "other_brand": 0,
+            "nothing": 0
+          }
+        },
+        "on": {
+          "stays": 0.62,
+          "buys": 0.37,
+          "objection": "price",
+          "objectionP": {
+            "price": 0.46,
+            "taste_doubt": 0.16,
+            "trust": 0.22,
+            "not_now": 0.01,
+            "other_brand": 0,
+            "nothing": 0.15
+          }
+        }
+      },
+      {
+        "segment": "seg_taste_skeptic",
+        "off": {
+          "stays": 0.48,
+          "buys": 0.21,
+          "objection": "not_now",
+          "objectionP": {
+            "price": 0,
+            "taste_doubt": 0.02,
+            "trust": 0.08,
+            "not_now": 0.9,
+            "other_brand": 0,
+            "nothing": 0
+          }
+        },
+        "on": {
+          "stays": 0.61,
+          "buys": 0.38,
+          "objection": "trust",
+          "objectionP": {
+            "price": 0.16,
+            "taste_doubt": 0.25,
+            "trust": 0.58,
+            "not_now": 0,
+            "other_brand": 0,
+            "nothing": 0.01
+          }
+        }
+      },
+      {
+        "segment": "seg_deal_seeker",
+        "off": {
+          "stays": 0.37,
+          "buys": 0.25,
+          "objection": "not_now",
+          "objectionP": {
+            "price": 0.33,
+            "taste_doubt": 0,
+            "trust": 0,
+            "not_now": 0.67,
+            "other_brand": 0,
+            "nothing": 0
+          }
+        },
+        "on": {
+          "stays": 0.48,
+          "buys": 0.43,
+          "objection": "price",
+          "objectionP": {
+            "price": 0.97,
+            "taste_doubt": 0,
+            "trust": 0.01,
+            "not_now": 0,
+            "other_brand": 0,
+            "nothing": 0.02
+          }
+        }
+      }
+    ]
+  },
+  "calls": {
+    "fresh": 0,
+    "cached": 372,
+    "p50_ms": null,
+    "p95_ms": null,
+    "max_ms": null
+  }
+}

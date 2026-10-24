@@ -72,10 +72,24 @@ everything else throws `JevError` with the status and body.
 - Price: $0.042 per million input tokens; output is free.
 - `jev-1.14.0` shipped 2026-10-14 and `jev-latest` now points to it. We stay pinned to
   `jev-1.13.0` per the plan; switching means re-running calibration.
-- Each question sees only the state and itself, never the other questions. So `believes` carries
-  our ad's full text instead of relying on the `tap` options.
-- 1.13 jaggedness that matters here: it leans towards the first Choice option (B1 test 2),
-  reads literally, can't count, and loses accuracy as irrelevant state grows.
+- Each question sees only the state and itself, never the other questions. That's why the feed
+  posts live in the state (B1, `SPIKE.md`): every tap Noul and `believes` can point at them.
+- 1.13 jaggedness that matters here: it reads literally, can't count, and loses accuracy as
+  irrelevant state grows. The documented first-option lean didn't show up in B1 (mean P(tap) by
+  position 0.29 / 0.28 / 0.28).
+
+## Observed live (B1, about 5,700 calls)
+
+- **Not deterministic.** The identical request varies: sd 0.011–0.018 on a Noul and 0.008–0.035 on
+  a Choice probability, the same whether requests are sent one after another or together. Only
+  the cache gives identical replays.
+- **Resolution is 0.01.** Every probability is on a 0.01 grid (up to float rounding such as
+  0.8099999999999999). Choice answers return exact 0 and 1; feed Nouls stayed within 0.06–0.73.
+- **Status codes that differ from the docs.** Malformed JSON returns **422** `json_invalid`, not
+  400. An unknown model returns **400** `api_usage_error`. Over 64k tokens returns 400
+  `max_tokens_exceeded`. Bad key returns 401 `authentication_error`.
+- **No 429s** at up to 256 requests in flight (peak about 700 req/s); `retry-after` was never seen.
+  Latency p50 about 75 ms up to 32 in flight.
 
 ## Why not the JS SDK
 

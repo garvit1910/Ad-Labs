@@ -158,6 +158,15 @@ export type JevClientOptions = {
   model?: string;
   concurrency?: number;
   cachePath?: string | null;
+  // Called once per HTTP attempt (retries included), for call counts and rate-limit stats.
+  onAttempt?: (attempt: JevAttempt) => void;
+};
+
+export type JevAttempt = {
+  attempt: number;
+  status: number | "network_error";
+  latencyMs: number;
+  retryAfter: string | null;
 };
 
 export class JevClient {
@@ -166,8 +175,10 @@ export class JevClient {
   private limit: ReturnType<typeof pLimit>;
   private cache: JevCache | null;
   private inFlight = new Map<string, Promise<{ parsed: ParsedResponse; latencyMs: number }>>();
+  private onAttempt: JevClientOptions["onAttempt"];
 
   constructor(opts: JevClientOptions = {}) {
+    this.onAttempt = opts.onAttempt;
     this.apiKey = opts.apiKey ?? process.env.TYPESAFE_API_KEY;
     this.model = opts.model ?? config.jev.model;
     this.limit = pLimit(opts.concurrency ?? config.jev.concurrency);
@@ -225,6 +236,7 @@ export class JevClient {
     let lastError: unknown;
     for (let attempt = 0; attempt < config.jev.maxAttempts; attempt++) {
       let res: Response;
+      const started = performance.now();
       try {
         res = await fetch(config.jev.endpoint, {
           method: "POST",
@@ -234,9 +246,16 @@ export class JevClient {
         });
       } catch (err) {
         lastError = err;
+        this.onAttempt?.({ attempt, status: "network_error", latencyMs: Math.round(performance.now() - started), retryAfter: null });
         if (attempt < config.jev.maxAttempts - 1) await sleep(backoffMs(attempt));
         continue;
       }
+      this.onAttempt?.({
+        attempt,
+        status: res.status,
+        latencyMs: Math.round(performance.now() - started),
+        retryAfter: res.headers.get("retry-after"),
+      });
       if (res.ok) return res.json();
       const text = await res.text();
       lastError = new JevError(`Jev HTTP ${res.status}: ${text}`, res.status, text);

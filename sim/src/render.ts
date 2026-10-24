@@ -156,16 +156,22 @@ export function renderShopper(shopper: Shopper, world: World, claimedConcepts: r
   ].join("\n");
 }
 
+// The feed's three posts are listed in the state, in feed order (B1: one Noul per ad).
 export function renderFeedState(
   shopper: Shopper,
   world: World,
   tick: number,
+  ads: readonly Creative[],
   claimedConcepts: readonly string[] = [],
 ): string {
   const state = [
     renderShopper(shopper, world, claimedConcepts),
     ["MEMORY", ...memoryLines(shopper, world, tick)].join("\n"),
-    ["RIGHT NOW", "Scrolling Instagram on their phone. Three sponsored posts appear one after another."].join("\n"),
+    [
+      "RIGHT NOW",
+      "Scrolling Instagram on their phone. Three sponsored posts appear one after another:",
+      ...ads.map((c) => `- ${renderAd(c, world)}`),
+    ].join("\n"),
   ].join("\n\n");
   const words = wordCount(state);
   if (words > config.render.maxWords) {

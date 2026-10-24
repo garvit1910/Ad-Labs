@@ -17,7 +17,8 @@ export const config = {
     endpoint: "https://api.typesafe.ai/v1/systemone",
     // Pinned, never jev-latest: a silent model upgrade would shift the calibration.
     model: "jev-1.13.0",
-    concurrency: 24,
+    // B1 (SPIKE.md): latency is flat to 32 (p50 ~75 ms) and no 429s up to 256 in flight.
+    concurrency: 32,
     timeoutMs: 30_000,
     maxAttempts: 5,
   },

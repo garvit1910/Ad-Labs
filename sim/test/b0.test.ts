@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, describe, test } from "node:test";
 import { armSchema, creativeSchema, segmentSchema } from "../src/contract.js";
-import { assembleFeed, feedQuestions } from "../src/feed.js";
+import { assembleFeed, feedQuestions, tapProbabilities } from "../src/feed.js";
 import { checkWorld, loadWorld } from "../src/fixtures.js";
 import { JevClient, JevError } from "../src/jev.js";
 import { makeShopper } from "../src/population.js";
@@ -14,6 +14,9 @@ import { normal, shuffle, uniform } from "../src/rng.js";
 const world = loadWorld();
 const SEED = 13;
 const shopper = (i: number) => makeShopper(i, world, SEED);
+const ourAd = (s: ReturnType<typeof shopper>) =>
+  world.creatives.find((c) => c.origin === "generated" && c.segment_id === s.segment_id)!;
+const feedAds = (s: ReturnType<typeof shopper>, tick = 0) => assembleFeed(s, ourAd(s), world, SEED, tick).map((o) => o.creative);
 const conceptCount = (line: string) =>
   line
     .split(/(?:Cares a lot about|Cares somewhat about|Doesn't think about): /)
@@ -128,12 +131,12 @@ describe("rng", () => {
 
 describe("rendering rules", () => {
   test("rule 1: every fixture state is under 450 words", () => {
-    for (let i = 0; i < 300; i++) assert.ok(wordCount(renderFeedState(shopper(i), world, 0)) <= 450);
+    for (let i = 0; i < 300; i++) assert.ok(wordCount(renderFeedState(shopper(i), world, 0, feedAds(shopper(i)))) <= 450);
   });
   test("rule 2 and 4: no segment name, no budget", () => {
     for (let i = 0; i < 300; i++) {
       const s = shopper(i);
-      const state = renderFeedState(s, world, 0);
+      const state = renderFeedState(s, world, 0, feedAds(s));
       const seg = world.segments.find((x) => x.segment_id === s.segment_id)!;
       assert.ok(!state.includes(seg.name));
       assert.ok(!state.includes("$"), "no money in a fresh state, so no budget");
@@ -198,7 +201,7 @@ describe("rendering rules", () => {
   test("rule 1 is enforced by the renderer", () => {
     const s = shopper(0);
     const big = { ...world, segments: world.segments.map((g) => ({ ...g, description: "word ".repeat(500) })) };
-    assert.throws(() => renderFeedState(s, big, 0), /limit 450/);
+    assert.throws(() => renderFeedState(s, big, 0, feedAds(s)), /limit 450/);
   });
 });
 
@@ -225,13 +228,27 @@ describe("feed", () => {
     for (let t = 0; t < 15; t++) seen.add(assembleFeed(s, ours, world, SEED, t).map((o) => o.creative.creative_id).join());
     assert.ok(seen.size > 5);
   });
-  test("questions: plan wording, A/B/C + none, believes carries one clean headline", () => {
+  test("feed call (B1 shape): posts listed in the state in feed order, one tap Noul per post", () => {
     const feed = assembleFeed(s, ours, world, SEED, 0);
+    const state = renderFeedState(s, world, 0, feed.map((o) => o.creative));
+    const listed = state.split("\n").filter((l) => l.startsWith("- "));
+    assert.deepEqual(listed, feed.map((o) => `- ${renderAd(o.creative, world)}`));
+    assert.match(state, /RIGHT NOW\nScrolling Instagram on their phone\. Three sponsored posts appear one after another:\n- /);
     const q = feedQuestions(feed, ours, world);
-    assert.equal(q.tap.instructions, "Which post, if any, does this shopper tap to learn more?");
-    assert.deepEqual(Object.keys(q.tap.criteria), ["A", "B", "C", "none"]);
-    for (const o of feed) assert.equal(q.tap.criteria[o.key], renderAd(o.creative, world));
-    assert.ok(q.believes.instructions.startsWith('Does this shopper believe the main promise of the Magic Spoon post that says "I finally hit my protein goal at breakfast"?'));
+    assert.deepEqual(Object.keys(q), ["tap_A", "tap_B", "tap_C", "believes"]);
+    for (const o of feed) {
+      assert.equal(q[`tap_${o.key}`].type, "noul");
+      assert.ok(q[`tap_${o.key}`].instructions.startsWith("Does this shopper tap the "), o.key);
+      assert.ok(q[`tap_${o.key}`].instructions.includes(`says "${o.creative.headline.replace(/^"(.*)"$/, "$1")}"`), o.key);
+    }
+    // Plan wording exactly, now that the post itself is in the state; testimonial quotes not doubled.
+    assert.equal(q.believes.instructions, 'Does this shopper believe the main promise of the Magic Spoon post that says "I finally hit my protein goal at breakfast"?');
+  });
+  test("tapProbabilities maps each tap answer to its creative", () => {
+    const feed = assembleFeed(s, ours, world, SEED, 0);
+    const answers = { tap_A: { type: "noul" as const, noul: 0.1 }, tap_B: { type: "noul" as const, noul: 0.2 }, tap_C: { type: "noul" as const, noul: 0.3 } };
+    const p = tapProbabilities(feed, answers);
+    assert.deepEqual(feed.map((o) => p[o.creative.creative_id]), [0.1, 0.2, 0.3]);
   });
 });
 

@@ -1,10 +1,10 @@
 import type { Creative } from "./contract.js";
 import type { World } from "./fixtures.js";
-import type { ChoiceQuestion, NoulQuestion } from "./jev.js";
+import type { NoulAnswer, NoulQuestion } from "./jev.js";
 import type { Shopper } from "./population.js";
-import { renderAd } from "./render.js";
 import { shuffle, weightedSample } from "./rng.js";
 
+// Feed slots in display order. Question names use them; the model never sees question names.
 export const OPTION_KEYS = ["A", "B", "C"] as const;
 export type OptionKey = (typeof OPTION_KEYS)[number];
 export type FeedOption = { key: OptionKey; creative: Creative };
@@ -25,26 +25,33 @@ export function assembleFeed(shopper: Shopper, ours: Creative, world: World, see
   return ordered.map((creative, i) => ({ key: OPTION_KEYS[i]!, creative }));
 }
 
-export type FeedQuestions = { tap: ChoiceQuestion; believes: NoulQuestion };
+// "the Magic Spoon post that says "…"": how a question points at a post listed in the state.
+// A testimonial headline is already in quotes; don't wrap it twice.
+export function postRef(creative: Creative, world: World): string {
+  const brand = world.brands.find((b) => b.brand_id === creative.brand_id)?.name ?? creative.brand_id;
+  return `the ${brand} post that says "${creative.headline.replace(/^["“](.*)["”]$/, "$1")}"`;
+}
 
-// Questions in one call can't see each other, so "believes" carries our ad's full text
-// instead of relying on the tap options.
+export type TapKey = `tap_${OptionKey}`;
+export type FeedQuestions = Record<TapKey, NoulQuestion> & { believes: NoulQuestion };
+
+// The feed call, as settled by B1 (SPIKE.md): the three posts are listed in the state
+// (renderFeedState) and each gets its own Noul. One Choice over A/B/C + none failed the order
+// test, saturated near 1 and was 2-4x noisier.
 export function feedQuestions(options: FeedOption[], ours: Creative, world: World): FeedQuestions {
-  const criteria: Record<string, string> = {};
-  for (const o of options) criteria[o.key] = renderAd(o.creative, world);
-  criteria.none = "None of them: keeps scrolling without tapping any post.";
-  const brand = world.brands.find((b) => b.brand_id === ours.brand_id)?.name ?? ours.brand_id;
-  // A testimonial headline is already in quotes; don't wrap it twice.
-  const headline = ours.headline.replace(/^["“](.*)["”]$/, "$1");
+  const taps = Object.fromEntries(
+    options.map((o) => [
+      `tap_${o.key}`,
+      { type: "noul", instructions: `Does this shopper tap ${postRef(o.creative, world)} to learn more?` } satisfies NoulQuestion,
+    ]),
+  ) as Record<TapKey, NoulQuestion>;
   return {
-    tap: {
-      type: "choice",
-      instructions: "Which post, if any, does this shopper tap to learn more?",
-      criteria,
-    },
-    believes: {
-      type: "noul",
-      instructions: `Does this shopper believe the main promise of the ${brand} post that says "${headline}"? The full post: ${renderAd(ours, world)}`,
-    },
+    ...taps,
+    believes: { type: "noul", instructions: `Does this shopper believe the main promise of ${postRef(ours, world)}?` },
   };
+}
+
+// P(tap) per creative id from a feed call's answers.
+export function tapProbabilities(options: FeedOption[], answers: Record<TapKey, NoulAnswer>): Record<string, number> {
+  return Object.fromEntries(options.map((o) => [o.creative.creative_id, answers[`tap_${o.key}`].noul]));
 }

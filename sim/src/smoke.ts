@@ -2,13 +2,13 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { parseArgs } from "node:util";
 import { config, loadEnv } from "./config.js";
-import { assembleFeed, feedQuestions } from "./feed.js";
+import { assembleFeed, feedQuestions, tapProbabilities } from "./feed.js";
 import { loadWorld } from "./fixtures.js";
 import { JevClient } from "./jev.js";
 import { makeShopper } from "./population.js";
 import { renderFeedState, wordCount } from "./render.js";
 
-// B0 smoke: one feed call (tap Choice + believes Noul) for one fixture shopper.
+// B0 smoke: one feed call (a tap Noul per post + believes) for one fixture shopper.
 // Usage: npm run sim:smoke -- [--shopper 0] [--no-cache] [--dry-run]
 
 const { values: args } = parseArgs({
@@ -31,7 +31,7 @@ if (!ours) throw new Error("no ranked generated creative in fixtures");
 
 const options = assembleFeed(shopper, ours, world, seed, tick);
 const questions = feedQuestions(options, ours, world);
-const state = renderFeedState(shopper, world, tick);
+const state = renderFeedState(shopper, world, tick, options.map((o) => o.creative));
 const words = wordCount(state);
 
 if (args["dry-run"]) {
@@ -56,12 +56,12 @@ try {
   console.log(state.replace(/^/gm, "  | "));
   console.log(`\nfeed call  model=${res.model}  latency=${res.latencyMs}ms  cache_hit=${res.cacheHit}  ` +
     `input_tokens=${res.usage.input_tokens}  output_tokens=${res.usage.output_tokens}`);
-  console.log(`\ntap (choice=${res.answers.tap.choice}, confidence=${res.answers.tap.confidence.toFixed(3)})`);
+  const taps = tapProbabilities(options, res.answers);
+  console.log("\ntap (one noul per post, raw, uncalibrated)");
   for (const o of options) {
     const mark = o.creative.creative_id === ours.creative_id ? "  <- ours" : "";
-    console.log(`  ${o.key}  ${pct(res.answers.tap.probabilities[o.key] ?? 0)}  ${o.creative.creative_id}${mark}`);
+    console.log(`  ${o.key}  ${pct(taps[o.creative.creative_id]!)}  ${o.creative.creative_id}${mark}`);
   }
-  console.log(`  none ${pct(res.answers.tap.probabilities.none ?? 0)}  keeps scrolling`);
   console.log(`\nbelieves (noul) ${pct(res.answers.believes.noul)}  ${ours.creative_id}`);
   console.log(`\nraw request and response: ${config.paths.lastCall}`);
 } finally {
