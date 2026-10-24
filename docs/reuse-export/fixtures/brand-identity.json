@@ -1,0 +1,1872 @@
+{
+  "_meta": {
+    "description": "One realistic Brand Identity (Brand Object report) page payload, keyed by the endpoint each hook calls (POST JSON, response body = { data: <value> }; brand-identity/synthesis is a GET). Everything is invented; domains use the reserved .example TLD; author identities never appear (Adcero stores only sha256 author_ref). brand-object/own-performance is deliberately absent: answer it 404 and chapter 07 \"What's working for you\" hides.",
+    "generatedAt": "2026-10-23T12:00:00.000Z",
+    "contract": "reuse-export/contracts.ts BrandIdentityPagePayload"
+  },
+  "brand-presence/profiles/list": {
+    "profiles": [
+      {
+        "id": "00000000-0000-4000-8000-000000000010",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "website_url": "https://haldenoats.example",
+        "brand_name": "Halden Oat Co.",
+        "name_variants": [
+          "Halden Oat Co.",
+          "Halden Oats",
+          "Halden"
+        ],
+        "product_description": "High-protein oat clusters and grab-and-go breakfast cups.",
+        "category": "Breakfast cereal",
+        "competitors": [
+          "Brightfield Granola",
+          "Puffwell Snacks",
+          "Morrow Oat Bakery",
+          "Tallgrass Cereal Co."
+        ],
+        "status": "confirmed",
+        "presence_role": "self",
+        "amazon_marketplace": "com",
+        "amazon_storefront_url": null,
+        "amazon_product_urls": [],
+        "meta": {},
+        "created_at": "2026-09-13T12:00:00.000Z",
+        "updated_at": "2026-10-21T12:00:00.000Z"
+      }
+    ],
+    "keptCounts": {
+      "00000000-0000-4000-8000-000000000010": 412
+    }
+  },
+  "brand-object/portfolio": {
+    "orgCompetitorCount": 4,
+    "profiles": []
+  },
+  "brand-object/status": {
+    "state": {
+      "status": "ready",
+      "completeness": {
+        "overall": 0.86,
+        "perSection": {
+          "positioning": 1,
+          "value_prop": 1,
+          "usp": 1,
+          "proof_point": 1,
+          "voice": 1,
+          "compliance": 1,
+          "voc_pain": 1,
+          "voc_desire": 1,
+          "voc_objection": 0.67,
+          "voc_praise": 1,
+          "market_prior": 1,
+          "persona": 1
+        }
+      },
+      "cost": {
+        "2026-10": {
+          "llmCalls": 4
+        }
+      }
+    },
+    "activeJobs": [],
+    "progress": {
+      "competitors": {
+        "tagged": 4,
+        "synced": 4,
+        "syncing": 0
+      },
+      "listening": {
+        "keptMentions": 412,
+        "activeJobs": 0,
+        "activeSources": 0
+      }
+    }
+  },
+  "brand-object/facts": {
+    "facts": [
+      {
+        "id": "00000000-0000-4000-f000-000000000001",
+        "section": "positioning",
+        "fact_key": "core",
+        "statement": "Halden Oat Co. makes high-protein oat clusters for people who want a breakfast that keeps them full until lunch.",
+        "details": {},
+        "confidence": 0.8,
+        "source": "identity_extraction",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "crawl_page",
+            "url": "https://haldenoats.example/",
+            "sourceSentence": "High-protein oat clusters that keep you full until lunch."
+          }
+        ],
+        "metrics": {},
+        "valid_from": "2026-10-11T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000002",
+        "section": "value_prop",
+        "fact_key": "every-bowl-delivers-15g-of-plant-protein-with-only-4g-of-sug",
+        "statement": "Every bowl delivers 15g of plant protein with only 4g of sugar.",
+        "details": {},
+        "confidence": 0.8,
+        "source": "identity_extraction",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "crawl_page",
+            "url": "https://haldenoats.example/nutrition",
+            "sourceSentence": "Every bowl delivers 15g of plant protein with only 4g of sugar."
+          }
+        ],
+        "metrics": {},
+        "valid_from": "2026-10-11T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000003",
+        "section": "value_prop",
+        "fact_key": "clusters-stay-crunchy-in-milk-for-over-ten-minutes",
+        "statement": "Clusters stay crunchy in milk for over ten minutes.",
+        "details": {},
+        "confidence": 0.8,
+        "source": "identity_extraction",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "crawl_page",
+            "url": "https://haldenoats.example/",
+            "sourceSentence": "Our clusters stay crunchy in milk for over ten minutes."
+          }
+        ],
+        "metrics": {},
+        "valid_from": "2026-10-11T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000004",
+        "section": "usp",
+        "fact_key": "baked-in-small-batches-with-whole-rolled-oats-and-no-seed-oi",
+        "statement": "Baked in small batches with whole rolled oats and no seed oils.",
+        "details": {},
+        "confidence": 0.8,
+        "source": "identity_extraction",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "crawl_page",
+            "url": "https://haldenoats.example/our-story",
+            "sourceSentence": "We bake in small batches with whole rolled oats and never use seed oils."
+          }
+        ],
+        "metrics": {},
+        "valid_from": "2026-10-11T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000005",
+        "section": "usp",
+        "fact_key": "ships-in-fully-compostable-pouches",
+        "statement": "Ships in fully compostable pouches.",
+        "details": {},
+        "confidence": 0.8,
+        "source": "identity_extraction",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "crawl_page",
+            "url": "https://haldenoats.example/sustainability",
+            "sourceSentence": "Every order ships in a fully compostable pouch."
+          }
+        ],
+        "metrics": {},
+        "valid_from": "2026-10-11T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000006",
+        "section": "proof_point",
+        "fact_key": "rated-4-7-out-of-5-across-more-than-3-000-reviews",
+        "statement": "Rated 4.7 out of 5 across more than 3,000 reviews.",
+        "details": {},
+        "confidence": 0.8,
+        "source": "identity_extraction",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "crawl_page",
+            "url": "https://haldenoats.example/reviews",
+            "sourceSentence": "Rated 4.7 out of 5 across more than 3,000 reviews."
+          }
+        ],
+        "metrics": {},
+        "valid_from": "2026-10-11T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000007",
+        "section": "proof_point",
+        "fact_key": "certified-gluten-free-by-an-independent-lab",
+        "statement": "Certified gluten-free by an independent lab.",
+        "details": {},
+        "confidence": 0.8,
+        "source": "identity_extraction",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "crawl_page",
+            "url": "https://haldenoats.example/faq",
+            "sourceSentence": "All flavours are certified gluten-free by an independent lab."
+          }
+        ],
+        "metrics": {},
+        "valid_from": "2026-10-11T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000008",
+        "section": "voice",
+        "fact_key": "voice-card",
+        "statement": "Warm, practical and lightly playful",
+        "details": {
+          "traits": [
+            "warm",
+            "practical",
+            "lightly playful"
+          ],
+          "toneDo": [
+            "Lead with the macros",
+            "Talk like a friend at breakfast"
+          ],
+          "toneDont": [
+            "Diet-culture language",
+            "Medical claims"
+          ]
+        },
+        "confidence": 0.6,
+        "source": "identity_extraction",
+        "status": "candidate",
+        "evidence": [],
+        "metrics": {},
+        "valid_from": "2026-10-11T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000009",
+        "section": "compliance",
+        "fact_key": "do-not-claim-the-product-treats-or-prevents-any-medical-cond",
+        "statement": "Do not claim the product treats or prevents any medical condition.",
+        "details": {},
+        "confidence": 0.8,
+        "source": "identity_extraction",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "crawl_page",
+            "url": "https://haldenoats.example/faq",
+            "sourceSentence": "Our oat clusters are a food, not a supplement, and are not intended to treat or prevent any condition."
+          }
+        ],
+        "metrics": {},
+        "valid_from": "2026-10-11T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000010",
+        "section": "voc_pain",
+        "fact_key": "mid-morning-hunger",
+        "statement": "Customers say other cereals leave them hungry again by 10am.",
+        "details": {
+          "label": "Mid-morning hunger",
+          "summary": "Customers say other cereals leave them hungry again by 10am.",
+          "themeKind": "pain",
+          "matchPhraseIds": [
+            "00000000-0000-4000-9000-000000000101",
+            "00000000-0000-4000-9000-000000000102"
+          ]
+        },
+        "confidence": 0.9,
+        "source": "voc_promotion",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "phrase",
+            "id": "00000000-0000-4000-9000-000000000101",
+            "quote": "I used to be starving by 10am with regular cereal, and this actually gets me to lunch.",
+            "platform": "reddit"
+          },
+          {
+            "type": "phrase",
+            "id": "00000000-0000-4000-9000-000000000102",
+            "quote": "Every granola I tried left me hungry an hour later.",
+            "platform": "trustpilot"
+          }
+        ],
+        "metrics": {
+          "frequency": 34,
+          "decayedFrequency": 27.88,
+          "perPlatform": {
+            "reddit": 14,
+            "trustpilot": 11,
+            "tiktok": 9
+          },
+          "avgSentiment": -0.4,
+          "lastSeenAt": "2026-10-21T12:00:00.000Z"
+        },
+        "valid_from": "2026-10-17T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000011",
+        "section": "voc_pain",
+        "fact_key": "too-much-sugar",
+        "statement": "Shoppers complain that most \"healthy\" cereals hide a lot of sugar.",
+        "details": {
+          "label": "Too much sugar",
+          "summary": "Shoppers complain that most \"healthy\" cereals hide a lot of sugar.",
+          "themeKind": "pain",
+          "matchPhraseIds": [
+            "00000000-0000-4000-9000-000000000111",
+            "00000000-0000-4000-9000-000000000112"
+          ]
+        },
+        "confidence": 0.9,
+        "source": "voc_promotion",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "phrase",
+            "id": "00000000-0000-4000-9000-000000000111",
+            "quote": "I was shocked how much sugar was in the granola I thought was healthy.",
+            "platform": "reddit"
+          }
+        ],
+        "metrics": {
+          "frequency": 22,
+          "decayedFrequency": 18.04,
+          "perPlatform": {
+            "reddit": 12,
+            "google_maps": 4,
+            "x": 6
+          },
+          "avgSentiment": -0.5,
+          "lastSeenAt": "2026-10-21T12:00:00.000Z"
+        },
+        "valid_from": "2026-10-17T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000012",
+        "section": "voc_pain",
+        "fact_key": "goes-soggy-fast",
+        "statement": "People are frustrated when clusters turn soggy within a minute of adding milk.",
+        "details": {
+          "label": "Goes soggy fast",
+          "summary": "People are frustrated when clusters turn soggy within a minute of adding milk.",
+          "themeKind": "pain",
+          "matchPhraseIds": [
+            "00000000-0000-4000-9000-000000000121",
+            "00000000-0000-4000-9000-000000000122"
+          ]
+        },
+        "confidence": 0.9,
+        "source": "voc_promotion",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "phrase",
+            "id": "00000000-0000-4000-9000-000000000121",
+            "quote": "My old cereal went soggy before I even sat down at the table.",
+            "platform": "tiktok"
+          }
+        ],
+        "metrics": {
+          "frequency": 15,
+          "decayedFrequency": 12.3,
+          "perPlatform": {
+            "tiktok": 8,
+            "instagram": 7
+          },
+          "avgSentiment": -0.3,
+          "lastSeenAt": "2026-10-21T12:00:00.000Z"
+        },
+        "valid_from": "2026-10-17T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000013",
+        "section": "voc_desire",
+        "fact_key": "protein-without-shakes",
+        "statement": "Customers want more protein at breakfast without drinking another shake.",
+        "details": {
+          "label": "Protein without shakes",
+          "summary": "Customers want more protein at breakfast without drinking another shake.",
+          "themeKind": "desire",
+          "matchPhraseIds": [
+            "00000000-0000-4000-9000-000000000131",
+            "00000000-0000-4000-9000-000000000132"
+          ]
+        },
+        "confidence": 0.9,
+        "source": "voc_promotion",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "phrase",
+            "id": "00000000-0000-4000-9000-000000000131",
+            "quote": "I want my protein in the morning without choking down another shake.",
+            "platform": "reddit"
+          }
+        ],
+        "metrics": {
+          "frequency": 28,
+          "decayedFrequency": 22.96,
+          "perPlatform": {
+            "reddit": 15,
+            "instagram": 7,
+            "trustpilot": 6
+          },
+          "avgSentiment": 0.3,
+          "lastSeenAt": "2026-10-21T12:00:00.000Z"
+        },
+        "valid_from": "2026-10-17T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000014",
+        "section": "voc_desire",
+        "fact_key": "kid-approved-breakfast",
+        "statement": "Parents want a breakfast their kids will eat that they also feel good about.",
+        "details": {
+          "label": "Kid-approved breakfast",
+          "summary": "Parents want a breakfast their kids will eat that they also feel good about.",
+          "themeKind": "desire",
+          "matchPhraseIds": [
+            "00000000-0000-4000-9000-000000000141",
+            "00000000-0000-4000-9000-000000000142"
+          ]
+        },
+        "confidence": 0.9,
+        "source": "voc_promotion",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "phrase",
+            "id": "00000000-0000-4000-9000-000000000141",
+            "quote": "My kids actually ask for this and I feel good about what is in it.",
+            "platform": "instagram"
+          }
+        ],
+        "metrics": {
+          "frequency": 19,
+          "decayedFrequency": 15.58,
+          "perPlatform": {
+            "instagram": 10,
+            "tiktok": 9
+          },
+          "avgSentiment": 0.6,
+          "lastSeenAt": "2026-10-21T12:00:00.000Z"
+        },
+        "valid_from": "2026-10-17T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000015",
+        "section": "voc_desire",
+        "fact_key": "grab-and-go-mornings",
+        "statement": "Busy commuters want something they can eat dry on the way to work.",
+        "details": {
+          "label": "Grab-and-go mornings",
+          "summary": "Busy commuters want something they can eat dry on the way to work.",
+          "themeKind": "desire",
+          "matchPhraseIds": [
+            "00000000-0000-4000-9000-000000000151",
+            "00000000-0000-4000-9000-000000000152"
+          ]
+        },
+        "confidence": 0.9,
+        "source": "voc_promotion",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "phrase",
+            "id": "00000000-0000-4000-9000-000000000151",
+            "quote": "I just grab a handful dry on my way to the train every morning.",
+            "platform": "x"
+          }
+        ],
+        "metrics": {
+          "frequency": 12,
+          "decayedFrequency": 9.84,
+          "perPlatform": {
+            "x": 7,
+            "reddit": 5
+          },
+          "avgSentiment": 0.4,
+          "lastSeenAt": "2026-10-21T12:00:00.000Z"
+        },
+        "valid_from": "2026-10-17T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000016",
+        "section": "voc_objection",
+        "fact_key": "price-per-box",
+        "statement": "Some shoppers hesitate because a box costs more than supermarket cereal.",
+        "details": {
+          "label": "Price per box",
+          "summary": "Some shoppers hesitate because a box costs more than supermarket cereal.",
+          "themeKind": "objection",
+          "matchPhraseIds": [
+            "00000000-0000-4000-9000-000000000161",
+            "00000000-0000-4000-9000-000000000162"
+          ]
+        },
+        "confidence": 0.9,
+        "source": "voc_promotion",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "phrase",
+            "id": "00000000-0000-4000-9000-000000000161",
+            "quote": "I love the taste but paying this much per box every week is hard to justify.",
+            "platform": "reddit"
+          }
+        ],
+        "metrics": {
+          "frequency": 17,
+          "decayedFrequency": 13.94,
+          "perPlatform": {
+            "reddit": 9,
+            "trustpilot": 8
+          },
+          "avgSentiment": -0.2,
+          "lastSeenAt": "2026-10-21T12:00:00.000Z"
+        },
+        "valid_from": "2026-10-17T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000017",
+        "section": "voc_objection",
+        "fact_key": "shipping-wait",
+        "statement": "A few customers mention waiting longer than expected for delivery.",
+        "details": {
+          "label": "Shipping wait",
+          "summary": "A few customers mention waiting longer than expected for delivery.",
+          "themeKind": "objection",
+          "matchPhraseIds": [
+            "00000000-0000-4000-9000-000000000171",
+            "00000000-0000-4000-9000-000000000172"
+          ]
+        },
+        "confidence": 0.86,
+        "source": "voc_promotion",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "phrase",
+            "id": "00000000-0000-4000-9000-000000000171",
+            "quote": "My first order took almost two weeks to arrive, which was frustrating.",
+            "platform": "trustpilot"
+          }
+        ],
+        "metrics": {
+          "frequency": 9,
+          "decayedFrequency": 7.38,
+          "perPlatform": {
+            "trustpilot": 6,
+            "google_maps": 3
+          },
+          "avgSentiment": -0.4,
+          "lastSeenAt": "2026-10-21T12:00:00.000Z"
+        },
+        "valid_from": "2026-10-17T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000018",
+        "section": "voc_praise",
+        "fact_key": "stays-crunchy",
+        "statement": "Customers repeatedly praise how long the clusters stay crunchy in milk.",
+        "details": {
+          "label": "Stays crunchy",
+          "summary": "Customers repeatedly praise how long the clusters stay crunchy in milk.",
+          "themeKind": "praise",
+          "matchPhraseIds": [
+            "00000000-0000-4000-9000-000000000181",
+            "00000000-0000-4000-9000-000000000182"
+          ]
+        },
+        "confidence": 0.9,
+        "source": "voc_promotion",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "phrase",
+            "id": "00000000-0000-4000-9000-000000000181",
+            "quote": "These stay crunchy in my milk the whole time I am eating, which never happens.",
+            "platform": "tiktok"
+          }
+        ],
+        "metrics": {
+          "frequency": 41,
+          "decayedFrequency": 33.62,
+          "perPlatform": {
+            "tiktok": 16,
+            "trustpilot": 14,
+            "instagram": 11
+          },
+          "avgSentiment": 0.8,
+          "lastSeenAt": "2026-10-21T12:00:00.000Z"
+        },
+        "valid_from": "2026-10-17T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000019",
+        "section": "voc_praise",
+        "fact_key": "tastes-like-dessert",
+        "statement": "People say the flavours taste like a treat while still feeling healthy.",
+        "details": {
+          "label": "Tastes like dessert",
+          "summary": "People say the flavours taste like a treat while still feeling healthy.",
+          "themeKind": "praise",
+          "matchPhraseIds": [
+            "00000000-0000-4000-9000-000000000191",
+            "00000000-0000-4000-9000-000000000192"
+          ]
+        },
+        "confidence": 0.9,
+        "source": "voc_promotion",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "phrase",
+            "id": "00000000-0000-4000-9000-000000000191",
+            "quote": "The cinnamon one tastes like dessert and I still hit my protein goal.",
+            "platform": "instagram"
+          }
+        ],
+        "metrics": {
+          "frequency": 31,
+          "decayedFrequency": 25.42,
+          "perPlatform": {
+            "instagram": 13,
+            "tiktok": 12,
+            "reddit": 6
+          },
+          "avgSentiment": 0.7,
+          "lastSeenAt": "2026-10-21T12:00:00.000Z"
+        },
+        "valid_from": "2026-10-17T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000020",
+        "section": "voc_praise",
+        "fact_key": "friendly-support",
+        "statement": "Reviewers mention fast, friendly replies from the support team.",
+        "details": {
+          "label": "Friendly support",
+          "summary": "Reviewers mention fast, friendly replies from the support team.",
+          "themeKind": "praise",
+          "matchPhraseIds": [
+            "00000000-0000-4000-9000-000000000201",
+            "00000000-0000-4000-9000-000000000202"
+          ]
+        },
+        "confidence": 0.9,
+        "source": "voc_promotion",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "phrase",
+            "id": "00000000-0000-4000-9000-000000000201",
+            "quote": "Support replied within an hour and swapped my flavour with no fuss.",
+            "platform": "trustpilot"
+          }
+        ],
+        "metrics": {
+          "frequency": 11,
+          "decayedFrequency": 9.02,
+          "perPlatform": {
+            "trustpilot": 8,
+            "google_maps": 3
+          },
+          "avgSentiment": 0.7,
+          "lastSeenAt": "2026-10-21T12:00:00.000Z"
+        },
+        "valid_from": "2026-10-17T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000021",
+        "section": "market_prior",
+        "fact_key": "angle:health-nutrition",
+        "statement": "Winning competitor ads in this set use the 'health_nutrition' angle in 5 of 12 distinct creative concepts (42%, replication-weighted 24).",
+        "details": {
+          "dimension": "angle",
+          "value": "health_nutrition",
+          "share": 42,
+          "conceptCount": 5,
+          "totalConcepts": 12
+        },
+        "confidence": 0.65,
+        "source": "market_distillation",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "ad_label_agg",
+            "id": "00000000-0000-4000-a000-000000000064"
+          },
+          {
+            "type": "ad_label_agg",
+            "id": "00000000-0000-4000-a000-000000000058"
+          }
+        ],
+        "metrics": {
+          "winnerCount": 9,
+          "replicationWeight": 24,
+          "evidenceAsOf": "2026-10-20T12:00:00.000Z"
+        },
+        "valid_from": "2026-10-20T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000022",
+        "section": "market_prior",
+        "fact_key": "angle:taste-indulgence",
+        "statement": "Winning competitor ads in this set use the 'taste_indulgence' angle in 4 of 12 distinct creative concepts (33%, replication-weighted 16).",
+        "details": {
+          "dimension": "angle",
+          "value": "taste_indulgence",
+          "share": 33,
+          "conceptCount": 4,
+          "totalConcepts": 12
+        },
+        "confidence": 0.6000000000000001,
+        "source": "market_distillation",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "ad_label_agg",
+            "id": "00000000-0000-4000-a000-000000000064"
+          },
+          {
+            "type": "ad_label_agg",
+            "id": "00000000-0000-4000-a000-000000000058"
+          }
+        ],
+        "metrics": {
+          "winnerCount": 6,
+          "replicationWeight": 16,
+          "evidenceAsOf": "2026-10-20T12:00:00.000Z"
+        },
+        "valid_from": "2026-10-20T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000023",
+        "section": "market_prior",
+        "fact_key": "angle:convenience",
+        "statement": "Winning competitor ads in this set use the 'convenience' angle in 2 of 12 distinct creative concepts (17%, replication-weighted 7).",
+        "details": {
+          "dimension": "angle",
+          "value": "convenience",
+          "share": 17,
+          "conceptCount": 2,
+          "totalConcepts": 12
+        },
+        "confidence": 0.5,
+        "source": "market_distillation",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "ad_label_agg",
+            "id": "00000000-0000-4000-a000-000000000064"
+          },
+          {
+            "type": "ad_label_agg",
+            "id": "00000000-0000-4000-a000-000000000058"
+          }
+        ],
+        "metrics": {
+          "winnerCount": 3,
+          "replicationWeight": 7,
+          "evidenceAsOf": "2026-10-20T12:00:00.000Z"
+        },
+        "valid_from": "2026-10-20T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000024",
+        "section": "market_prior",
+        "fact_key": "hook_archetype:statistic",
+        "statement": "Winning competitor ads in this set use the 'statistic' hook archetype in 5 of 12 distinct creative concepts (42%, replication-weighted 22).",
+        "details": {
+          "dimension": "hook_archetype",
+          "value": "statistic",
+          "share": 42,
+          "conceptCount": 5,
+          "totalConcepts": 12
+        },
+        "confidence": 0.65,
+        "source": "market_distillation",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "ad_label_agg",
+            "id": "00000000-0000-4000-a000-000000000064"
+          },
+          {
+            "type": "ad_label_agg",
+            "id": "00000000-0000-4000-a000-000000000058"
+          }
+        ],
+        "metrics": {
+          "winnerCount": 9,
+          "replicationWeight": 22,
+          "evidenceAsOf": "2026-10-20T12:00:00.000Z"
+        },
+        "valid_from": "2026-10-20T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000025",
+        "section": "market_prior",
+        "fact_key": "hook_archetype:social-proof",
+        "statement": "Winning competitor ads in this set use the 'social_proof' hook archetype in 4 of 12 distinct creative concepts (33%, replication-weighted 15).",
+        "details": {
+          "dimension": "hook_archetype",
+          "value": "social_proof",
+          "share": 33,
+          "conceptCount": 4,
+          "totalConcepts": 12
+        },
+        "confidence": 0.6000000000000001,
+        "source": "market_distillation",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "ad_label_agg",
+            "id": "00000000-0000-4000-a000-000000000064"
+          },
+          {
+            "type": "ad_label_agg",
+            "id": "00000000-0000-4000-a000-000000000058"
+          }
+        ],
+        "metrics": {
+          "winnerCount": 6,
+          "replicationWeight": 15,
+          "evidenceAsOf": "2026-10-20T12:00:00.000Z"
+        },
+        "valid_from": "2026-10-20T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000026",
+        "section": "market_prior",
+        "fact_key": "hook_archetype:problem-callout",
+        "statement": "Winning competitor ads in this set use the 'problem_callout' hook archetype in 2 of 12 distinct creative concepts (17%, replication-weighted 6).",
+        "details": {
+          "dimension": "hook_archetype",
+          "value": "problem_callout",
+          "share": 17,
+          "conceptCount": 2,
+          "totalConcepts": 12
+        },
+        "confidence": 0.5,
+        "source": "market_distillation",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "ad_label_agg",
+            "id": "00000000-0000-4000-a000-000000000064"
+          },
+          {
+            "type": "ad_label_agg",
+            "id": "00000000-0000-4000-a000-000000000058"
+          }
+        ],
+        "metrics": {
+          "winnerCount": 3,
+          "replicationWeight": 6,
+          "evidenceAsOf": "2026-10-20T12:00:00.000Z"
+        },
+        "valid_from": "2026-10-20T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000027",
+        "section": "market_prior",
+        "fact_key": "format:ugc",
+        "statement": "Winning competitor ads in this set use the 'ugc' format in 4 of 12 distinct creative concepts (33%, replication-weighted 18).",
+        "details": {
+          "dimension": "format",
+          "value": "ugc",
+          "share": 33,
+          "conceptCount": 4,
+          "totalConcepts": 12
+        },
+        "confidence": 0.6000000000000001,
+        "source": "market_distillation",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "ad_label_agg",
+            "id": "00000000-0000-4000-a000-000000000064"
+          },
+          {
+            "type": "ad_label_agg",
+            "id": "00000000-0000-4000-a000-000000000058"
+          }
+        ],
+        "metrics": {
+          "winnerCount": 7,
+          "replicationWeight": 18,
+          "evidenceAsOf": "2026-10-20T12:00:00.000Z"
+        },
+        "valid_from": "2026-10-20T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000028",
+        "section": "market_prior",
+        "fact_key": "format:product-only-static",
+        "statement": "Winning competitor ads in this set use the 'product_only_static' format in 3 of 12 distinct creative concepts (25%, replication-weighted 11).",
+        "details": {
+          "dimension": "format",
+          "value": "product_only_static",
+          "share": 25,
+          "conceptCount": 3,
+          "totalConcepts": 12
+        },
+        "confidence": 0.55,
+        "source": "market_distillation",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "ad_label_agg",
+            "id": "00000000-0000-4000-a000-000000000064"
+          },
+          {
+            "type": "ad_label_agg",
+            "id": "00000000-0000-4000-a000-000000000058"
+          }
+        ],
+        "metrics": {
+          "winnerCount": 4,
+          "replicationWeight": 11,
+          "evidenceAsOf": "2026-10-20T12:00:00.000Z"
+        },
+        "valid_from": "2026-10-20T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000029",
+        "section": "market_prior",
+        "fact_key": "format:lifestyle-static",
+        "statement": "Winning competitor ads in this set use the 'lifestyle_static' format in 2 of 12 distinct creative concepts (17%, replication-weighted 8).",
+        "details": {
+          "dimension": "format",
+          "value": "lifestyle_static",
+          "share": 17,
+          "conceptCount": 2,
+          "totalConcepts": 12
+        },
+        "confidence": 0.5,
+        "source": "market_distillation",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "ad_label_agg",
+            "id": "00000000-0000-4000-a000-000000000064"
+          },
+          {
+            "type": "ad_label_agg",
+            "id": "00000000-0000-4000-a000-000000000058"
+          }
+        ],
+        "metrics": {
+          "winnerCount": 3,
+          "replicationWeight": 8,
+          "evidenceAsOf": "2026-10-20T12:00:00.000Z"
+        },
+        "valid_from": "2026-10-20T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000030",
+        "section": "market_prior",
+        "fact_key": "offer_type:subscribe-save",
+        "statement": "Winning competitor ads in this set use the 'subscribe_save' offer type in 3 of 7 distinct creative concepts (43%, replication-weighted 12).",
+        "details": {
+          "dimension": "offer_type",
+          "value": "subscribe_save",
+          "share": 43,
+          "conceptCount": 3,
+          "totalConcepts": 7
+        },
+        "confidence": 0.55,
+        "source": "market_distillation",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "ad_label_agg",
+            "id": "00000000-0000-4000-a000-000000000064"
+          },
+          {
+            "type": "ad_label_agg",
+            "id": "00000000-0000-4000-a000-000000000058"
+          }
+        ],
+        "metrics": {
+          "winnerCount": 5,
+          "replicationWeight": 12,
+          "evidenceAsOf": "2026-10-20T12:00:00.000Z"
+        },
+        "valid_from": "2026-10-20T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000031",
+        "section": "market_prior",
+        "fact_key": "offer_type:discount",
+        "statement": "Winning competitor ads in this set use the 'discount' offer type in 2 of 7 distinct creative concepts (29%, replication-weighted 7).",
+        "details": {
+          "dimension": "offer_type",
+          "value": "discount",
+          "share": 29,
+          "conceptCount": 2,
+          "totalConcepts": 7
+        },
+        "confidence": 0.5,
+        "source": "market_distillation",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "ad_label_agg",
+            "id": "00000000-0000-4000-a000-000000000064"
+          },
+          {
+            "type": "ad_label_agg",
+            "id": "00000000-0000-4000-a000-000000000058"
+          }
+        ],
+        "metrics": {
+          "winnerCount": 3,
+          "replicationWeight": 7,
+          "evidenceAsOf": "2026-10-20T12:00:00.000Z"
+        },
+        "valid_from": "2026-10-20T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000032",
+        "section": "persona",
+        "fact_key": "the-fuel-up-commuter",
+        "statement": "The Fuel-Up Commuter: Early-shift worker who needs breakfast to last until lunch and eats on the move.",
+        "details": {
+          "name": "The Fuel-Up Commuter",
+          "description": "Early-shift worker who needs breakfast to last until lunch and eats on the move.",
+          "awarenessStage": "problem_aware",
+          "extrapolated": false,
+          "pains": [
+            {
+              "fact_id": "00000000-0000-4000-f000-000000000010",
+              "note": "Hungry again by 10am on regular cereal"
+            }
+          ],
+          "desires": [
+            {
+              "fact_id": "00000000-0000-4000-f000-000000000015",
+              "note": "Wants something to eat dry on the commute"
+            }
+          ],
+          "objections": [
+            {
+              "fact_id": "00000000-0000-4000-f000-000000000016",
+              "note": "Weighs cost per box against supermarket cereal"
+            }
+          ],
+          "verbatims": [
+            "I used to be starving by 10am with regular cereal, and this actually gets me to lunch."
+          ]
+        },
+        "confidence": 0.65,
+        "source": "persona_synthesis",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "fact",
+            "id": "00000000-0000-4000-f000-000000000010"
+          },
+          {
+            "type": "fact",
+            "id": "00000000-0000-4000-f000-000000000015"
+          },
+          {
+            "type": "fact",
+            "id": "00000000-0000-4000-f000-000000000016"
+          },
+          {
+            "type": "fact",
+            "quote": "I used to be starving by 10am with regular cereal, and this actually gets me to lunch."
+          }
+        ],
+        "metrics": {},
+        "valid_from": "2026-10-20T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000033",
+        "section": "persona",
+        "fact_key": "the-label-reading-parent",
+        "statement": "The Label-Reading Parent: Parent comparing sugar and protein on every box, looking for something the kids will eat.",
+        "details": {
+          "name": "The Label-Reading Parent",
+          "description": "Parent comparing sugar and protein on every box, looking for something the kids will eat.",
+          "awarenessStage": "solution_aware",
+          "extrapolated": false,
+          "pains": [
+            {
+              "fact_id": "00000000-0000-4000-f000-000000000011",
+              "note": "Distrusts \"healthy\" claims that hide sugar"
+            }
+          ],
+          "desires": [
+            {
+              "fact_id": "00000000-0000-4000-f000-000000000014",
+              "note": "Needs a breakfast the kids actually ask for"
+            }
+          ],
+          "objections": [],
+          "verbatims": [
+            "My kids actually ask for this and I feel good about what is in it."
+          ]
+        },
+        "confidence": 0.65,
+        "source": "persona_synthesis",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "fact",
+            "id": "00000000-0000-4000-f000-000000000011"
+          },
+          {
+            "type": "fact",
+            "id": "00000000-0000-4000-f000-000000000014"
+          },
+          {
+            "type": "fact",
+            "quote": "My kids actually ask for this and I feel good about what is in it."
+          }
+        ],
+        "metrics": {},
+        "valid_from": "2026-10-20T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000034",
+        "section": "persona",
+        "fact_key": "the-macro-tracker",
+        "statement": "The Macro Tracker: Gym-goer hitting a daily protein target who is tired of shakes and bars.",
+        "details": {
+          "name": "The Macro Tracker",
+          "description": "Gym-goer hitting a daily protein target who is tired of shakes and bars.",
+          "awarenessStage": "product_aware",
+          "extrapolated": false,
+          "pains": [
+            {
+              "fact_id": "00000000-0000-4000-f000-000000000012",
+              "note": "Gave up on cereal because it went soggy"
+            }
+          ],
+          "desires": [
+            {
+              "fact_id": "00000000-0000-4000-f000-000000000013",
+              "note": "Wants protein at breakfast without another shake"
+            }
+          ],
+          "objections": [],
+          "verbatims": [
+            "I want my protein in the morning without choking down another shake."
+          ]
+        },
+        "confidence": 0.65,
+        "source": "persona_synthesis",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "fact",
+            "id": "00000000-0000-4000-f000-000000000012"
+          },
+          {
+            "type": "fact",
+            "id": "00000000-0000-4000-f000-000000000013"
+          },
+          {
+            "type": "fact",
+            "quote": "I want my protein in the morning without choking down another shake."
+          }
+        ],
+        "metrics": {},
+        "valid_from": "2026-10-20T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-f000-000000000035",
+        "section": "persona",
+        "fact_key": "the-breakfast-skipper",
+        "statement": "The Breakfast Skipper: Someone who skips breakfast entirely and has not connected that to their mid-morning slump.",
+        "details": {
+          "name": "The Breakfast Skipper",
+          "description": "Someone who skips breakfast entirely and has not connected that to their mid-morning slump.",
+          "awarenessStage": "unaware",
+          "extrapolated": true,
+          "pains": [
+            {
+              "fact_id": "00000000-0000-4000-f000-000000000010",
+              "note": "Feels the 10am slump without naming the cause"
+            }
+          ],
+          "desires": [
+            {
+              "fact_id": "00000000-0000-4000-f000-000000000015",
+              "note": "Would eat something that needs zero prep"
+            }
+          ],
+          "objections": [],
+          "verbatims": []
+        },
+        "confidence": 0.5,
+        "source": "persona_synthesis",
+        "status": "candidate",
+        "evidence": [
+          {
+            "type": "fact",
+            "id": "00000000-0000-4000-f000-000000000010"
+          },
+          {
+            "type": "fact",
+            "id": "00000000-0000-4000-f000-000000000015"
+          }
+        ],
+        "metrics": {},
+        "valid_from": "2026-10-20T12:00:00.000Z"
+      }
+    ],
+    "pendingSuggestionsByFactId": {}
+  },
+  "brand-identity/synthesis": {
+    "synthesis": {
+      "id": "00000000-0000-4000-7000-000000000001",
+      "organizationId": "00000000-0000-4000-8000-000000000001",
+      "brandProfileId": "00000000-0000-4000-8000-000000000010",
+      "status": "ready",
+      "trigger": "manual",
+      "headline": "A protein breakfast that wins on staying power, while the market sells sugar-light health",
+      "story": [
+        "Halden Oat Co. positions itself on fullness: 15g of plant protein per bowl and a promise to last until lunch. Customers repeat that promise back, with \"stays crunchy\" (41 mentions) and \"mid-morning hunger\" (34) leading the conversation.",
+        "Competitor winners lean hardest on health and nutrition angles told through statistic hooks (24 replication weight), with subscribe-and-save the most common offer. Halden already owns the numbers those ads rely on but rarely leads with them."
+      ],
+      "strengths": [
+        {
+          "point": "Crunch is the most-praised attribute",
+          "evidence": "Stays crunchy: 41 mentions across TikTok, Trustpilot and Instagram."
+        },
+        {
+          "point": "Fullness claim is echoed by customers",
+          "evidence": "Mid-morning hunger: 34 mentions, matching the positioning statement."
+        }
+      ],
+      "tensions": [
+        {
+          "point": "Price is the main objection",
+          "evidence": "Price per box: 17 mentions; no subscribe-and-save offer is visible in the claims."
+        }
+      ],
+      "watchItems": [
+        {
+          "observation": "Shipping-wait complaints are small but negative",
+          "suggestedCheck": "Track the Shipping wait theme after the next sync."
+        }
+      ],
+      "hypotheses": [
+        {
+          "hypothesis": "Leading with the 15g protein statistic may match the market's strongest hook pattern.",
+          "groundedIn": "statistic hook, replication-weighted 22"
+        }
+      ],
+      "inputsFingerprint": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",
+      "factsCount": 35,
+      "model": "gpt-5.4",
+      "cost": {
+        "inputTokens": 6120,
+        "outputTokens": 812,
+        "reasoningTokens": 1410,
+        "usd": 0.0261,
+        "model": "gpt-5.4"
+      },
+      "inputSnapshot": {
+        "factsCount": 35,
+        "perSectionCounts": {
+          "positioning": 1,
+          "value_prop": 2,
+          "usp": 2,
+          "proof_point": 2,
+          "voice": 1,
+          "compliance": 1,
+          "voc_pain": 3,
+          "voc_desire": 3,
+          "voc_objection": 2,
+          "voc_praise": 3,
+          "market_prior": 11,
+          "persona": 4
+        },
+        "completenessOverall": 0.86,
+        "brandName": "Halden Oat Co.",
+        "locale": "en"
+      },
+      "generatedBy": null,
+      "generatedByType": "system",
+      "error": null,
+      "createdAt": "2026-10-22T12:00:00.000Z",
+      "updatedAt": "2026-10-22T12:00:00.000Z"
+    },
+    "staleness": {
+      "stale": false,
+      "reason": "fresh"
+    },
+    "translated": false
+  },
+  "brand-object/own-ad-angles": {
+    "mix": {
+      "totalLabeledAds": 0,
+      "byAngle": {},
+      "byUniversal": {}
+    }
+  },
+  "brand-presence/sources/list": {
+    "sources": [
+      {
+        "id": "00000000-0000-4000-5000-000000000001",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "brand_profile_id": "00000000-0000-4000-8000-000000000010",
+        "source_type": "reddit_search",
+        "uri": "halden oat co",
+        "label": "Reddit search",
+        "status": "synced",
+        "meta": {},
+        "last_synced_at": "2026-10-19T12:00:00.000Z",
+        "created_at": "2026-09-13T12:00:00.000Z",
+        "updated_at": "2026-10-19T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-5000-000000000002",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "brand_profile_id": "00000000-0000-4000-8000-000000000010",
+        "source_type": "trustpilot",
+        "uri": "https://www.trustpilot.com/review/haldenoats.example",
+        "label": "Trustpilot",
+        "status": "synced",
+        "meta": {},
+        "last_synced_at": "2026-10-19T12:00:00.000Z",
+        "created_at": "2026-09-13T12:00:00.000Z",
+        "updated_at": "2026-10-19T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-5000-000000000003",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "brand_profile_id": "00000000-0000-4000-8000-000000000010",
+        "source_type": "google_maps_reviews",
+        "uri": "https://maps.google.com/?cid=1000000000000000001",
+        "label": "Google Maps",
+        "status": "synced",
+        "meta": {},
+        "last_synced_at": "2026-10-18T12:00:00.000Z",
+        "created_at": "2026-09-13T12:00:00.000Z",
+        "updated_at": "2026-10-18T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-5000-000000000004",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "brand_profile_id": "00000000-0000-4000-8000-000000000010",
+        "source_type": "x",
+        "uri": "haldenoats_example",
+        "label": "X",
+        "status": "synced",
+        "meta": {},
+        "last_synced_at": "2026-10-20T12:00:00.000Z",
+        "created_at": "2026-09-13T12:00:00.000Z",
+        "updated_at": "2026-10-20T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-5000-000000000005",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "brand_profile_id": "00000000-0000-4000-8000-000000000010",
+        "source_type": "tiktok_comments",
+        "uri": "haldenoats_example",
+        "label": "TikTok",
+        "status": "synced",
+        "meta": {},
+        "last_synced_at": "2026-10-17T12:00:00.000Z",
+        "created_at": "2026-09-13T12:00:00.000Z",
+        "updated_at": "2026-10-17T12:00:00.000Z"
+      },
+      {
+        "id": "00000000-0000-4000-5000-000000000006",
+        "organization_id": "00000000-0000-4000-8000-000000000001",
+        "brand_profile_id": "00000000-0000-4000-8000-000000000010",
+        "source_type": "instagram_comments",
+        "uri": "haldenoats_example",
+        "label": "Instagram",
+        "status": "synced",
+        "meta": {},
+        "last_synced_at": "2026-10-17T12:00:00.000Z",
+        "created_at": "2026-09-13T12:00:00.000Z",
+        "updated_at": "2026-10-17T12:00:00.000Z"
+      }
+    ],
+    "mentionCounts": {
+      "reddit": 88,
+      "trustpilot": 96,
+      "google_maps": 12,
+      "x": 24,
+      "tiktok": 118,
+      "instagram": 74
+    }
+  },
+  "brand-presence/status": {
+    "profileStatus": "confirmed",
+    "sources": [
+      {
+        "id": "00000000-0000-4000-5000-000000000001",
+        "source_type": "reddit_search",
+        "uri": "halden oat co",
+        "label": "Reddit search",
+        "status": "synced",
+        "last_synced_at": "2026-10-19T12:00:00.000Z",
+        "awaitingConfirm": false
+      },
+      {
+        "id": "00000000-0000-4000-5000-000000000002",
+        "source_type": "trustpilot",
+        "uri": "https://www.trustpilot.com/review/haldenoats.example",
+        "label": "Trustpilot",
+        "status": "synced",
+        "last_synced_at": "2026-10-19T12:00:00.000Z",
+        "awaitingConfirm": false
+      },
+      {
+        "id": "00000000-0000-4000-5000-000000000003",
+        "source_type": "google_maps_reviews",
+        "uri": "https://maps.google.com/?cid=1000000000000000001",
+        "label": "Google Maps",
+        "status": "synced",
+        "last_synced_at": "2026-10-18T12:00:00.000Z",
+        "awaitingConfirm": false
+      },
+      {
+        "id": "00000000-0000-4000-5000-000000000004",
+        "source_type": "x",
+        "uri": "haldenoats_example",
+        "label": "X",
+        "status": "synced",
+        "last_synced_at": "2026-10-20T12:00:00.000Z",
+        "awaitingConfirm": false
+      },
+      {
+        "id": "00000000-0000-4000-5000-000000000005",
+        "source_type": "tiktok_comments",
+        "uri": "haldenoats_example",
+        "label": "TikTok",
+        "status": "synced",
+        "last_synced_at": "2026-10-17T12:00:00.000Z",
+        "awaitingConfirm": false
+      },
+      {
+        "id": "00000000-0000-4000-5000-000000000006",
+        "source_type": "instagram_comments",
+        "uri": "haldenoats_example",
+        "label": "Instagram",
+        "status": "synced",
+        "last_synced_at": "2026-10-17T12:00:00.000Z",
+        "awaitingConfirm": false
+      }
+    ],
+    "counts": {
+      "total": 1204,
+      "kept": 412,
+      "brand": 690,
+      "brandKept": 412,
+      "competitor": 0,
+      "competitorKept": 0,
+      "category": 514,
+      "categoryKept": 0,
+      "relevant": 236,
+      "irrelevant": 792,
+      "pending": 0,
+      "topSubreddits": [
+        {
+          "subreddit": "EatCheapAndHealthy",
+          "count": 31
+        },
+        {
+          "subreddit": "Fitness",
+          "count": 22
+        }
+      ]
+    },
+    "activeJobs": []
+  },
+  "brand-presence/insights/competitive-landscape": {
+    "self": {
+      "profileId": "00000000-0000-4000-8000-000000000010",
+      "brandName": "Halden Oat Co.",
+      "role": "self",
+      "keptMentions": 412,
+      "platforms": [
+        {
+          "platform": "tiktok",
+          "kept": 118
+        },
+        {
+          "platform": "trustpilot",
+          "kept": 96
+        },
+        {
+          "platform": "reddit",
+          "kept": 88
+        },
+        {
+          "platform": "instagram",
+          "kept": 74
+        },
+        {
+          "platform": "x",
+          "kept": 24
+        },
+        {
+          "platform": "google_maps",
+          "kept": 12
+        }
+      ],
+      "sentiment": {
+        "score": 0.42,
+        "positivePct": 64,
+        "neutralPct": 21,
+        "negativePct": 15,
+        "scoredWeight": 398
+      },
+      "themesByKind": {
+        "pain": [
+          {
+            "kind": "pain",
+            "label": "Mid-morning hunger",
+            "summary": "Other cereals leave them hungry by 10am.",
+            "frequency": 34,
+            "mentionCount": 34,
+            "avgSentiment": -0.4
+          }
+        ],
+        "desire": [
+          {
+            "kind": "desire",
+            "label": "Protein without shakes",
+            "summary": "More protein at breakfast without a shake.",
+            "frequency": 28,
+            "mentionCount": 28,
+            "avgSentiment": 0.3
+          }
+        ],
+        "objection": [
+          {
+            "kind": "objection",
+            "label": "Price per box",
+            "summary": "A box costs more than supermarket cereal.",
+            "frequency": 17,
+            "mentionCount": 17,
+            "avgSentiment": -0.2
+          }
+        ],
+        "praise": [
+          {
+            "kind": "praise",
+            "label": "Stays crunchy",
+            "summary": "Clusters stay crunchy in milk.",
+            "frequency": 41,
+            "mentionCount": 41,
+            "avgSentiment": 0.8
+          }
+        ]
+      },
+      "topPraise": {
+        "body": "These stay crunchy in my milk the whole time I am eating, which never happens.",
+        "platform": "trustpilot",
+        "url": "https://www.trustpilot.com/reviews/000000000000000000000001",
+        "rating": 5,
+        "postedAt": "2026-10-14T12:00:00.000Z",
+        "sentiment": 0.9
+      },
+      "topComplaint": {
+        "body": "My first order took almost two weeks to arrive, which was frustrating.",
+        "platform": "trustpilot",
+        "url": "https://www.trustpilot.com/reviews/000000000000000000000002",
+        "rating": 2,
+        "postedAt": "2026-10-02T12:00:00.000Z",
+        "sentiment": -0.6
+      },
+      "hookQuotes": [
+        "Finally a cereal that keeps me full until lunch",
+        "Tastes like dessert, hits my protein goal"
+      ],
+      "lastSyncedAt": "2026-10-19T12:00:00.000Z"
+    },
+    "competitors": [
+      {
+        "profileId": "00000000-0000-4000-8000-000000000201",
+        "brandName": "Brightfield Granola",
+        "role": "competitor",
+        "keptMentions": 236,
+        "platforms": [
+          {
+            "platform": "reddit",
+            "kept": 102
+          },
+          {
+            "platform": "trustpilot",
+            "kept": 80
+          },
+          {
+            "platform": "tiktok",
+            "kept": 54
+          }
+        ],
+        "sentiment": {
+          "score": 0.18,
+          "positivePct": 51,
+          "neutralPct": 22,
+          "negativePct": 27,
+          "scoredWeight": 221
+        },
+        "themesByKind": {
+          "pain": [
+            {
+              "kind": "pain",
+              "label": "Too sweet",
+              "summary": "Several flavours taste too sweet.",
+              "frequency": 26,
+              "mentionCount": 26,
+              "avgSentiment": -0.5
+            }
+          ],
+          "desire": [
+            {
+              "kind": "desire",
+              "label": "Bigger bags",
+              "summary": "Customers want a larger family-size bag.",
+              "frequency": 14,
+              "mentionCount": 14,
+              "avgSentiment": 0.2
+            }
+          ],
+          "objection": [
+            {
+              "kind": "objection",
+              "label": "Price per box",
+              "summary": "Feels expensive for the amount.",
+              "frequency": 19,
+              "mentionCount": 19,
+              "avgSentiment": -0.3
+            }
+          ],
+          "praise": [
+            {
+              "kind": "praise",
+              "label": "Great with yogurt",
+              "summary": "Popular as a yogurt topping.",
+              "frequency": 22,
+              "mentionCount": 22,
+              "avgSentiment": 0.6
+            }
+          ]
+        },
+        "topPraise": {
+          "body": "Perfect on top of my yogurt, I go through a bag a week.",
+          "platform": "reddit",
+          "url": null,
+          "rating": null,
+          "postedAt": "2026-10-09T12:00:00.000Z",
+          "sentiment": 0.7
+        },
+        "topComplaint": {
+          "body": "Way too sweet for breakfast, it tastes like candy.",
+          "platform": "trustpilot",
+          "url": null,
+          "rating": 2,
+          "postedAt": "2026-10-05T12:00:00.000Z",
+          "sentiment": -0.6
+        },
+        "hookQuotes": [],
+        "lastSyncedAt": "2026-10-19T12:00:00.000Z"
+      },
+      {
+        "profileId": "00000000-0000-4000-8000-000000000202",
+        "brandName": "Puffwell Snacks",
+        "role": "competitor",
+        "keptMentions": 158,
+        "platforms": [
+          {
+            "platform": "tiktok",
+            "kept": 91
+          },
+          {
+            "platform": "instagram",
+            "kept": 67
+          }
+        ],
+        "sentiment": {
+          "score": 0.35,
+          "positivePct": 60,
+          "neutralPct": 24,
+          "negativePct": 16,
+          "scoredWeight": 150
+        },
+        "themesByKind": {
+          "pain": [
+            {
+              "kind": "pain",
+              "label": "Crumbles in the bag",
+              "summary": "Pieces arrive broken into dust.",
+              "frequency": 12,
+              "mentionCount": 12,
+              "avgSentiment": -0.4
+            }
+          ],
+          "desire": [
+            {
+              "kind": "desire",
+              "label": "More flavours",
+              "summary": "Fans ask for seasonal flavours.",
+              "frequency": 18,
+              "mentionCount": 18,
+              "avgSentiment": 0.5
+            }
+          ],
+          "objection": [],
+          "praise": [
+            {
+              "kind": "praise",
+              "label": "Kids love it",
+              "summary": "Parents say kids finish the bag.",
+              "frequency": 27,
+              "mentionCount": 27,
+              "avgSentiment": 0.8
+            }
+          ]
+        },
+        "topPraise": {
+          "body": "My kids finish a bag in one afternoon, it is their favourite snack.",
+          "platform": "instagram",
+          "url": null,
+          "rating": null,
+          "postedAt": "2026-10-16T12:00:00.000Z",
+          "sentiment": 0.8
+        },
+        "topComplaint": {
+          "body": "Half the bag was crumbs when it arrived.",
+          "platform": "tiktok",
+          "url": null,
+          "rating": null,
+          "postedAt": "2026-10-12T12:00:00.000Z",
+          "sentiment": -0.5
+        },
+        "hookQuotes": [],
+        "lastSyncedAt": "2026-10-19T12:00:00.000Z"
+      }
+    ],
+    "contrasts": [
+      {
+        "competitorId": "00000000-0000-4000-8000-000000000201",
+        "kind": "ahead",
+        "headline": "Customers praise you more than Brightfield Granola",
+        "caption": "64% positive vs 51% across kept mentions."
+      },
+      {
+        "competitorId": "00000000-0000-4000-8000-000000000202",
+        "kind": "level",
+        "headline": "Sentiment is level with Puffwell Snacks",
+        "caption": "64% positive vs 60% across kept mentions."
+      }
+    ],
+    "generatedAt": "2026-10-23T12:00:00.000Z"
+  },
+  "brand-identity/competitors/list": [
+    {
+      "id": "00000000-0000-4000-8000-000000000101",
+      "organization_id": "00000000-0000-4000-8000-000000000001",
+      "brand_profile_id": "00000000-0000-4000-8000-000000000010",
+      "name": "Brightfield Granola",
+      "platform": "meta",
+      "keyword": "brightfield granola",
+      "country": "US",
+      "page_ref": null,
+      "meta_page_id": "100000000000101",
+      "meta_page_name": "Brightfield Granola",
+      "google_advertiser_id": null,
+      "google_advertiser_name": null,
+      "status": "active",
+      "industry": "food",
+      "last_synced_at": "2026-10-20T12:00:00.000Z",
+      "created_at": "2026-09-13T12:00:00.000Z",
+      "adCount": 18,
+      "labeledCount": 18,
+      "activeCount": 15,
+      "winnerCount": 5,
+      "syncing": false,
+      "syncFailed": false
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000102",
+      "organization_id": "00000000-0000-4000-8000-000000000001",
+      "brand_profile_id": "00000000-0000-4000-8000-000000000010",
+      "name": "Puffwell Snacks",
+      "platform": "meta",
+      "keyword": "puffwell snacks",
+      "country": "US",
+      "page_ref": null,
+      "meta_page_id": "100000000000102",
+      "meta_page_name": "Puffwell Snacks",
+      "google_advertiser_id": null,
+      "google_advertiser_name": null,
+      "status": "active",
+      "industry": "food",
+      "last_synced_at": "2026-10-20T12:00:00.000Z",
+      "created_at": "2026-09-13T12:00:00.000Z",
+      "adCount": 18,
+      "labeledCount": 18,
+      "activeCount": 15,
+      "winnerCount": 5,
+      "syncing": false,
+      "syncFailed": false
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000103",
+      "organization_id": "00000000-0000-4000-8000-000000000001",
+      "brand_profile_id": "00000000-0000-4000-8000-000000000010",
+      "name": "Morrow Oat Bakery",
+      "platform": "meta",
+      "keyword": "morrow oat bakery",
+      "country": "US",
+      "page_ref": null,
+      "meta_page_id": "100000000000103",
+      "meta_page_name": "Morrow Oat Bakery",
+      "google_advertiser_id": null,
+      "google_advertiser_name": null,
+      "status": "active",
+      "industry": "food",
+      "last_synced_at": "2026-10-20T12:00:00.000Z",
+      "created_at": "2026-09-13T12:00:00.000Z",
+      "adCount": 16,
+      "labeledCount": 16,
+      "activeCount": 12,
+      "winnerCount": 2,
+      "syncing": false,
+      "syncFailed": false
+    },
+    {
+      "id": "00000000-0000-4000-8000-000000000104",
+      "organization_id": "00000000-0000-4000-8000-000000000001",
+      "brand_profile_id": "00000000-0000-4000-8000-000000000010",
+      "name": "Tallgrass Cereal Co.",
+      "platform": "google",
+      "keyword": null,
+      "country": "US",
+      "page_ref": null,
+      "meta_page_id": null,
+      "meta_page_name": null,
+      "google_advertiser_id": "AR00000000000000000001",
+      "google_advertiser_name": "Tallgrass Cereal Co.",
+      "status": "active",
+      "industry": "food",
+      "last_synced_at": "2026-10-20T12:00:00.000Z",
+      "created_at": "2026-09-13T12:00:00.000Z",
+      "adCount": 12,
+      "labeledCount": 12,
+      "activeCount": 10,
+      "winnerCount": 6,
+      "syncing": false,
+      "syncFailed": false
+    }
+  ]
+}

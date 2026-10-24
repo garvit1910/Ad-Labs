@@ -1,0 +1,1050 @@
+{
+  "_meta": {
+    "description": "Creative BRIEF side of one text-only run: brand facts → brand_context rows (real buildDesiredRows) → one compiled pack per (segment=persona, angle) (real compile + fingerprintPack) → strategyFromArms over bandit-chosen joint arms (real buildStrategyGroups) → composeBrief → renderCopyPrompt/renderJudgeChecklist/buildVariationPlan. copyRequests are the EXACT Chat Completions bodies the real generateBrandCopy sent (captured by a mocked transport).",
+    "brand": "Halden Oat Co. (invented; .example domains)",
+    "sourceCommit": "f9bb088c93f40f1c2ae41886ba4a21b7556e102f",
+    "generatedAt": "2026-10-24T12:00:00.000Z",
+    "contract": "reuse-export/contracts-creative.ts CreativeBriefFixture"
+  },
+  "brandFacts": [
+    {
+      "id": "00000000-0000-4000-f000-000000000001",
+      "section": "positioning",
+      "fact_key": "core",
+      "statement": "Halden Oat Co. makes high-protein oat clusters for people who want a breakfast that keeps them full until lunch.",
+      "details": {},
+      "confidence": 0.8,
+      "status": "candidate"
+    },
+    {
+      "id": "00000000-0000-4000-f000-000000000002",
+      "section": "value_prop",
+      "fact_key": "protein-per-bowl",
+      "statement": "Every bowl delivers 15g of plant protein with only 4g of sugar.",
+      "details": {},
+      "confidence": 0.8,
+      "status": "candidate"
+    },
+    {
+      "id": "00000000-0000-4000-f000-000000000003",
+      "section": "usp",
+      "fact_key": "small-batch",
+      "statement": "Baked in small batches with whole rolled oats and no seed oils.",
+      "details": {},
+      "confidence": 0.8,
+      "status": "candidate"
+    },
+    {
+      "id": "00000000-0000-4000-f000-000000000004",
+      "section": "proof_point",
+      "fact_key": "rating",
+      "statement": "Rated 4.7 out of 5 across more than 3,000 reviews.",
+      "details": {},
+      "confidence": 0.8,
+      "status": "candidate"
+    },
+    {
+      "id": "00000000-0000-4000-f000-000000000005",
+      "section": "voice",
+      "fact_key": "voice-card",
+      "statement": "Warm, practical and lightly playful",
+      "details": {
+        "traits": [
+          "warm",
+          "practical",
+          "lightly playful"
+        ],
+        "toneDo": [
+          "Lead with the macros",
+          "Talk like a friend at breakfast"
+        ],
+        "toneDont": [
+          "Diet-culture language",
+          "Medical claims"
+        ]
+      },
+      "confidence": 0.6,
+      "status": "candidate"
+    },
+    {
+      "id": "00000000-0000-4000-f000-000000000006",
+      "section": "compliance",
+      "fact_key": "no-medical-claims",
+      "statement": "Do not claim the product treats or prevents any medical condition.",
+      "details": {},
+      "confidence": 0.8,
+      "status": "candidate"
+    },
+    {
+      "id": "00000000-0000-4000-f000-000000000007",
+      "section": "voc_praise",
+      "fact_key": "stays-crunchy",
+      "statement": "Customers repeatedly praise how long the clusters stay crunchy in milk.",
+      "details": {
+        "label": "Stays crunchy",
+        "summary": "Customers repeatedly praise how long the clusters stay crunchy in milk.",
+        "themeKind": "praise",
+        "matchPhraseIds": []
+      },
+      "confidence": 0.8,
+      "status": "candidate"
+    },
+    {
+      "id": "00000000-0000-4000-f000-000000000008",
+      "section": "voc_pain",
+      "fact_key": "mid-morning-hunger",
+      "statement": "Customers say other cereals leave them hungry again by 10am.",
+      "details": {
+        "label": "Mid-morning hunger",
+        "summary": "Customers say other cereals leave them hungry again by 10am.",
+        "themeKind": "pain",
+        "matchPhraseIds": []
+      },
+      "confidence": 0.8,
+      "status": "candidate"
+    },
+    {
+      "id": "00000000-0000-4000-f000-000000000009",
+      "section": "persona",
+      "fact_key": "the-macro-tracker",
+      "statement": "The Macro Tracker: Gym-goer hitting a daily protein target who is tired of shakes and bars.",
+      "details": {
+        "name": "The Macro Tracker",
+        "description": "Gym-goer hitting a daily protein target who is tired of shakes and bars.",
+        "awarenessStage": "product_aware",
+        "extrapolated": false,
+        "pains": [
+          {
+            "fact_id": "00000000-0000-4000-f000-000000000008",
+            "note": "Hungry again an hour after a low-protein breakfast"
+          }
+        ],
+        "desires": [
+          {
+            "fact_id": "00000000-0000-4000-f000-000000000002",
+            "note": "Protein at breakfast without another shake"
+          }
+        ],
+        "objections": [],
+        "verbatims": [
+          "I want my protein in the morning without choking down another shake."
+        ]
+      },
+      "confidence": 0.65,
+      "status": "candidate"
+    }
+  ],
+  "brandContextRows": [
+    {
+      "rowId": "fact_positioning_core",
+      "rowType": "fact",
+      "version": 1,
+      "priority": 180,
+      "tagFilters": {
+        "themes": [
+          "health_nutrition"
+        ]
+      },
+      "content": {
+        "kind": "fact",
+        "section": "positioning",
+        "statement": "Halden Oat Co. makes high-protein oat clusters for people who want a breakfast that keeps them full until lunch.",
+        "details": {}
+      }
+    },
+    {
+      "rowId": "fact_value_prop_protein_per_bowl",
+      "rowType": "fact",
+      "version": 1,
+      "priority": 180,
+      "tagFilters": {
+        "audiences": [
+          "persona_the_macro_tracker"
+        ],
+        "stages": [
+          "product_aware"
+        ],
+        "themes": [
+          "health_nutrition"
+        ]
+      },
+      "content": {
+        "kind": "fact",
+        "section": "value_prop",
+        "statement": "Every bowl delivers 15g of plant protein with only 4g of sugar.",
+        "details": {}
+      }
+    },
+    {
+      "rowId": "fact_usp_small_batch",
+      "rowType": "fact",
+      "version": 1,
+      "priority": 180,
+      "tagFilters": {},
+      "content": {
+        "kind": "fact",
+        "section": "usp",
+        "statement": "Baked in small batches with whole rolled oats and no seed oils.",
+        "details": {}
+      }
+    },
+    {
+      "rowId": "fact_proof_point_rating",
+      "rowType": "fact",
+      "version": 1,
+      "priority": 180,
+      "tagFilters": {
+        "themes": [
+          "trust_credibility"
+        ]
+      },
+      "content": {
+        "kind": "fact",
+        "section": "proof_point",
+        "statement": "Rated 4.7 out of 5 across more than 3,000 reviews.",
+        "details": {}
+      }
+    },
+    {
+      "rowId": "voice_voice_card",
+      "rowType": "voice",
+      "version": 1,
+      "priority": 160,
+      "tagFilters": {},
+      "content": {
+        "kind": "voice",
+        "statement": "Warm, practical and lightly playful",
+        "details": {
+          "traits": [
+            "warm",
+            "practical",
+            "lightly playful"
+          ],
+          "toneDo": [
+            "Lead with the macros",
+            "Talk like a friend at breakfast"
+          ],
+          "toneDont": [
+            "Diet-culture language",
+            "Medical claims"
+          ]
+        }
+      }
+    },
+    {
+      "rowId": "rule_no_medical_claims",
+      "rowType": "rule",
+      "version": 1,
+      "priority": 180,
+      "tagFilters": {},
+      "content": {
+        "kind": "rule",
+        "statement": "Do not claim the product treats or prevents any medical condition.",
+        "details": {}
+      }
+    },
+    {
+      "rowId": "fact_voc_praise_stays_crunchy",
+      "rowType": "fact",
+      "version": 1,
+      "priority": 180,
+      "tagFilters": {},
+      "content": {
+        "kind": "fact",
+        "section": "voc_praise",
+        "statement": "Customers repeatedly praise how long the clusters stay crunchy in milk.",
+        "details": {
+          "label": "Stays crunchy",
+          "summary": "Customers repeatedly praise how long the clusters stay crunchy in milk.",
+          "themeKind": "praise",
+          "matchPhraseIds": []
+        }
+      }
+    },
+    {
+      "rowId": "fact_voc_pain_mid_morning_hunger",
+      "rowType": "fact",
+      "version": 1,
+      "priority": 180,
+      "tagFilters": {
+        "audiences": [
+          "persona_the_macro_tracker"
+        ],
+        "stages": [
+          "product_aware"
+        ]
+      },
+      "content": {
+        "kind": "fact",
+        "section": "voc_pain",
+        "statement": "Customers say other cereals leave them hungry again by 10am.",
+        "details": {
+          "label": "Mid-morning hunger",
+          "summary": "Customers say other cereals leave them hungry again by 10am.",
+          "themeKind": "pain",
+          "matchPhraseIds": []
+        }
+      }
+    },
+    {
+      "rowId": "persona_the_macro_tracker",
+      "rowType": "persona",
+      "version": 1,
+      "priority": 165,
+      "tagFilters": {},
+      "content": {
+        "name": "The Macro Tracker",
+        "description": "Gym-goer hitting a daily protein target who is tired of shakes and bars.",
+        "awarenessStage": "product_aware",
+        "extrapolated": false,
+        "pains": [
+          {
+            "fact_id": "00000000-0000-4000-f000-000000000008",
+            "note": "Hungry again an hour after a low-protein breakfast"
+          }
+        ],
+        "desires": [
+          {
+            "fact_id": "00000000-0000-4000-f000-000000000002",
+            "note": "Protein at breakfast without another shake"
+          }
+        ],
+        "objections": [],
+        "verbatims": [
+          "I want my protein in the morning without choking down another shake."
+        ],
+        "kind": "persona"
+      }
+    }
+  ],
+  "armSpace": {
+    "pickableAngles": [
+      "pain_relief",
+      "convenience",
+      "price_value",
+      "status",
+      "health",
+      "time_saving",
+      "trust_safety"
+    ],
+    "producibleHooks": [
+      "problem_callout",
+      "bold_claim",
+      "question",
+      "curiosity",
+      "pov_relatable",
+      "statistic",
+      "social_proof",
+      "testimonial",
+      "story_narrative"
+    ],
+    "size": 63,
+    "pruned12": [
+      "health|statistic",
+      "health|social_proof",
+      "health|problem_callout",
+      "health|pov_relatable",
+      "convenience|statistic",
+      "convenience|social_proof",
+      "convenience|problem_callout",
+      "convenience|pov_relatable",
+      "time_saving|statistic",
+      "time_saving|social_proof",
+      "time_saving|problem_callout",
+      "time_saving|pov_relatable"
+    ],
+    "pruningNote": "Illustrative only: 3 angles × 4 hooks. Adcero has no joint-arm pruning rule; choose yours (e.g. by market_prior share)."
+  },
+  "chosenArms": [
+    {
+      "segment": "persona_the_macro_tracker",
+      "angleUniversal": "health",
+      "hookArchetype": "statistic"
+    },
+    {
+      "segment": "persona_the_macro_tracker",
+      "angleUniversal": "health",
+      "hookArchetype": "social_proof"
+    },
+    {
+      "segment": "persona_the_macro_tracker",
+      "angleUniversal": "convenience",
+      "hookArchetype": "problem_callout"
+    },
+    {
+      "segment": "persona_the_macro_tracker",
+      "angleUniversal": "convenience",
+      "hookArchetype": "pov_relatable"
+    }
+  ],
+  "briefs": [
+    {
+      "key": "persona_the_macro_tracker|health",
+      "chosenArms": [
+        {
+          "segment": "persona_the_macro_tracker",
+          "angleUniversal": "health",
+          "hookArchetype": "statistic"
+        },
+        {
+          "segment": "persona_the_macro_tracker",
+          "angleUniversal": "health",
+          "hookArchetype": "social_proof"
+        }
+      ],
+      "packHints": {
+        "hasNumericFact": true,
+        "hasSocialProofFact": true,
+        "hasCustomerVerbatim": true,
+        "hasOfferFact": false
+      },
+      "selectedStrategy": {
+        "angleKey": "health",
+        "angleDirective": "Lead with the health angle proven by winning ads in this market",
+        "groups": [
+          {
+            "key": "statistic__lifestyle_static",
+            "hookArchetype": "statistic",
+            "hookDirective": "Lead with the exact number a brand fact states (never rounded, never invented) and make it tangible.",
+            "format": "lifestyle_static",
+            "sceneDirective": "Product in a realistic in-use scene: the exact moment a customer uses it, natural light, candid framing. Make the brand fact's number physically tangible — quantity, volume, or scale shown through real objects arranged with the product; never render digits, charts, or text.",
+            "visualStyle": "polished_studio"
+          },
+          {
+            "key": "social_proof__product_only_static",
+            "hookArchetype": "social_proof",
+            "hookDirective": "Lead with the proof point a brand fact provides (reviews, customers, ratings) — exactly as the fact states it.",
+            "format": "product_only_static",
+            "sceneDirective": "Product hero on a clean seamless studio background, soft directional lighting, gentle shadow, label facing camera. Evidence of genuine, repeated use — a well-loved, half-finished product in a real setting where it clearly belongs; no people, stars, ratings, or text.",
+            "visualStyle": "polished_studio"
+          }
+        ],
+        "alternates": [],
+        "evidence": [],
+        "fallbackTier": "evidence"
+      },
+      "brief": {
+        "organizationId": "00000000-0000-4000-8000-000000000001",
+        "source": "manual",
+        "angle": "Lead with the health angle proven by winning ads in this market",
+        "persona": "Busy professionals and commuters who track their protein",
+        "coreMessage": "Breakfast that keeps you full until lunch",
+        "hooks": [
+          "Lead with the exact number a brand fact states (never rounded, never invented) and make it tangible.",
+          "Lead with the proof point a brand fact provides (reviews, customers, ratings) — exactly as the fact states it."
+        ],
+        "headline": "Breakfast that keeps you full until lunch",
+        "primaryText": "Breakfast that keeps you full until lunch. Baked in small batches with whole rolled oats.",
+        "cta": "Shop Now",
+        "visualDirection": "Product-hero composition with a clear offer treatment and an unmissable call-to-action zone. Native feed look: thumb-stopping first impression, minimal overlay text, mobile-first framing that holds up at 1:1 and 4:5.",
+        "style": "polished_studio",
+        "styleDirection": "clean, product-forward, offer-led",
+        "proofFactIds": [],
+        "platform": "meta",
+        "aspectRatios": [
+          "1:1"
+        ],
+        "compliance": {
+          "prohibitedClaims": [
+            "cures",
+            "clinically proven"
+          ],
+          "requiredDisclaimers": []
+        },
+        "brandKit": {
+          "productImages": []
+        },
+        "briefId": "00000000-0000-4000-b000-000000000001",
+        "angleUniversal": "health",
+        "personaUniversal": "professionals"
+      },
+      "canonical": {
+        "value": "health",
+        "rung": "taxonomy"
+      },
+      "compileSpec": {
+        "platform": "meta",
+        "aspectRatio": "1:1",
+        "goal": "conversions",
+        "personaRef": "persona_the_macro_tracker",
+        "angle": "Lead with the health angle proven by winning ads in this market",
+        "candidates": 2,
+        "angleTheme": "health"
+      },
+      "pack": {
+        "meta": {
+          "compilerVersion": 4,
+          "rendererVersions": {
+            "copy": 3,
+            "image": 5,
+            "judge": 4
+          },
+          "brandProfileId": "00000000-0000-4000-8000-000000000010",
+          "spec": {
+            "platform": "meta",
+            "aspectRatio": "1:1",
+            "goal": "conversions",
+            "personaRef": "persona_the_macro_tracker",
+            "angle": "Lead with the health angle proven by winning ads in this market",
+            "candidates": 2,
+            "angleTheme": "health"
+          },
+          "rowRefs": [
+            {
+              "id": "fact_positioning_core",
+              "version": 1
+            },
+            {
+              "id": "fact_proof_point_rating",
+              "version": 1
+            },
+            {
+              "id": "fact_usp_small_batch",
+              "version": 1
+            },
+            {
+              "id": "persona_the_macro_tracker",
+              "version": 1
+            },
+            {
+              "id": "rule_no_medical_claims",
+              "version": 1
+            },
+            {
+              "id": "voice_voice_card",
+              "version": 1
+            }
+          ]
+        },
+        "slots": {
+          "facts": [
+            {
+              "id": "fact_positioning_core",
+              "version": 1,
+              "content": {
+                "kind": "fact",
+                "section": "positioning",
+                "statement": "Halden Oat Co. makes high-protein oat clusters for people who want a breakfast that keeps them full until lunch.",
+                "details": {}
+              }
+            },
+            {
+              "id": "fact_proof_point_rating",
+              "version": 1,
+              "content": {
+                "kind": "fact",
+                "section": "proof_point",
+                "statement": "Rated 4.7 out of 5 across more than 3,000 reviews.",
+                "details": {}
+              }
+            },
+            {
+              "id": "fact_usp_small_batch",
+              "version": 1,
+              "content": {
+                "kind": "fact",
+                "section": "usp",
+                "statement": "Baked in small batches with whole rolled oats and no seed oils.",
+                "details": {}
+              }
+            }
+          ],
+          "voice": [
+            {
+              "id": "voice_voice_card",
+              "version": 1,
+              "content": {
+                "kind": "voice",
+                "statement": "Warm, practical and lightly playful",
+                "details": {
+                  "traits": [
+                    "warm",
+                    "practical",
+                    "lightly playful"
+                  ],
+                  "toneDo": [
+                    "Lead with the macros",
+                    "Talk like a friend at breakfast"
+                  ],
+                  "toneDont": [
+                    "Diet-culture language",
+                    "Medical claims"
+                  ]
+                }
+              }
+            }
+          ],
+          "rules": [
+            {
+              "id": "rule_no_medical_claims",
+              "version": 1,
+              "content": {
+                "kind": "rule",
+                "statement": "Do not claim the product treats or prevents any medical condition.",
+                "details": {}
+              }
+            }
+          ],
+          "assets": [],
+          "persona": {
+            "id": "persona_the_macro_tracker",
+            "version": 1,
+            "content": {
+              "name": "The Macro Tracker",
+              "description": "Gym-goer hitting a daily protein target who is tired of shakes and bars.",
+              "awarenessStage": "product_aware",
+              "extrapolated": false,
+              "pains": [
+                {
+                  "fact_id": "00000000-0000-4000-f000-000000000008",
+                  "note": "Hungry again an hour after a low-protein breakfast"
+                }
+              ],
+              "desires": [
+                {
+                  "fact_id": "00000000-0000-4000-f000-000000000002",
+                  "note": "Protein at breakfast without another shake"
+                }
+              ],
+              "objections": [],
+              "verbatims": [
+                "I want my protein in the morning without choking down another shake."
+              ],
+              "kind": "persona"
+            }
+          }
+        }
+      },
+      "packFingerprint": "6154a1afb260047d75cd67f309177ee47b224f9eb8e0012f2dd59dc5bb8be725",
+      "versions": {
+        "compilerVersion": 4,
+        "rendererVersions": {
+          "copy": 3,
+          "image": 5,
+          "judge": 4
+        }
+      },
+      "copyPrompt": {
+        "system": "You are a senior direct-response copywriter. You write specific, concrete ad copy that could only be written for THIS brand. Ground every claim ONLY in the brand facts provided. If a specific number, ingredient, or attribute is not in the facts, write the line without it — NEVER invent statistics, quantities, ingredients, awards, or reviews. Express the strategic angle through a concrete, fact-grounded claim or a vivid specific moment — never restate the angle itself as copy, and never produce generic retail phrases. Match the brand voice exactly and speak directly to the target audience. The rules at the end of the brief are non-negotiable: before finalizing, check every line of copy against every rule.",
+        "user": "## Brand facts\n1. [positioning] Halden Oat Co. makes high-protein oat clusters for people who want a breakfast that keeps them full until lunch.\n2. [proof_point] Rated 4.7 out of 5 across more than 3,000 reviews.\n3. [usp] Baked in small batches with whole rolled oats and no seed oils.\n\n## Brand voice\n- Warm, practical and lightly playful\n\n## Persona\nName: The Macro Tracker\nDescription: Gym-goer hitting a daily protein target who is tired of shakes and bars.\nAwareness stage: product_aware\nPains:\n- Hungry again an hour after a low-protein breakfast\nDesires:\n- Protein at breakfast without another shake\nCustomer verbatims:\n- \"I want my protein in the morning without choking down another shake.\"\n\n## Task\nPlatform: meta\nGoal: conversions\nStrategic angle (INTERNAL strategy — express it through the copy, never quote or restate it): Lead with the health angle proven by winning ads in this market\n\nHow to execute the angle:\n- The headline must make ONE concrete claim or paint ONE specific moment that proves the angle, using details from the Brand facts section.\n- If the angle involves a measurable benefit and a fact states the number, use the number EXACTLY as the fact states it. If no fact states a number, write the line without any number — NEVER invent one.\n- If the angle is emotional (nostalgia, status, relief), the line itself must evoke that feeling through specifics — never announce it (\"Experience nostalgia\" is a failure).\n- BANNED — never write these or structurally similar empty retail phrases: \"shop smart\", \"style meets value\", \"exclusive deals\", \"don't miss out\", \"elevate your\", \"unleash\", \"discover the difference\", \"quality you can trust\", \"your one-stop shop\", \"treat yourself\", \"satisfaction guaranteed\", \"limited time only\", \"best-kept secret\", \"game-changer\", \"shop the look\".\n\n## Rules (non-negotiable — verify every one)\n1. Do not claim the product treats or prevents any medical condition."
+      },
+      "judgeChecklist": [
+        {
+          "id": "rule_no_medical_claims@v1",
+          "source": "rule",
+          "requirement": "The copy and image comply with this brand rule: \"Do not claim the product treats or prevents any medical condition.\"",
+          "enforced": false
+        },
+        {
+          "id": "structural_no_added_text@r2",
+          "source": "structural",
+          "requirement": "No text, headline, caption, banner band, CTA button, or watermark has been ADDED to the image. Text printed on the product's own packaging or label is expected and allowed. A thin bottom compliance-disclaimer strip is a sanctioned overlay and allowed.",
+          "enforced": true
+        },
+        {
+          "id": "structural_scene_relevance@r3",
+          "source": "structural",
+          "requirement": "Every element of the image relates to the product, its ingredients, its benefit, or its customer; stylised, conceptual, or editorial compositions are acceptable. There are no unrelated or unmotivated people, devices, screens, venues, or props.",
+          "enforced": false
+        }
+      ],
+      "variationPlan": [
+        {
+          "key": "statistic__lifestyle_static",
+          "text": "Product in a realistic in-use scene: the exact moment a customer uses it, natural light, candid framing. Make the brand fact's number physically tangible — quantity, volume, or scale shown through real objects arranged with the product; never render digits, charts, or text.",
+          "hookArchetype": "statistic",
+          "format": "lifestyle_static",
+          "strategyKey": "statistic__lifestyle_static"
+        },
+        {
+          "key": "social_proof__product_only_static",
+          "text": "Product hero on a clean seamless studio background, soft directional lighting, gentle shadow, label facing camera. Evidence of genuine, repeated use — a well-loved, half-finished product in a real setting where it clearly belongs; no people, stars, ratings, or text.",
+          "hookArchetype": "social_proof",
+          "format": "product_only_static",
+          "strategyKey": "social_proof__product_only_static"
+        }
+      ],
+      "copyRequests": [
+        {
+          "model": "gpt-4o",
+          "temperature": 0.6,
+          "max_tokens": 512,
+          "response_format": {
+            "type": "json_object"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are a senior direct-response copywriter. You write specific, concrete ad copy that could only be written for THIS brand. Ground every claim ONLY in the brand facts provided. If a specific number, ingredient, or attribute is not in the facts, write the line without it — NEVER invent statistics, quantities, ingredients, awards, or reviews. Express the strategic angle through a concrete, fact-grounded claim or a vivid specific moment — never restate the angle itself as copy, and never produce generic retail phrases. Match the brand voice exactly and speak directly to the target audience. The rules at the end of the brief are non-negotiable: before finalizing, check every line of copy against every rule."
+            },
+            {
+              "role": "user",
+              "content": "## Brand facts\n1. [positioning] Halden Oat Co. makes high-protein oat clusters for people who want a breakfast that keeps them full until lunch.\n2. [proof_point] Rated 4.7 out of 5 across more than 3,000 reviews.\n3. [usp] Baked in small batches with whole rolled oats and no seed oils.\n\n## Brand voice\n- Warm, practical and lightly playful\n\n## Persona\nName: The Macro Tracker\nDescription: Gym-goer hitting a daily protein target who is tired of shakes and bars.\nAwareness stage: product_aware\nPains:\n- Hungry again an hour after a low-protein breakfast\nDesires:\n- Protein at breakfast without another shake\nCustomer verbatims:\n- \"I want my protein in the morning without choking down another shake.\"\n\n## Task\nPlatform: meta\nGoal: conversions\nStrategic angle (INTERNAL strategy — express it through the copy, never quote or restate it): Lead with the health angle proven by winning ads in this market\n\nHow to execute the angle:\n- The headline must make ONE concrete claim or paint ONE specific moment that proves the angle, using details from the Brand facts section.\n- If the angle involves a measurable benefit and a fact states the number, use the number EXACTLY as the fact states it. If no fact states a number, write the line without any number — NEVER invent one.\n- If the angle is emotional (nostalgia, status, relief), the line itself must evoke that feeling through specifics — never announce it (\"Experience nostalgia\" is a failure).\n- BANNED — never write these or structurally similar empty retail phrases: \"shop smart\", \"style meets value\", \"exclusive deals\", \"don't miss out\", \"elevate your\", \"unleash\", \"discover the difference\", \"quality you can trust\", \"your one-stop shop\", \"treat yourself\", \"satisfaction guaranteed\", \"limited time only\", \"best-kept secret\", \"game-changer\", \"shop the look\".\n\n## Rules (non-negotiable — verify every one)\n1. Do not claim the product treats or prevents any medical condition.\n\n## Strategy for this variant\nHook archetype to execute: Lead with the exact number a brand fact states (never rounded, never invented) and make it tangible.\nImage shot direction for this variant: Product in a realistic in-use scene: the exact moment a customer uses it, natural light, candid framing. Make the brand fact's number physically tangible — quantity, volume, or scale shown through real objects arranged with the product; never render digits, charts, or text.\nThe visualConcept must fit this shot direction — keep its shot type, framing and setting (a studio product-hero direction means a staged still life of the product, not a person in a kitchen).\n\n## Output format\nRespond with JSON only, no commentary:\n{\"headline\": \"<ONE concrete, fact-grounded headline, STRICTLY <= 60 characters including spaces>\",\n \"primaryText\": \"<1-3 sentences of primary ad text, STRICTLY <= 500 characters>\",\n \"cta\": \"<EXACTLY one of: Shop Now | Learn More | Sign Up | Subscribe | Get Offer | Contact Us | Download | Order Now>\",\n \"visualConcept\": \"<ONE concrete scene, about 40 words at most, that makes THIS headline's specific claim or moment visible in a single static photo>\"}\nThe cta is a platform button label — pick from the list verbatim, never write your own.\nThe visualConcept directs the ad image, which never shows the ad copy: describe only what the camera sees — people, setting, props, action, mood. Never describe added text, words, numbers, logos beyond the product's own packaging, fabricated interfaces or readable on-screen text, or split before/after panels; show a screen only when the product itself is software, and only as the product in use."
+            }
+          ]
+        },
+        {
+          "model": "gpt-4o",
+          "temperature": 0.6,
+          "max_tokens": 512,
+          "response_format": {
+            "type": "json_object"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are a senior direct-response copywriter. You write specific, concrete ad copy that could only be written for THIS brand. Ground every claim ONLY in the brand facts provided. If a specific number, ingredient, or attribute is not in the facts, write the line without it — NEVER invent statistics, quantities, ingredients, awards, or reviews. Express the strategic angle through a concrete, fact-grounded claim or a vivid specific moment — never restate the angle itself as copy, and never produce generic retail phrases. Match the brand voice exactly and speak directly to the target audience. The rules at the end of the brief are non-negotiable: before finalizing, check every line of copy against every rule."
+            },
+            {
+              "role": "user",
+              "content": "## Brand facts\n1. [positioning] Halden Oat Co. makes high-protein oat clusters for people who want a breakfast that keeps them full until lunch.\n2. [proof_point] Rated 4.7 out of 5 across more than 3,000 reviews.\n3. [usp] Baked in small batches with whole rolled oats and no seed oils.\n\n## Brand voice\n- Warm, practical and lightly playful\n\n## Persona\nName: The Macro Tracker\nDescription: Gym-goer hitting a daily protein target who is tired of shakes and bars.\nAwareness stage: product_aware\nPains:\n- Hungry again an hour after a low-protein breakfast\nDesires:\n- Protein at breakfast without another shake\nCustomer verbatims:\n- \"I want my protein in the morning without choking down another shake.\"\n\n## Task\nPlatform: meta\nGoal: conversions\nStrategic angle (INTERNAL strategy — express it through the copy, never quote or restate it): Lead with the health angle proven by winning ads in this market\n\nHow to execute the angle:\n- The headline must make ONE concrete claim or paint ONE specific moment that proves the angle, using details from the Brand facts section.\n- If the angle involves a measurable benefit and a fact states the number, use the number EXACTLY as the fact states it. If no fact states a number, write the line without any number — NEVER invent one.\n- If the angle is emotional (nostalgia, status, relief), the line itself must evoke that feeling through specifics — never announce it (\"Experience nostalgia\" is a failure).\n- BANNED — never write these or structurally similar empty retail phrases: \"shop smart\", \"style meets value\", \"exclusive deals\", \"don't miss out\", \"elevate your\", \"unleash\", \"discover the difference\", \"quality you can trust\", \"your one-stop shop\", \"treat yourself\", \"satisfaction guaranteed\", \"limited time only\", \"best-kept secret\", \"game-changer\", \"shop the look\".\n\n## Rules (non-negotiable — verify every one)\n1. Do not claim the product treats or prevents any medical condition.\n\n## Strategy for this variant\nHook archetype to execute: Lead with the exact number a brand fact states (never rounded, never invented) and make it tangible.\nImage shot direction for this variant: Product in a realistic in-use scene: the exact moment a customer uses it, natural light, candid framing. Make the brand fact's number physically tangible — quantity, volume, or scale shown through real objects arranged with the product; never render digits, charts, or text.\nThe visualConcept must fit this shot direction — keep its shot type, framing and setting (a studio product-hero direction means a staged still life of the product, not a person in a kitchen).\n\n## Output format\nRespond with JSON only, no commentary:\n{\"headline\": \"<ONE concrete, fact-grounded headline, STRICTLY <= 60 characters including spaces>\",\n \"primaryText\": \"<1-3 sentences of primary ad text, STRICTLY <= 500 characters>\",\n \"cta\": \"<EXACTLY one of: Shop Now | Learn More | Sign Up | Subscribe | Get Offer | Contact Us | Download | Order Now>\",\n \"visualConcept\": \"<ONE concrete scene, about 40 words at most, that makes THIS headline's specific claim or moment visible in a single static photo>\"}\nThe cta is a platform button label — pick from the list verbatim, never write your own.\nThe visualConcept directs the ad image, which never shows the ad copy: describe only what the camera sees — people, setting, props, action, mood. Never describe added text, words, numbers, logos beyond the product's own packaging, fabricated interfaces or readable on-screen text, or split before/after panels; show a screen only when the product itself is software, and only as the product in use.\n\n## Previous attempt rejected\nCopy contains number(s) not present in any brand fact: 15. Never invent quantities — write the line without a number instead.\nRegenerate the full set without this problem."
+            }
+          ]
+        },
+        {
+          "model": "gpt-4o",
+          "temperature": 0.6,
+          "max_tokens": 512,
+          "response_format": {
+            "type": "json_object"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are a senior direct-response copywriter. You write specific, concrete ad copy that could only be written for THIS brand. Ground every claim ONLY in the brand facts provided. If a specific number, ingredient, or attribute is not in the facts, write the line without it — NEVER invent statistics, quantities, ingredients, awards, or reviews. Express the strategic angle through a concrete, fact-grounded claim or a vivid specific moment — never restate the angle itself as copy, and never produce generic retail phrases. Match the brand voice exactly and speak directly to the target audience. The rules at the end of the brief are non-negotiable: before finalizing, check every line of copy against every rule."
+            },
+            {
+              "role": "user",
+              "content": "## Brand facts\n1. [positioning] Halden Oat Co. makes high-protein oat clusters for people who want a breakfast that keeps them full until lunch.\n2. [proof_point] Rated 4.7 out of 5 across more than 3,000 reviews.\n3. [usp] Baked in small batches with whole rolled oats and no seed oils.\n\n## Brand voice\n- Warm, practical and lightly playful\n\n## Persona\nName: The Macro Tracker\nDescription: Gym-goer hitting a daily protein target who is tired of shakes and bars.\nAwareness stage: product_aware\nPains:\n- Hungry again an hour after a low-protein breakfast\nDesires:\n- Protein at breakfast without another shake\nCustomer verbatims:\n- \"I want my protein in the morning without choking down another shake.\"\n\n## Task\nPlatform: meta\nGoal: conversions\nStrategic angle (INTERNAL strategy — express it through the copy, never quote or restate it): Lead with the health angle proven by winning ads in this market\n\nHow to execute the angle:\n- The headline must make ONE concrete claim or paint ONE specific moment that proves the angle, using details from the Brand facts section.\n- If the angle involves a measurable benefit and a fact states the number, use the number EXACTLY as the fact states it. If no fact states a number, write the line without any number — NEVER invent one.\n- If the angle is emotional (nostalgia, status, relief), the line itself must evoke that feeling through specifics — never announce it (\"Experience nostalgia\" is a failure).\n- BANNED — never write these or structurally similar empty retail phrases: \"shop smart\", \"style meets value\", \"exclusive deals\", \"don't miss out\", \"elevate your\", \"unleash\", \"discover the difference\", \"quality you can trust\", \"your one-stop shop\", \"treat yourself\", \"satisfaction guaranteed\", \"limited time only\", \"best-kept secret\", \"game-changer\", \"shop the look\".\n\n## Rules (non-negotiable — verify every one)\n1. Do not claim the product treats or prevents any medical condition.\n\n## Strategy for this variant\nHook archetype to execute: Lead with the proof point a brand fact provides (reviews, customers, ratings) — exactly as the fact states it.\nImage shot direction for this variant: Product hero on a clean seamless studio background, soft directional lighting, gentle shadow, label facing camera. Evidence of genuine, repeated use — a well-loved, half-finished product in a real setting where it clearly belongs; no people, stars, ratings, or text.\nThe visualConcept must fit this shot direction — keep its shot type, framing and setting (a studio product-hero direction means a staged still life of the product, not a person in a kitchen).\n\n## Output format\nRespond with JSON only, no commentary:\n{\"headline\": \"<ONE concrete, fact-grounded headline, STRICTLY <= 60 characters including spaces>\",\n \"primaryText\": \"<1-3 sentences of primary ad text, STRICTLY <= 500 characters>\",\n \"cta\": \"<EXACTLY one of: Shop Now | Learn More | Sign Up | Subscribe | Get Offer | Contact Us | Download | Order Now>\",\n \"visualConcept\": \"<ONE concrete scene, about 40 words at most, that makes THIS headline's specific claim or moment visible in a single static photo>\"}\nThe cta is a platform button label — pick from the list verbatim, never write your own.\nThe visualConcept directs the ad image, which never shows the ad copy: describe only what the camera sees — people, setting, props, action, mood. Never describe added text, words, numbers, logos beyond the product's own packaging, fabricated interfaces or readable on-screen text, or split before/after panels; show a screen only when the product itself is software, and only as the product in use."
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "key": "persona_the_macro_tracker|convenience",
+      "chosenArms": [
+        {
+          "segment": "persona_the_macro_tracker",
+          "angleUniversal": "convenience",
+          "hookArchetype": "problem_callout"
+        },
+        {
+          "segment": "persona_the_macro_tracker",
+          "angleUniversal": "convenience",
+          "hookArchetype": "pov_relatable"
+        }
+      ],
+      "packHints": {
+        "hasNumericFact": true,
+        "hasSocialProofFact": true,
+        "hasCustomerVerbatim": true,
+        "hasOfferFact": false
+      },
+      "selectedStrategy": {
+        "angleKey": "convenience",
+        "angleDirective": "Lead with the convenience angle proven by winning ads in this market",
+        "groups": [
+          {
+            "key": "problem_callout__lifestyle_static",
+            "hookArchetype": "problem_callout",
+            "hookDirective": "Open on the specific pain the product removes — name the moment the customer feels it, then resolve it with a brand fact.",
+            "format": "lifestyle_static",
+            "sceneDirective": "Product in a realistic in-use scene: the exact moment a customer uses it, natural light, candid framing. Capture the exact moment of the everyday frustration this product removes, with the product visibly present as the fix — the tension resolving in one frame.",
+            "visualStyle": "polished_studio"
+          },
+          {
+            "key": "pov_relatable__product_only_static",
+            "hookArchetype": "pov_relatable",
+            "hookDirective": "Write from the persona's own point of view — a first-person moment they recognize, resolved by the product.",
+            "format": "product_only_static",
+            "sceneDirective": "Product hero on a clean seamless studio background, soft directional lighting, gentle shadow, label facing camera. The persona's own vantage over their table, desk, or counter with the product in their everyday spot, framed as they would see it — no person visible.",
+            "visualStyle": "polished_studio"
+          }
+        ],
+        "alternates": [],
+        "evidence": [],
+        "fallbackTier": "evidence"
+      },
+      "brief": {
+        "organizationId": "00000000-0000-4000-8000-000000000001",
+        "source": "manual",
+        "angle": "Lead with the convenience angle proven by winning ads in this market",
+        "persona": "Busy professionals and commuters who track their protein",
+        "coreMessage": "Breakfast that keeps you full until lunch",
+        "hooks": [
+          "Open on the specific pain the product removes — name the moment the customer feels it, then resolve it with a brand fact.",
+          "Write from the persona's own point of view — a first-person moment they recognize, resolved by the product."
+        ],
+        "headline": "Breakfast that keeps you full until lunch",
+        "primaryText": "Breakfast that keeps you full until lunch. Baked in small batches with whole rolled oats.",
+        "cta": "Shop Now",
+        "visualDirection": "Product-hero composition with a clear offer treatment and an unmissable call-to-action zone. Native feed look: thumb-stopping first impression, minimal overlay text, mobile-first framing that holds up at 1:1 and 4:5.",
+        "style": "polished_studio",
+        "styleDirection": "clean, product-forward, offer-led",
+        "proofFactIds": [],
+        "platform": "meta",
+        "aspectRatios": [
+          "1:1"
+        ],
+        "compliance": {
+          "prohibitedClaims": [
+            "cures",
+            "clinically proven"
+          ],
+          "requiredDisclaimers": []
+        },
+        "brandKit": {
+          "productImages": []
+        },
+        "briefId": "00000000-0000-4000-b000-000000000002",
+        "angleUniversal": "convenience",
+        "personaUniversal": "professionals"
+      },
+      "canonical": {
+        "value": "convenience",
+        "rung": "taxonomy"
+      },
+      "compileSpec": {
+        "platform": "meta",
+        "aspectRatio": "1:1",
+        "goal": "conversions",
+        "personaRef": "persona_the_macro_tracker",
+        "angle": "Lead with the convenience angle proven by winning ads in this market",
+        "candidates": 2,
+        "angleTheme": "convenience"
+      },
+      "pack": {
+        "meta": {
+          "compilerVersion": 4,
+          "rendererVersions": {
+            "copy": 3,
+            "image": 5,
+            "judge": 4
+          },
+          "brandProfileId": "00000000-0000-4000-8000-000000000010",
+          "spec": {
+            "platform": "meta",
+            "aspectRatio": "1:1",
+            "goal": "conversions",
+            "personaRef": "persona_the_macro_tracker",
+            "angle": "Lead with the convenience angle proven by winning ads in this market",
+            "candidates": 2,
+            "angleTheme": "convenience"
+          },
+          "rowRefs": [
+            {
+              "id": "fact_positioning_core",
+              "version": 1
+            },
+            {
+              "id": "fact_proof_point_rating",
+              "version": 1
+            },
+            {
+              "id": "fact_usp_small_batch",
+              "version": 1
+            },
+            {
+              "id": "persona_the_macro_tracker",
+              "version": 1
+            },
+            {
+              "id": "rule_no_medical_claims",
+              "version": 1
+            },
+            {
+              "id": "voice_voice_card",
+              "version": 1
+            }
+          ]
+        },
+        "slots": {
+          "facts": [
+            {
+              "id": "fact_positioning_core",
+              "version": 1,
+              "content": {
+                "kind": "fact",
+                "section": "positioning",
+                "statement": "Halden Oat Co. makes high-protein oat clusters for people who want a breakfast that keeps them full until lunch.",
+                "details": {}
+              }
+            },
+            {
+              "id": "fact_proof_point_rating",
+              "version": 1,
+              "content": {
+                "kind": "fact",
+                "section": "proof_point",
+                "statement": "Rated 4.7 out of 5 across more than 3,000 reviews.",
+                "details": {}
+              }
+            },
+            {
+              "id": "fact_usp_small_batch",
+              "version": 1,
+              "content": {
+                "kind": "fact",
+                "section": "usp",
+                "statement": "Baked in small batches with whole rolled oats and no seed oils.",
+                "details": {}
+              }
+            }
+          ],
+          "voice": [
+            {
+              "id": "voice_voice_card",
+              "version": 1,
+              "content": {
+                "kind": "voice",
+                "statement": "Warm, practical and lightly playful",
+                "details": {
+                  "traits": [
+                    "warm",
+                    "practical",
+                    "lightly playful"
+                  ],
+                  "toneDo": [
+                    "Lead with the macros",
+                    "Talk like a friend at breakfast"
+                  ],
+                  "toneDont": [
+                    "Diet-culture language",
+                    "Medical claims"
+                  ]
+                }
+              }
+            }
+          ],
+          "rules": [
+            {
+              "id": "rule_no_medical_claims",
+              "version": 1,
+              "content": {
+                "kind": "rule",
+                "statement": "Do not claim the product treats or prevents any medical condition.",
+                "details": {}
+              }
+            }
+          ],
+          "assets": [],
+          "persona": {
+            "id": "persona_the_macro_tracker",
+            "version": 1,
+            "content": {
+              "name": "The Macro Tracker",
+              "description": "Gym-goer hitting a daily protein target who is tired of shakes and bars.",
+              "awarenessStage": "product_aware",
+              "extrapolated": false,
+              "pains": [
+                {
+                  "fact_id": "00000000-0000-4000-f000-000000000008",
+                  "note": "Hungry again an hour after a low-protein breakfast"
+                }
+              ],
+              "desires": [
+                {
+                  "fact_id": "00000000-0000-4000-f000-000000000002",
+                  "note": "Protein at breakfast without another shake"
+                }
+              ],
+              "objections": [],
+              "verbatims": [
+                "I want my protein in the morning without choking down another shake."
+              ],
+              "kind": "persona"
+            }
+          }
+        }
+      },
+      "packFingerprint": "60a0cd12c6ef60021e2b33e9eedb0fe97cdefead66f49cf8ff46db27277a9d85",
+      "versions": {
+        "compilerVersion": 4,
+        "rendererVersions": {
+          "copy": 3,
+          "image": 5,
+          "judge": 4
+        }
+      },
+      "copyPrompt": {
+        "system": "You are a senior direct-response copywriter. You write specific, concrete ad copy that could only be written for THIS brand. Ground every claim ONLY in the brand facts provided. If a specific number, ingredient, or attribute is not in the facts, write the line without it — NEVER invent statistics, quantities, ingredients, awards, or reviews. Express the strategic angle through a concrete, fact-grounded claim or a vivid specific moment — never restate the angle itself as copy, and never produce generic retail phrases. Match the brand voice exactly and speak directly to the target audience. The rules at the end of the brief are non-negotiable: before finalizing, check every line of copy against every rule.",
+        "user": "## Brand facts\n1. [positioning] Halden Oat Co. makes high-protein oat clusters for people who want a breakfast that keeps them full until lunch.\n2. [proof_point] Rated 4.7 out of 5 across more than 3,000 reviews.\n3. [usp] Baked in small batches with whole rolled oats and no seed oils.\n\n## Brand voice\n- Warm, practical and lightly playful\n\n## Persona\nName: The Macro Tracker\nDescription: Gym-goer hitting a daily protein target who is tired of shakes and bars.\nAwareness stage: product_aware\nPains:\n- Hungry again an hour after a low-protein breakfast\nDesires:\n- Protein at breakfast without another shake\nCustomer verbatims:\n- \"I want my protein in the morning without choking down another shake.\"\n\n## Task\nPlatform: meta\nGoal: conversions\nStrategic angle (INTERNAL strategy — express it through the copy, never quote or restate it): Lead with the convenience angle proven by winning ads in this market\n\nHow to execute the angle:\n- The headline must make ONE concrete claim or paint ONE specific moment that proves the angle, using details from the Brand facts section.\n- If the angle involves a measurable benefit and a fact states the number, use the number EXACTLY as the fact states it. If no fact states a number, write the line without any number — NEVER invent one.\n- If the angle is emotional (nostalgia, status, relief), the line itself must evoke that feeling through specifics — never announce it (\"Experience nostalgia\" is a failure).\n- BANNED — never write these or structurally similar empty retail phrases: \"shop smart\", \"style meets value\", \"exclusive deals\", \"don't miss out\", \"elevate your\", \"unleash\", \"discover the difference\", \"quality you can trust\", \"your one-stop shop\", \"treat yourself\", \"satisfaction guaranteed\", \"limited time only\", \"best-kept secret\", \"game-changer\", \"shop the look\".\n\n## Rules (non-negotiable — verify every one)\n1. Do not claim the product treats or prevents any medical condition."
+      },
+      "judgeChecklist": [
+        {
+          "id": "rule_no_medical_claims@v1",
+          "source": "rule",
+          "requirement": "The copy and image comply with this brand rule: \"Do not claim the product treats or prevents any medical condition.\"",
+          "enforced": false
+        },
+        {
+          "id": "structural_no_added_text@r2",
+          "source": "structural",
+          "requirement": "No text, headline, caption, banner band, CTA button, or watermark has been ADDED to the image. Text printed on the product's own packaging or label is expected and allowed. A thin bottom compliance-disclaimer strip is a sanctioned overlay and allowed.",
+          "enforced": true
+        },
+        {
+          "id": "structural_scene_relevance@r3",
+          "source": "structural",
+          "requirement": "Every element of the image relates to the product, its ingredients, its benefit, or its customer; stylised, conceptual, or editorial compositions are acceptable. There are no unrelated or unmotivated people, devices, screens, venues, or props.",
+          "enforced": false
+        }
+      ],
+      "variationPlan": [
+        {
+          "key": "problem_callout__lifestyle_static",
+          "text": "Product in a realistic in-use scene: the exact moment a customer uses it, natural light, candid framing. Capture the exact moment of the everyday frustration this product removes, with the product visibly present as the fix — the tension resolving in one frame.",
+          "hookArchetype": "problem_callout",
+          "format": "lifestyle_static",
+          "strategyKey": "problem_callout__lifestyle_static"
+        },
+        {
+          "key": "pov_relatable__product_only_static",
+          "text": "Product hero on a clean seamless studio background, soft directional lighting, gentle shadow, label facing camera. The persona's own vantage over their table, desk, or counter with the product in their everyday spot, framed as they would see it — no person visible.",
+          "hookArchetype": "pov_relatable",
+          "format": "product_only_static",
+          "strategyKey": "pov_relatable__product_only_static"
+        }
+      ],
+      "copyRequests": [
+        {
+          "model": "gpt-4o",
+          "temperature": 0.6,
+          "max_tokens": 512,
+          "response_format": {
+            "type": "json_object"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are a senior direct-response copywriter. You write specific, concrete ad copy that could only be written for THIS brand. Ground every claim ONLY in the brand facts provided. If a specific number, ingredient, or attribute is not in the facts, write the line without it — NEVER invent statistics, quantities, ingredients, awards, or reviews. Express the strategic angle through a concrete, fact-grounded claim or a vivid specific moment — never restate the angle itself as copy, and never produce generic retail phrases. Match the brand voice exactly and speak directly to the target audience. The rules at the end of the brief are non-negotiable: before finalizing, check every line of copy against every rule."
+            },
+            {
+              "role": "user",
+              "content": "## Brand facts\n1. [positioning] Halden Oat Co. makes high-protein oat clusters for people who want a breakfast that keeps them full until lunch.\n2. [proof_point] Rated 4.7 out of 5 across more than 3,000 reviews.\n3. [usp] Baked in small batches with whole rolled oats and no seed oils.\n\n## Brand voice\n- Warm, practical and lightly playful\n\n## Persona\nName: The Macro Tracker\nDescription: Gym-goer hitting a daily protein target who is tired of shakes and bars.\nAwareness stage: product_aware\nPains:\n- Hungry again an hour after a low-protein breakfast\nDesires:\n- Protein at breakfast without another shake\nCustomer verbatims:\n- \"I want my protein in the morning without choking down another shake.\"\n\n## Task\nPlatform: meta\nGoal: conversions\nStrategic angle (INTERNAL strategy — express it through the copy, never quote or restate it): Lead with the convenience angle proven by winning ads in this market\n\nHow to execute the angle:\n- The headline must make ONE concrete claim or paint ONE specific moment that proves the angle, using details from the Brand facts section.\n- If the angle involves a measurable benefit and a fact states the number, use the number EXACTLY as the fact states it. If no fact states a number, write the line without any number — NEVER invent one.\n- If the angle is emotional (nostalgia, status, relief), the line itself must evoke that feeling through specifics — never announce it (\"Experience nostalgia\" is a failure).\n- BANNED — never write these or structurally similar empty retail phrases: \"shop smart\", \"style meets value\", \"exclusive deals\", \"don't miss out\", \"elevate your\", \"unleash\", \"discover the difference\", \"quality you can trust\", \"your one-stop shop\", \"treat yourself\", \"satisfaction guaranteed\", \"limited time only\", \"best-kept secret\", \"game-changer\", \"shop the look\".\n\n## Rules (non-negotiable — verify every one)\n1. Do not claim the product treats or prevents any medical condition.\n\n## Strategy for this variant\nHook archetype to execute: Open on the specific pain the product removes — name the moment the customer feels it, then resolve it with a brand fact.\nImage shot direction for this variant: Product in a realistic in-use scene: the exact moment a customer uses it, natural light, candid framing. Capture the exact moment of the everyday frustration this product removes, with the product visibly present as the fix — the tension resolving in one frame.\nThe visualConcept must fit this shot direction — keep its shot type, framing and setting (a studio product-hero direction means a staged still life of the product, not a person in a kitchen).\n\n## Output format\nRespond with JSON only, no commentary:\n{\"headline\": \"<ONE concrete, fact-grounded headline, STRICTLY <= 60 characters including spaces>\",\n \"primaryText\": \"<1-3 sentences of primary ad text, STRICTLY <= 500 characters>\",\n \"cta\": \"<EXACTLY one of: Shop Now | Learn More | Sign Up | Subscribe | Get Offer | Contact Us | Download | Order Now>\",\n \"visualConcept\": \"<ONE concrete scene, about 40 words at most, that makes THIS headline's specific claim or moment visible in a single static photo>\"}\nThe cta is a platform button label — pick from the list verbatim, never write your own.\nThe visualConcept directs the ad image, which never shows the ad copy: describe only what the camera sees — people, setting, props, action, mood. Never describe added text, words, numbers, logos beyond the product's own packaging, fabricated interfaces or readable on-screen text, or split before/after panels; show a screen only when the product itself is software, and only as the product in use."
+            }
+          ]
+        },
+        {
+          "model": "gpt-4o",
+          "temperature": 0.6,
+          "max_tokens": 512,
+          "response_format": {
+            "type": "json_object"
+          },
+          "messages": [
+            {
+              "role": "system",
+              "content": "You are a senior direct-response copywriter. You write specific, concrete ad copy that could only be written for THIS brand. Ground every claim ONLY in the brand facts provided. If a specific number, ingredient, or attribute is not in the facts, write the line without it — NEVER invent statistics, quantities, ingredients, awards, or reviews. Express the strategic angle through a concrete, fact-grounded claim or a vivid specific moment — never restate the angle itself as copy, and never produce generic retail phrases. Match the brand voice exactly and speak directly to the target audience. The rules at the end of the brief are non-negotiable: before finalizing, check every line of copy against every rule."
+            },
+            {
+              "role": "user",
+              "content": "## Brand facts\n1. [positioning] Halden Oat Co. makes high-protein oat clusters for people who want a breakfast that keeps them full until lunch.\n2. [proof_point] Rated 4.7 out of 5 across more than 3,000 reviews.\n3. [usp] Baked in small batches with whole rolled oats and no seed oils.\n\n## Brand voice\n- Warm, practical and lightly playful\n\n## Persona\nName: The Macro Tracker\nDescription: Gym-goer hitting a daily protein target who is tired of shakes and bars.\nAwareness stage: product_aware\nPains:\n- Hungry again an hour after a low-protein breakfast\nDesires:\n- Protein at breakfast without another shake\nCustomer verbatims:\n- \"I want my protein in the morning without choking down another shake.\"\n\n## Task\nPlatform: meta\nGoal: conversions\nStrategic angle (INTERNAL strategy — express it through the copy, never quote or restate it): Lead with the convenience angle proven by winning ads in this market\n\nHow to execute the angle:\n- The headline must make ONE concrete claim or paint ONE specific moment that proves the angle, using details from the Brand facts section.\n- If the angle involves a measurable benefit and a fact states the number, use the number EXACTLY as the fact states it. If no fact states a number, write the line without any number — NEVER invent one.\n- If the angle is emotional (nostalgia, status, relief), the line itself must evoke that feeling through specifics — never announce it (\"Experience nostalgia\" is a failure).\n- BANNED — never write these or structurally similar empty retail phrases: \"shop smart\", \"style meets value\", \"exclusive deals\", \"don't miss out\", \"elevate your\", \"unleash\", \"discover the difference\", \"quality you can trust\", \"your one-stop shop\", \"treat yourself\", \"satisfaction guaranteed\", \"limited time only\", \"best-kept secret\", \"game-changer\", \"shop the look\".\n\n## Rules (non-negotiable — verify every one)\n1. Do not claim the product treats or prevents any medical condition.\n\n## Strategy for this variant\nHook archetype to execute: Write from the persona's own point of view — a first-person moment they recognize, resolved by the product.\nImage shot direction for this variant: Product hero on a clean seamless studio background, soft directional lighting, gentle shadow, label facing camera. The persona's own vantage over their table, desk, or counter with the product in their everyday spot, framed as they would see it — no person visible.\nThe visualConcept must fit this shot direction — keep its shot type, framing and setting (a studio product-hero direction means a staged still life of the product, not a person in a kitchen).\n\n## Output format\nRespond with JSON only, no commentary:\n{\"headline\": \"<ONE concrete, fact-grounded headline, STRICTLY <= 60 characters including spaces>\",\n \"primaryText\": \"<1-3 sentences of primary ad text, STRICTLY <= 500 characters>\",\n \"cta\": \"<EXACTLY one of: Shop Now | Learn More | Sign Up | Subscribe | Get Offer | Contact Us | Download | Order Now>\",\n \"visualConcept\": \"<ONE concrete scene, about 40 words at most, that makes THIS headline's specific claim or moment visible in a single static photo>\"}\nThe cta is a platform button label — pick from the list verbatim, never write your own.\nThe visualConcept directs the ad image, which never shows the ad copy: describe only what the camera sees — people, setting, props, action, mood. Never describe added text, words, numbers, logos beyond the product's own packaging, fabricated interfaces or readable on-screen text, or split before/after panels; show a screen only when the product itself is software, and only as the product in use."
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
