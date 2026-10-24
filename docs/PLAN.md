@@ -10,7 +10,7 @@ Everything here is settled. Change a row only by editing this table, so both of 
 
 | Topic | Decision |
 | --- | --- |
-| Demo brand | Magic Spoon, against competitors that run Meta ads today. **Competitor set is open** (unlocked Oct 24): of the original Catalina Crunch, Three Wishes and Wonderworks, only Catalina Crunch has live ads (5). Pick the new set from the candidates in A2, agree it with B, then lock it here. B's fixtures still use the old names |
+| Demo brand | Magic Spoon, against seven brands that run Meta ads today (locked Oct 24, agreed by A and B): the protein cereals Catalina Crunch, Seven Sundays and Surreal, and the protein-adjacent GHOST, Premier Protein, Legendary Foods and Quest Nutrition. Page ids are in A2. This replaces Catalina Crunch, Three Wishes and Wonderworks, of which only Catalina Crunch runs ads. B's fixtures still use the old names |
 | Meta ads | Scraped only by the advertiser's own page (Ad Library `view_all_page_id`, or the facebook.com page the brand's website links to), never by keyword search. A keyword search returns mostly unrelated advertisers. Each page is shown to Person A before its full scrape |
 | Sponsor tracks | Apify, Fetch.ai, SpacetimeDB, Visa |
 | Shopper decisions | Jev (TypeSafe), pinned to `jev-1.13.0`. Not a sponsor track |
@@ -62,7 +62,7 @@ These SpacetimeDB tables are the entire interface between A and B. Each side wri
 
 | Table | Fields | Rules |
 | --- | --- | --- |
-| brand | brand\_id, name, is\_client | Magic Spoon is the client; the three competitors are not |
+| brand | brand\_id, name, is\_client | Magic Spoon is the client; the seven competitors are not |
 | concept | concept\_id, key, label | The closed claim vocabulary (draft in Simulation design). A's analysts map brand facts onto the same keys |
 | segment | segment\_id, name, description, share, prior\_weights (json: concept key → 0..1), quotes (json: 8–20 real customer quotes), budget\_mean\_usd, budget\_sd\_usd, in\_market\_rate | description is life context only (who they are, their routine), never preferences; those live only in prior\_weights. Shares sum to 1. Built from Adcero's personas in A4 |
 | arm | arm\_id, angle, hook, strategy (steal / double\_down / gap / control), rationale, evidence | angle uses the food-industry tokens Adcero's labeller writes (taste\_indulgence, health\_nutrition, convenience, natural\_clean, craving, dietary\_fit, price\_value, trust\_safety); hook uses HOOK\_ARCHETYPES. Exactly one control arm: Magic Spoon's own live ads |
@@ -219,15 +219,15 @@ A turns Magic Spoon's public footprint into the rows the sim needs, writes the a
 
 **Done when** `npm run typecheck` passes, `npm run worker` drains an empty queue, and `/` renders in Adcero's dark theme.
 
-### A2 · Sat 8 – 10:30 AM · Ingest Magic Spoon and the three competitors
+### A2 · Sat 8 – 10:30 AM · Ingest Magic Spoon and its seven competitors
 
 - [ ] Run `brand_presence_discover` on magicspoon.com. Check the draft profile's name variants and competitor list, then confirm it.
 - [ ] Sources: Reddit, Trustpilot, Google Maps, X, Instagram, TikTok. Where discovery missed a handle, set it by hand and confirm it through the copied `confirm-source.ts` functions from a script.
 - [ ] Caps: Reddit and X about 300 each, reviews about 100–200, Instagram and TikTok comments from about 10 posts each (Adcero's planner defaults).
 - [ ] `tracked_competitors`, Meta only, with `APIFY_AD_LIBRARY_MAX_ADS=50`:
-  - the competitor set chosen under Locked decisions, each tracked by its Meta page id, never a keyword
+  - the seven competitors under Locked decisions, each tracked by its Meta page id (table below), never a keyword
   - Magic Spoon's own page ("Magic Spoon Cereal", page id 1978160732305312), which feeds the control and double-down recipes
-- Competitor candidates, checked Oct 24. Page ids come from each brand's own website; "live" means running Meta ads that day:
+- Competitor set, locked Oct 24: the seven brands with a page id below. Page ids come from each brand's own website; "live" means running Meta ads that day:
 
   | Brand | Page id | Live ads | Fit |
   | --- | --- | --- | --- |
@@ -258,7 +258,7 @@ A turns Magic Spoon's public footprint into the rows the sim needs, writes the a
 
 ### A4 · Sat 1 – 2:30 PM · Write the contract rows (2:30 PM integration with B)
 
-- [ ] **brand:** 4 rows. **concept:** the shared vocabulary from Simulation design.
+- [ ] **brand:** 8 rows (Magic Spoon and the seven competitors). **concept:** the shared vocabulary from Simulation design.
 - [ ] **Segment builder:** one script, one strict-JSON LLM call per persona.
 - [ ] **Arm builder:** deterministic picks, plus one LLM call for the rationale text.
 - [ ] **Live ads to creatives:** competitor\_live and brand\_live rows.
@@ -830,7 +830,7 @@ Finish with: what works, what is stubbed, the proving command, and a commit "A1:
 ### A2 · Ingest
 
 ```
-Ad Lab, phase A2: ingest Magic Spoon and three competitors. Cal Hacks 13.0; hard deadline Sun Oct 25, 9 AM PT. You are Person A's coding agent.
+Ad Lab, phase A2: ingest Magic Spoon and its seven competitors. Cal Hacks 13.0; hard deadline Sun Oct 25, 9 AM PT. You are Person A's coding agent.
 Read first: docs/PLAN.md "Locked decisions", "A2" and its gotchas.
 Also read: REUSE_MANIFEST.md §1, §2, §3, §10.
 ../adcero is read-only; use tests/fixtures/ad-library/apify-sample.json for a normalizer smoke test.
