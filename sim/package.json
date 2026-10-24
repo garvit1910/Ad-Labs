@@ -13,7 +13,9 @@
     "test": "tsx --test test/*.test.ts",
     "sim:spike": "tsx spike/run.ts",
     "sim:spike:mechanics": "tsx spike/mechanics.ts",
-    "sim:run": "tsx src/cli.ts"
+    "sim:run": "tsx src/cli.ts",
+    "sim:worker": "tsx src/worker.ts",
+    "test:module": "esbuild ../spacetime/src/index.ts --bundle --format=esm --platform=neutral --external:spacetimedb --external:spacetimedb/server '--external:spacetime:sys*' --outfile=.cache/module.mjs --log-level=warning && node --import ./test/module/register.mjs --import tsx --test test/module/module.test.ts"
   },
   "dependencies": {
     "better-sqlite3": "13.0.3",

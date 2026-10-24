@@ -121,13 +121,13 @@ export class Engine {
   readonly seed: number;
   readonly offsets: Offsets;
   private policy: ArmPolicy;
-  private liveArms: Arm[];
+  private liveArms: Arm[] = [];
   private armCreatives = new Map<string, Creative[]>();
   private products = new Map<string, Product>();
   private segments = new Map<string, Segment>();
 
   constructor(
-    readonly world: World,
+    public world: World,
     private jev: Asker,
     private perceptions: Map<string, Perception>,
     opts: EngineOptions,
@@ -137,8 +137,20 @@ export class Engine {
     this.offsets = opts.offsets ?? ZERO_OFFSETS;
     this.policy = opts.policy ?? uniformPolicy;
     this.shoppers = Array.from({ length: opts.population }, (_, i) => makeShopper(i, world, opts.seed));
+    this.setWorld(world, perceptions);
+  }
+
+  // A's rows between rounds: new creatives (and products) arrive; shoppers and their memory stay.
+  // A shopper's segment must still exist, since segments are fixed for a run.
+  setWorld(world: World, perceptions: Map<string, Perception>): void {
+    this.products.clear();
+    this.segments.clear();
+    this.armCreatives.clear();
     for (const p of world.products) this.products.set(p.product_id, p);
     for (const s of world.segments) this.segments.set(s.segment_id, s);
+    for (const s of this.shoppers) {
+      if (!this.segments.has(s.segment_id)) throw new Error(`segment ${s.segment_id} left the world mid-run`);
+    }
     const client = world.brands.find((b) => b.is_client)!;
     for (const c of world.creatives) {
       if (c.arm_id && c.brand_id === client.brand_id && c.status === "ranked") {
@@ -148,8 +160,10 @@ export class Engine {
     // Only ranked creatives enter feeds, so an arm with none can't be shown.
     this.liveArms = world.arms.filter((a) => this.armCreatives.has(a.arm_id));
     for (const c of world.creatives) {
-      if (!this.perceptions.has(c.creative_id)) throw new Error(`creative ${c.creative_id} has no perception`);
+      if (!perceptions.has(c.creative_id)) throw new Error(`creative ${c.creative_id} has no perception`);
     }
+    this.world = world;
+    this.perceptions = perceptions;
   }
 
   // Arms with at least one ranked Magic Spoon creative, in fixture order.

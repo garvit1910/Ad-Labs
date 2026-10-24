@@ -106,7 +106,7 @@ export class SimRun {
   readonly configHash: string;
 
   constructor(
-    readonly world: World,
+    public world: World,
     private jev: Asker,
     private perceptions: Map<string, Perception>,
     readonly opts: RunOptions,
@@ -142,7 +142,16 @@ export class SimRun {
     return this.fit;
   }
 
-  async runRound(round: number): Promise<RoundReport> {
+  // The world for the next round (A writes new creatives between rounds).
+  setWorld(world: World, perceptions: Map<string, Perception>): void {
+    this.world = world;
+    this.perceptions = perceptions;
+    this.engine?.setWorld(world, perceptions);
+  }
+
+  // onDay runs at the end of each sim day, after the bandit update, with that day's results and
+  // refreshed arm stats: where the worker writes the day's rows (one call per table per day).
+  async runRound(round: number, onDay?: (day: DayResult, armStats: ArmStat[]) => Promise<void>): Promise<RoundReport> {
     if (!this.engine) throw new Error("calibrate() before running rounds");
     const days: DayResult[] = [];
     const dailyArmStats: ArmStat[][] = [];
@@ -154,6 +163,7 @@ export class SimRun {
       this.impressions.push(...day.impressions);
       days.push(day);
       dailyArmStats.push(this.armStats(round));
+      await onDay?.(day, dailyArmStats.at(-1)!);
     }
     const candidates = findLearnings({
       world: this.world,

@@ -1,0 +1,861 @@
+{
+  "run_id": "run_demo",
+  "round": 1,
+  "ticks": [
+    3,
+    4,
+    5
+  ],
+  "seed": 13,
+  "population": 300,
+  "calibration": {
+    "offsets": {
+      "tap": -3.96452676061042,
+      "stay": -0.328363805800704,
+      "buy": -1.8522955541782342
+    },
+    "probe_jev": {
+      "calls": 1456,
+      "input_tokens": 1066616,
+      "cost_usd": 0.0448
+    },
+    "warm_up_fit": {
+      "n": 728,
+      "p_tap": 0.01,
+      "bounce_rate": 0.5,
+      "p_buy_given_stay": 0.04,
+      "visit_to_purchase": 0.02,
+      "in_band": {
+        "p_click": true,
+        "bounce_rate": true,
+        "visit_to_purchase": true
+      }
+    }
+  },
+  "funnel_cal": {
+    "p_tap": 0.0153,
+    "bounce_rate": 0.4409,
+    "p_buy_given_stay": 0.055,
+    "visit_to_purchase": 0.0307
+  },
+  "in_market_impressions": 288,
+  "budget_guarded": 296,
+  "impressions": 705,
+  "taps": 13,
+  "stays": 9,
+  "buys": 1,
+  "lost_to_competitor": 7,
+  "mean_p_raw": {
+    "tap": 0.3877,
+    "stay": 0.563,
+    "buy": 0.3012
+  },
+  "mean_believes": 0.4077,
+  "mean_reward_raw": 0.050502,
+  "mean_reward_cal": 0.00047,
+  "objections": {
+    "price": 0.1617,
+    "taste_doubt": 0.0908,
+    "trust": 0.0128,
+    "not_now": 0.5887,
+    "other_brand": 0,
+    "nothing": 0.1461
+  },
+  "by_arm": [
+    {
+      "arm_id": "arm_01",
+      "strategy": "steal",
+      "angle": "taste_indulgence",
+      "hook": "bold_claim",
+      "impressions": 61,
+      "taps": 0,
+      "stays": 0,
+      "buys": 0,
+      "lost_to_competitor": 0,
+      "mean_p_raw": {
+        "tap": 0.451,
+        "stay": 0.5797,
+        "buy": 0.2874
+      },
+      "mean_believes": 0.4089,
+      "mean_reward_raw": 0.041673,
+      "mean_reward_cal": 0.000293
+    },
+    {
+      "arm_id": "arm_02",
+      "strategy": "steal",
+      "angle": "dietary_fit",
+      "hook": "problem_callout",
+      "impressions": 89,
+      "taps": 2,
+      "stays": 1,
+      "buys": 0,
+      "lost_to_competitor": 1,
+      "mean_p_raw": {
+        "tap": 0.4234,
+        "stay": 0.6173,
+        "buy": 0.3329
+      },
+      "mean_believes": 0.4907,
+      "mean_reward_raw": 0.063667,
+      "mean_reward_cal": 0.000578
+    },
+    {
+      "arm_id": "arm_03",
+      "strategy": "steal",
+      "angle": "health_nutrition",
+      "hook": "statistic",
+      "impressions": 26,
+      "taps": 0,
+      "stays": 0,
+      "buys": 0,
+      "lost_to_competitor": 0,
+      "mean_p_raw": {
+        "tap": 0.2846,
+        "stay": 0.5365,
+        "buy": 0.2581
+      },
+      "mean_believes": 0.3612,
+      "mean_reward_raw": 0.013539,
+      "mean_reward_cal": 0.000065
+    },
+    {
+      "arm_id": "arm_04",
+      "strategy": "steal",
+      "angle": "craving",
+      "hook": "pov_relatable",
+      "impressions": 20,
+      "taps": 0,
+      "stays": 0,
+      "buys": 0,
+      "lost_to_competitor": 0,
+      "mean_p_raw": {
+        "tap": 0.2465,
+        "stay": 0.5195,
+        "buy": 0.2565
+      },
+      "mean_believes": 0.2745,
+      "mean_reward_raw": 0.026191,
+      "mean_reward_cal": 0.000136
+    },
+    {
+      "arm_id": "arm_05",
+      "strategy": "steal",
+      "angle": "natural_clean",
+      "hook": "question",
+      "impressions": 29,
+      "taps": 1,
+      "stays": 1,
+      "buys": 0,
+      "lost_to_competitor": 0,
+      "mean_p_raw": {
+        "tap": 0.3614,
+        "stay": 0.5717,
+        "buy": 0.2786
+      },
+      "mean_believes": 0.3934,
+      "mean_reward_raw": 0.050888,
+      "mean_reward_cal": 0.000382
+    },
+    {
+      "arm_id": "arm_06",
+      "strategy": "double_down",
+      "angle": "taste_indulgence",
+      "hook": "social_proof",
+      "impressions": 21,
+      "taps": 0,
+      "stays": 0,
+      "buys": 0,
+      "lost_to_competitor": 0,
+      "mean_p_raw": {
+        "tap": 0.3152,
+        "stay": 0.5276,
+        "buy": 0.2557
+      },
+      "mean_believes": 0.3133,
+      "mean_reward_raw": 0.045249,
+      "mean_reward_cal": 0.000333
+    },
+    {
+      "arm_id": "arm_07",
+      "strategy": "double_down",
+      "angle": "health_nutrition",
+      "hook": "testimonial",
+      "impressions": 197,
+      "taps": 4,
+      "stays": 4,
+      "buys": 1,
+      "lost_to_competitor": 3,
+      "mean_p_raw": {
+        "tap": 0.3884,
+        "stay": 0.5366,
+        "buy": 0.3107
+      },
+      "mean_believes": 0.3854,
+      "mean_reward_raw": 0.063944,
+      "mean_reward_cal": 0.000769
+    },
+    {
+      "arm_id": "arm_08",
+      "strategy": "double_down",
+      "angle": "craving",
+      "hook": "curiosity",
+      "impressions": 56,
+      "taps": 3,
+      "stays": 2,
+      "buys": 0,
+      "lost_to_competitor": 0,
+      "mean_p_raw": {
+        "tap": 0.3752,
+        "stay": 0.5766,
+        "buy": 0.2886
+      },
+      "mean_believes": 0.3779,
+      "mean_reward_raw": 0.055945,
+      "mean_reward_cal": 0.000443
+    },
+    {
+      "arm_id": "arm_09",
+      "strategy": "gap",
+      "angle": "price_value",
+      "hook": "offer_led",
+      "impressions": 19,
+      "taps": 0,
+      "stays": 0,
+      "buys": 0,
+      "lost_to_competitor": 0,
+      "mean_p_raw": {
+        "tap": 0.3705,
+        "stay": 0.5674,
+        "buy": 0.3532
+      },
+      "mean_believes": 0.3547,
+      "mean_reward_raw": 0.031052,
+      "mean_reward_cal": 0.000183
+    },
+    {
+      "arm_id": "arm_10",
+      "strategy": "gap",
+      "angle": "trust_safety",
+      "hook": "story_narrative",
+      "impressions": 25,
+      "taps": 1,
+      "stays": 0,
+      "buys": 0,
+      "lost_to_competitor": 0,
+      "mean_p_raw": {
+        "tap": 0.3188,
+        "stay": 0.5352,
+        "buy": 0.26
+      },
+      "mean_believes": 0.3472,
+      "mean_reward_raw": 0.022329,
+      "mean_reward_cal": 0.000117
+    },
+    {
+      "arm_id": "arm_11",
+      "strategy": "gap",
+      "angle": "taste_indulgence",
+      "hook": "testimonial",
+      "impressions": 96,
+      "taps": 1,
+      "stays": 0,
+      "buys": 0,
+      "lost_to_competitor": 0,
+      "mean_p_raw": {
+        "tap": 0.4545,
+        "stay": 0.5815,
+        "buy": 0.3136
+      },
+      "mean_believes": 0.5224,
+      "mean_reward_raw": 0.052231,
+      "mean_reward_cal": 0.000458
+    },
+    {
+      "arm_id": "arm_control",
+      "strategy": "control",
+      "angle": null,
+      "hook": null,
+      "impressions": 66,
+      "taps": 1,
+      "stays": 1,
+      "buys": 0,
+      "lost_to_competitor": 3,
+      "mean_p_raw": {
+        "tap": 0.3415,
+        "stay": 0.5556,
+        "buy": 0.2906
+      },
+      "mean_believes": 0.3533,
+      "mean_reward_raw": 0.033349,
+      "mean_reward_cal": 0.000198
+    }
+  ],
+  "by_segment": [
+    {
+      "segment_id": "seg_keto_low_carb",
+      "impressions": 155,
+      "taps": 6,
+      "stays": 4,
+      "buys": 1,
+      "lost_to_competitor": 0,
+      "mean_p_raw": {
+        "tap": 0.4325,
+        "stay": 0.6619,
+        "buy": 0.3607
+      },
+      "mean_believes": 0.4795,
+      "mean_reward_raw": 0.068481,
+      "mean_reward_cal": 0.00057,
+      "objections": {
+        "price": 0.071,
+        "taste_doubt": 0.2,
+        "trust": 0,
+        "not_now": 0.5742,
+        "other_brand": 0,
+        "nothing": 0.1548
+      }
+    },
+    {
+      "segment_id": "seg_protein_athlete",
+      "impressions": 148,
+      "taps": 4,
+      "stays": 4,
+      "buys": 0,
+      "lost_to_competitor": 1,
+      "mean_p_raw": {
+        "tap": 0.5149,
+        "stay": 0.6482,
+        "buy": 0.3985
+      },
+      "mean_believes": 0.483,
+      "mean_reward_raw": 0.090982,
+      "mean_reward_cal": 0.00106,
+      "objections": {
+        "price": 0.0608,
+        "taste_doubt": 0.0068,
+        "trust": 0,
+        "not_now": 0.6149,
+        "other_brand": 0,
+        "nothing": 0.3176
+      }
+    },
+    {
+      "segment_id": "seg_nostalgic_adult",
+      "impressions": 120,
+      "taps": 0,
+      "stays": 0,
+      "buys": 0,
+      "lost_to_competitor": 1,
+      "mean_p_raw": {
+        "tap": 0.3992,
+        "stay": 0.5323,
+        "buy": 0.2468
+      },
+      "mean_believes": 0.4133,
+      "mean_reward_raw": 0.034702,
+      "mean_reward_cal": 0.000266,
+      "objections": {
+        "price": 0.1417,
+        "taste_doubt": 0.05,
+        "trust": 0,
+        "not_now": 0.6667,
+        "other_brand": 0,
+        "nothing": 0.1417
+      }
+    },
+    {
+      "segment_id": "seg_healthy_family",
+      "impressions": 113,
+      "taps": 2,
+      "stays": 1,
+      "buys": 0,
+      "lost_to_competitor": 4,
+      "mean_p_raw": {
+        "tap": 0.258,
+        "stay": 0.4901,
+        "buy": 0.235
+      },
+      "mean_believes": 0.2932,
+      "mean_reward_raw": 0.021705,
+      "mean_reward_cal": 0.000135,
+      "objections": {
+        "price": 0.354,
+        "taste_doubt": 0.0708,
+        "trust": 0.0796,
+        "not_now": 0.4956,
+        "other_brand": 0,
+        "nothing": 0
+      }
+    },
+    {
+      "segment_id": "seg_taste_skeptic",
+      "impressions": 97,
+      "taps": 0,
+      "stays": 0,
+      "buys": 0,
+      "lost_to_competitor": 0,
+      "mean_p_raw": {
+        "tap": 0.3874,
+        "stay": 0.5015,
+        "buy": 0.2543
+      },
+      "mean_believes": 0.4211,
+      "mean_reward_raw": 0.041376,
+      "mean_reward_cal": 0.000361,
+      "objections": {
+        "price": 0.0103,
+        "taste_doubt": 0.1856,
+        "trust": 0,
+        "not_now": 0.6495,
+        "other_brand": 0,
+        "nothing": 0.1546
+      }
+    },
+    {
+      "segment_id": "seg_deal_seeker",
+      "impressions": 72,
+      "taps": 1,
+      "stays": 0,
+      "buys": 0,
+      "lost_to_competitor": 1,
+      "mean_p_raw": {
+        "tap": 0.2149,
+        "stay": 0.4238,
+        "buy": 0.2306
+      },
+      "mean_believes": 0.2511,
+      "mean_reward_raw": 0.012407,
+      "mean_reward_cal": 0.000058,
+      "objections": {
+        "price": 0.5,
+        "taste_doubt": 0,
+        "trust": 0,
+        "not_now": 0.5,
+        "other_brand": 0,
+        "nothing": 0
+      }
+    }
+  ],
+  "jev": {
+    "model": "jev-1.13.0",
+    "calls": 1410,
+    "input_tokens": 1063312,
+    "cost_usd": 0.0447,
+    "cache_hit_rate": 1
+  },
+  "jev_model": "jev-1.13.0",
+  "config_hash": "98a475dc29fbb65fdbb3df0ba0f372daa1ae68b63fad6840b9abb79679d21812",
+  "leaderboard": [
+    {
+      "segment_id": "seg_keto_low_carb",
+      "impressions_this_round": 155,
+      "top": [
+        {
+          "arm_id": "arm_02",
+          "share_this_round": 0.3871,
+          "impressions": 74,
+          "p_best": 0.8915,
+          "cpo_usd": 19.12,
+          "cpo_range_usd": [
+            16.1,
+            23.53
+          ]
+        },
+        {
+          "arm_id": "arm_08",
+          "share_this_round": 0.2065,
+          "impressions": 45,
+          "p_best": 0.0895,
+          "cpo_usd": 23.51,
+          "cpo_range_usd": [
+            18.49,
+            32.26
+          ]
+        },
+        {
+          "arm_id": "arm_07",
+          "share_this_round": 0.0581,
+          "impressions": 22,
+          "p_best": 0.0185,
+          "cpo_usd": 28.15,
+          "cpo_range_usd": [
+            20.25,
+            46.16
+          ]
+        }
+      ],
+      "control": {
+        "arm_id": "arm_control",
+        "share_this_round": 0.0839,
+        "impressions": 27,
+        "p_best": 0,
+        "cpo_usd": 58.18,
+        "cpo_range_usd": [
+          32.87,
+          253.1
+        ]
+      }
+    },
+    {
+      "segment_id": "seg_protein_athlete",
+      "impressions_this_round": 148,
+      "top": [
+        {
+          "arm_id": "arm_07",
+          "share_this_round": 0.6149,
+          "impressions": 104,
+          "p_best": 1,
+          "cpo_usd": 10.09,
+          "cpo_range_usd": [
+            9.28,
+            11.06
+          ]
+        },
+        {
+          "arm_id": "arm_02",
+          "share_this_round": 0.027,
+          "impressions": 16,
+          "p_best": 0,
+          "cpo_usd": 37.15,
+          "cpo_range_usd": [
+            24.01,
+            82.07
+          ]
+        },
+        {
+          "arm_id": "arm_03",
+          "share_this_round": 0.0203,
+          "impressions": 15,
+          "p_best": 0,
+          "cpo_usd": 37.7,
+          "cpo_range_usd": [
+            24.14,
+            85.97
+          ]
+        }
+      ],
+      "control": {
+        "arm_id": "arm_control",
+        "share_this_round": 0.1081,
+        "impressions": 29,
+        "p_best": 0,
+        "cpo_usd": 54.87,
+        "cpo_range_usd": [
+          32.01,
+          191.73
+        ]
+      }
+    },
+    {
+      "segment_id": "seg_nostalgic_adult",
+      "impressions_this_round": 120,
+      "top": [
+        {
+          "arm_id": "arm_11",
+          "share_this_round": 0.125,
+          "impressions": 26,
+          "p_best": 0.4975,
+          "cpo_usd": 32.36,
+          "cpo_range_usd": [
+            22.6,
+            57
+          ]
+        },
+        {
+          "arm_id": "arm_01",
+          "share_this_round": 0.3,
+          "impressions": 47,
+          "p_best": 0.1945,
+          "cpo_usd": 37.46,
+          "cpo_range_usd": [
+            26.26,
+            65.34
+          ]
+        },
+        {
+          "arm_id": "arm_07",
+          "share_this_round": 0.2,
+          "impressions": 35,
+          "p_best": 0.088,
+          "cpo_usd": 43.49,
+          "cpo_range_usd": [
+            28.26,
+            94.37
+          ]
+        }
+      ],
+      "control": {
+        "arm_id": "arm_control",
+        "share_this_round": 0.1167,
+        "impressions": 25,
+        "p_best": 0.0145,
+        "cpo_usd": 61.41,
+        "cpo_range_usd": [
+          33.6,
+          356.11
+        ]
+      }
+    },
+    {
+      "segment_id": "seg_healthy_family",
+      "impressions_this_round": 113,
+      "top": [
+        {
+          "arm_id": "arm_05",
+          "share_this_round": 0.1239,
+          "impressions": 22,
+          "p_best": 0.3585,
+          "cpo_usd": 39.82,
+          "cpo_range_usd": [
+            25.66,
+            88.87
+          ]
+        },
+        {
+          "arm_id": "arm_07",
+          "share_this_round": 0.2478,
+          "impressions": 36,
+          "p_best": 0.2055,
+          "cpo_usd": 43.87,
+          "cpo_range_usd": [
+            28.49,
+            95.31
+          ]
+        },
+        {
+          "arm_id": "arm_02",
+          "share_this_round": 0.1062,
+          "impressions": 20,
+          "p_best": 0.146,
+          "cpo_usd": 49.36,
+          "cpo_range_usd": [
+            29.08,
+            163.25
+          ]
+        }
+      ],
+      "control": {
+        "arm_id": "arm_control",
+        "share_this_round": 0.0708,
+        "impressions": 16,
+        "p_best": 0.012,
+        "cpo_usd": 83.83,
+        "cpo_range_usd": [
+          37.5,
+          null
+        ]
+      }
+    },
+    {
+      "segment_id": "seg_taste_skeptic",
+      "impressions_this_round": 97,
+      "top": [
+        {
+          "arm_id": "arm_11",
+          "share_this_round": 0.4742,
+          "impressions": 56,
+          "p_best": 0.9385,
+          "cpo_usd": 23.87,
+          "cpo_range_usd": [
+            18.98,
+            32.13
+          ]
+        },
+        {
+          "arm_id": "arm_07",
+          "share_this_round": 0.2268,
+          "impressions": 31,
+          "p_best": 0.016,
+          "cpo_usd": 40.65,
+          "cpo_range_usd": [
+            26.74,
+            84.72
+          ]
+        },
+        {
+          "arm_id": "arm_02",
+          "share_this_round": 0.0103,
+          "impressions": 10,
+          "p_best": 0.032,
+          "cpo_usd": 40.79,
+          "cpo_range_usd": [
+            24.8,
+            114.73
+          ]
+        }
+      ],
+      "control": {
+        "arm_id": "arm_control",
+        "share_this_round": 0.0928,
+        "impressions": 19,
+        "p_best": 0,
+        "cpo_usd": 95.55,
+        "cpo_range_usd": [
+          40.42,
+          null
+        ]
+      }
+    },
+    {
+      "segment_id": "seg_deal_seeker",
+      "impressions_this_round": 72,
+      "top": [
+        {
+          "arm_id": "arm_07",
+          "share_this_round": 0.3194,
+          "impressions": 28,
+          "p_best": 0.3195,
+          "cpo_usd": 38.72,
+          "cpo_range_usd": [
+            25.68,
+            78.73
+          ]
+        },
+        {
+          "arm_id": "arm_02",
+          "share_this_round": 0.0833,
+          "impressions": 12,
+          "p_best": 0.229,
+          "cpo_usd": 42.58,
+          "cpo_range_usd": [
+            25.7,
+            124
+          ]
+        },
+        {
+          "arm_id": "arm_11",
+          "share_this_round": 0.0833,
+          "impressions": 12,
+          "p_best": 0.166,
+          "cpo_usd": 45.31,
+          "cpo_range_usd": [
+            26.67,
+            150.41
+          ]
+        }
+      ],
+      "control": {
+        "arm_id": "arm_control",
+        "share_this_round": 0.0833,
+        "impressions": 12,
+        "p_best": 0.0115,
+        "cpo_usd": 92.05,
+        "cpo_range_usd": [
+          38.05,
+          null
+        ]
+      }
+    }
+  ],
+  "learnings": {
+    "opened": [
+      {
+        "learning_id": "lrn_demo_keto_low_carb_objection_top_v2",
+        "kind": "objection",
+        "statement": "Keto low-carb shoppers mostly hesitate over not needing cereal yet (65% of page visits).",
+        "directive": "Address not needing cereal yet early for keto low-carb shoppers."
+      },
+      {
+        "learning_id": "lrn_demo_keto_low_carb_claim_doubt_high_protein_v1",
+        "kind": "claim_doubt",
+        "statement": "Keto low-carb shoppers don't believe high protein claims (only 39% do).",
+        "directive": "Keto low-carb shoppers doubt high protein claims: back them with a concrete brand fact or drop them."
+      },
+      {
+        "learning_id": "lrn_demo_protein_athlete_winner_07_v1",
+        "kind": "winner",
+        "statement": "For protein athlete shoppers, health nutrition × testimonial leads: about $10 per order vs $55 for Magic Spoon's current ads (99% chance it's truly best).",
+        "directive": "For protein athlete shoppers, keep leading with health nutrition through a testimonial hook."
+      },
+      {
+        "learning_id": "lrn_demo_protein_athlete_objection_top_v2",
+        "kind": "objection",
+        "statement": "Protein athlete shoppers mostly hesitate over not needing cereal yet (63% of page visits).",
+        "directive": "Address not needing cereal yet early for protein athlete shoppers."
+      },
+      {
+        "learning_id": "lrn_demo_nostalgic_adult_objection_top_v2",
+        "kind": "objection",
+        "statement": "Nostalgic adult shoppers mostly hesitate over not needing cereal yet (64% of page visits).",
+        "directive": "Address not needing cereal yet early for nostalgic adult shoppers."
+      },
+      {
+        "learning_id": "lrn_demo_nostalgic_adult_claim_doubt_high_protein_v1",
+        "kind": "claim_doubt",
+        "statement": "Nostalgic adult shoppers don't believe high protein claims (only 23% do).",
+        "directive": "Nostalgic adult shoppers doubt high protein claims: back them with a concrete brand fact or drop them."
+      },
+      {
+        "learning_id": "lrn_demo_healthy_family_objection_top_v2",
+        "kind": "objection",
+        "statement": "Healthy family shoppers mostly hesitate over not needing cereal yet (50% of page visits).",
+        "directive": "Address not needing cereal yet early for healthy family shoppers."
+      },
+      {
+        "learning_id": "lrn_demo_healthy_family_claim_doubt_high_protein_v1",
+        "kind": "claim_doubt",
+        "statement": "Healthy family shoppers don't believe high protein claims (only 24% do).",
+        "directive": "Healthy family shoppers doubt high protein claims: back them with a concrete brand fact or drop them."
+      },
+      {
+        "learning_id": "lrn_demo_taste_skeptic_objection_top_v2",
+        "kind": "objection",
+        "statement": "Taste skeptic shoppers mostly hesitate over not needing cereal yet (69% of page visits).",
+        "directive": "Address not needing cereal yet early for taste skeptic shoppers."
+      },
+      {
+        "learning_id": "lrn_demo_deal_seeker_objection_top_v2",
+        "kind": "objection",
+        "statement": "Deal seeker shoppers mostly hesitate over not needing cereal yet (63% of page visits).",
+        "directive": "Address not needing cereal yet early for deal seeker shoppers."
+      }
+    ],
+    "closed": [
+      "lrn_demo_keto_low_carb_objection_top_v1",
+      "lrn_demo_protein_athlete_objection_top_v1",
+      "lrn_demo_nostalgic_adult_objection_top_v1",
+      "lrn_demo_healthy_family_objection_top_v1",
+      "lrn_demo_taste_skeptic_objection_top_v1",
+      "lrn_demo_deal_seeker_objection_top_v1"
+    ],
+    "live": 10
+  },
+  "generation": {
+    "run_id": "run_demo",
+    "round": 1,
+    "arms": [
+      {
+        "arm_id": "arm_07",
+        "segment_ids": [
+          "seg_protein_athlete",
+          "seg_deal_seeker"
+        ]
+      },
+      {
+        "arm_id": "arm_11",
+        "segment_ids": [
+          "seg_nostalgic_adult",
+          "seg_taste_skeptic"
+        ]
+      },
+      {
+        "arm_id": "arm_02",
+        "segment_ids": [
+          "seg_keto_low_carb"
+        ]
+      }
+    ],
+    "n_per_arm": 1,
+    "learning_ids": [
+      "lrn_demo_keto_low_carb_objection_top_v2",
+      "lrn_demo_keto_low_carb_claim_doubt_high_protein_v1",
+      "lrn_demo_protein_athlete_winner_07_v1",
+      "lrn_demo_protein_athlete_objection_top_v2",
+      "lrn_demo_nostalgic_adult_objection_top_v2",
+      "lrn_demo_nostalgic_adult_claim_doubt_high_protein_v1",
+      "lrn_demo_taste_skeptic_objection_top_v2",
+      "lrn_demo_deal_seeker_objection_top_v2"
+    ]
+  }
+}

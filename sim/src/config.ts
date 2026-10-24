@@ -55,5 +55,7 @@ export const config = {
     fixtures: join(SIM_ROOT, "fixtures", "magicspoon"),
     cacheDb: join(SIM_ROOT, ".cache", "jev-cache.sqlite"),
     lastCall: join(SIM_ROOT, ".cache", "last-jev-call.json"),
+    // The worker's SpacetimeDB identity token (git-ignored with the rest of .cache).
+    spacetimeIdentity: join(SIM_ROOT, ".cache", "spacetime-identity.json"),
   },
 } as const;

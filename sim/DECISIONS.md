@@ -7,7 +7,7 @@ When a decision changes, edit its entry and status here in the same commit as th
 **Status:** `OPEN` needs an answer · `NEEDS A` needs Person A's agreement because it touches the
 contract or A's data · `DECIDED` taken by B and reversible · `FORCED` the plan couldn't be followed.
 
-Last updated: 2026-10-24, after checking B2 and B3 against `docs/sim-export/`. B0 entries: commits `c82e80e`, `2a4f72a`; B1: `2dd85d2`; B2: `e7ca652`, `d5da10d`; B3: `9cf9666`, `241045b`.
+Last updated: 2026-10-24, B4 (SpacetimeDB, task board, worker). B0 entries: commits `c82e80e`, `2a4f72a`; B1: `2dd85d2`; B2: `e7ca652`, `d5da10d`; B3: `9cf9666`, `241045b`.
 
 ---
 
@@ -386,8 +386,8 @@ Last updated: 2026-10-24, after checking B2 and B3 against `docs/sim-export/`. B
 - In B2, `sim:run` printed one JSON summary per round on stdout, built only from Jev's answers and the
   seeded dice (calls and input tokens count the same cached or fresh). Cache hits, latency and
   wall time go to stderr. A cold run and a warm run therefore print identical stdout.
-- The plan's round summary also lists the cache hit rate; B4's round row can add it next to the
-  deterministic part.
+- The plan's round summary also lists the cache hit rate; since B4 the worker adds
+  `jev.cache_hit_rate` to the summary it writes to the round row (the CLI still keeps it off stdout).
 - **Where:** `src/cli.ts`, `src/summary.ts`.
 
 ### D46. "Changes smaller than 0.01 are ignored" also freezes E — `DECIDED`
@@ -406,7 +406,7 @@ Last updated: 2026-10-24, after checking B2 and B3 against `docs/sim-export/`. B
   spike, for a cosmetic gain.
 - **Where:** `src/feed.ts` `postRef`.
 
-### D48. Two state texts per shopper-day; the shopper row has one `state_text` — `OPEN` (for B4)
+### D48. Two state texts per shopper-day; the shopper row has one `state_text` — `DECIDED` (B4: the page state, D65)
 - The engine keeps `{ feed, page }` per shopper (`Engine.lastState`). The contract's `shopper` row
   has a single `state_text`, "the exact text Jev last read".
 - **Since D37, both states share their SHOPPER and MEMORY blocks.** B4 can store the page state
@@ -517,7 +517,7 @@ Last updated: 2026-10-24, after checking B2 and B3 against `docs/sim-export/`. B
   valid_from_round is the round whose data produced it. A key that stops firing is closed at that
   round. Nothing is deleted.
 - **wear_out is not built** (cut line 1; SPIKE.md test 3 found Jev's wear-out response weak).
-- **`OPEN` (yours):** with the stand-in ads, "not needing cereal yet" is every segment's top
+- **`DECIDED` (your call before B4: keep it as is):** with the stand-in ads, "not needing cereal yet" is every segment's top
   hesitation (53–64%), so every objection directive reads "Address not needing cereal yet early
   for …". Either keep it (urgency is copy's job too) or skip `not_now` like `nothing`.
   - claim_doubt also fires widely, because Jev's mean `believes` is about 0.32 across the board.
@@ -585,7 +585,7 @@ Last updated: 2026-10-24, after checking B2 and B3 against `docs/sim-export/`. B
   "claimed" for memory and evidence, a different role from ShopSim's 0.05 retrieval floor.
 - **Where:** `test/sim-export.test.ts`; `src/memory.ts` exports `PRICE_KEEP` for it.
 
-### D59. Budgets vs a $39 price: 43% of impressions are guarded — `OPEN` (yours, with A)
+### D59. Budgets vs a $39 price: 43% of impressions are guarded — `OPEN` (your call before B4: keep, revisit with A's personas)
 - SIM_NOTES rule 10: "Absolute-dollar gates need brand-scaled budgets. A premium catalog with
   value-tier budgets reads as a broken funnel."
 - With the plan's $45 ± $15 a month against Magic Spoon's $39 one-time price, about 34% of shoppers
@@ -613,3 +613,129 @@ Last updated: 2026-10-24, after checking B2 and B3 against `docs/sim-export/`. B
   characters. B4 writes them to the run row.
 - ShopSim refused to resume a run when any manifest hash changed (SIM_NOTES rule 6, §8 rec. 9).
 - **Where:** `src/run.ts` `configHash`.
+
+---
+
+## B4: SpacetimeDB, task board, worker
+
+Sources: the SpacetimeDB TypeScript module docs (cheat sheet, reducer context, submodules, unit
+testing), the HTTP API (`/v1/database`) and SATS-JSON pages, and the installed `spacetimedb@2.13.0`
+package (types and `dist/server`). `spacetime/src/tables_a.ts` is still empty on every branch A has
+pushed, and the live database has no tables yet (its schema lists only `ping`).
+
+### D61. B's reducers are exported from `spacetime/src/index.ts` — `DECIDED` (the one shared-file edit)
+- **Why:** in 2.13, a reducer is registered only through the module entry file's exports
+  (`Schema.buildRawModuleDefV10(exports)`; each export's `registerExport` hook). It also has to be
+  built from the schema object `index.ts` creates. So B's reducers can't live only in B's files.
+- **The edit:**
+  - one import of `reducersB` from `reducers_b.ts`;
+  - one `export const { … } = reducersB(spacetimedb)` naming B's 13 reducers.
+- **`reducers_b.ts`** imports the schema type only, so there is no runtime import cycle; checked by
+  an esbuild bundle.
+- **`tables_a.ts` is untouched.** A's own reducers need the same kind of export.
+- **Wire names** are the snake_case of the export names (`upsertProducts` → `upsert_products`).
+
+### D62. The worker talks HTTP; batch writers take one JSON string — `DECIDED`
+- **Endpoints:** `POST /v1/identity`, `POST /v1/database/<db>/call/<reducer>` (positional JSON array)
+  and `POST /v1/database/<db>/sql`. No SDK dependency in `sim/`, matching A's `check:connections`.
+- **Rows** are decoded from SATS-JSON:
+  - products as arrays or objects;
+  - sums by index or name;
+  - options to null;
+  - timestamps to ISO strings.
+- **Batch writers** take the rows as one JSON-string argument (`rows_json`). The reducer parses and
+  validates every row and rejects the whole batch with a `SenderError` on a bad one. That keeps
+  SATS encoding off the wire for options and timestamps, which the HTTP docs don't spell out.
+- **Calls per sim day:** `insert_decisions`, `upsert_shoppers`, `replace_arm_stats` (one each).
+- **Calls per round:** `start_round`, `upsert_learnings`, `finish_round`.
+- **The worker's identity token** is cached in `sim/.cache/spacetime-identity.json` (git-ignored).
+
+### D63. The worker: claim, run, write, hand back; replay after a restart — `DECIDED`
+- **Claiming:**
+  1. read queued `run_round` tasks by SQL, oldest first;
+  2. `claim_task` each until one succeeds; a task another worker took rejects;
+  3. run the round, then `complete_task` with a short result, or `fail_task` with the error.
+- **After the round:**
+  - the summary goes to the round row (`finish_round`);
+  - a `generate_creatives` task is queued for every round but the last (task id
+    `tsk_gen_<run>_r<round>`);
+  - the run row is set to `done` after the last round.
+- **A run stays in memory between rounds.** A worker without it rebuilds it by replaying rounds
+  0..r−1 from the Jev cache, each on the creatives that existed in that round.
+- **The replay refuses (and the task fails)** if the run row's `config_hash` or the replayed
+  calibration offsets differ, rather than writing numbers that don't match what's stored.
+- **Stand-ins until A's pieces exist:**
+  - `--enqueue <run_id>` queues `run_round` (task id `tsk_run_<run>_r<round>`), standing in for A6's
+    start-rounds;
+  - `--auto-next` queues the next round itself, standing in for A5.
+
+### D64. The worker creates the run row on round 0 — `DECIDED` (your default)
+- If `run_round` round 0 arrives for a run with no row, the worker uses the defaults (seed 13,
+  300 shoppers, 5 rounds). If a row exists (A or a test wrote one), its settings win.
+- The row then gets `status`, `calibration` (offsets, warm-up fit, probe usage), `jev_model` and
+  `config_hash` (D60).
+- **A new run is a new warm-up:** switching from fixtures to A's rows starts a fresh calibration,
+  which is the plan's "re-run the warm-up round" at integration.
+
+### D65. `shopper.state_text` is the page state — `DECIDED` (your default)
+- It is the last text Jev read that day. A shopper who hasn't scrolled yet has `""`.
+
+### D66. Column types for the contract's fields — `DECIDED` (no field added or changed)
+- **json columns** are `string` holding JSON text.
+- **Empty values are `option`:** subscription price, mean reward, cost per order, a learning's
+  arm and valid_to_round, believes and objection, task claimed_by and result.
+- **Round timestamps:** `started_at` and `finished_at` are options; `created_at` and `updated_at`
+  are set from `ctx.timestamp`.
+- **Keys:**
+  - product, creative_perception, run, learning and task have their id as primary key;
+  - round, shopper, decision and arm_stat have no single-column key in the contract, so they are
+    indexed on `run_id` and their reducers filter within a run, rather than adding a column.
+- `draw` is JSON (every uniform the call's dice used; D40). Every table is `public`.
+
+### D67. Task board rules — `DECIDED` (your default; A's agents use the same reducers)
+- **`enqueue_task(task_id, kind, payload_json)`:**
+  - `kind` is `run_round` or `generate_creatives`;
+  - the payload is checked against the contract's shape;
+  - a duplicate task id is rejected.
+- **`claim_task(task_id, claimed_by)`:** queued → claimed in one transaction, so two workers can
+  never both take a task.
+- **`complete_task(task_id, result_json)`** needs a claimed task; **`fail_task(task_id, error)`**
+  records `{ error }` as the result.
+- **`run_id`** comes from the payload.
+
+### D68. Reading A's rows assumes the contract's field names — `OPEN` (until A's table info arrives)
+- `loadWorldFromDb` reads `brand`, `concept`, `segment`, `arm` and `creative` (A's) plus `product`
+  (B's) with `SELECT *`, then parses them through the same contract schemas and cross-table checks
+  as the fixtures. A field that differs fails loudly with the table and field name.
+- **Rows are sorted by id**, since SQL order isn't guaranteed and draws index into it.
+- **Creatives with `round_created` after the round are left out.**
+- **Products:** in A mode they come from the `product` table; in fixture mode the worker writes the
+  fixture products. With A's real table information, map any name differences here.
+
+### D69. The module is tested in the official harness without Vitest — `DECIDED`
+- **`npm run test:module`:**
+  1. bundles `spacetime/src/index.ts` with esbuild (already installed with tsx);
+  2. runs it in `createModuleTestHarness` (spacetimedb/server/test-utils);
+  3. drives it with the real worker.
+- **How it loads:** a Node resolve hook (`test/module/sys-hooks.mjs`) serves `spacetime:sys@2.*` from
+  the same stub the official Vitest plugin uses, so nothing is added to `spacetime/package.json`.
+- **What it covers:**
+  - the module definition builds;
+  - two rounds land in every B table, the summary in the round row, and tasks move queued → claimed
+    → done, with `generate_creatives` queued;
+  - claim races and bad input are rejected;
+  - perceptions stay frozen.
+- **What it can't cover:** row-level security, network behaviour and the real HTTP encoding (the
+  live database has no tables yet). The real `spacetime build` and publish need the CLI and A's
+  owner login.
+
+### D70. Live status at the end of B4 coding — `OPEN`
+- **Connection:** the database answers reducer calls (`ping`) and SQL, but has no tables. A's
+  aren't published, and B's go up with the next publish.
+- **The CLI install was blocked** by the session's permission check, so `spacetime build` hasn't
+  run here; the module typechecks and bundles.
+- **The done-when** ("A starts a round from ASI:One, the worker runs it, and the summary lands in
+  the round row") waits on A publishing the module with A4's rows. Until A6 exists,
+  `npm run sim:worker -- --enqueue <run>` stands in for start-rounds.
+- **Sample round summary for A6:** `sim/SAMPLE_ROUND_SUMMARY.json`, round 1 of a fixture run on
+  real Jev answers (from cache), written by the real worker.
