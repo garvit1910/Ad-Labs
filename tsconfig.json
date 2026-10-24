@@ -43,6 +43,7 @@
     "node_modules",
     "sim",
     "spacetime",
-    "agents"
+    "agents",
+    "docs"
   ]
 }
