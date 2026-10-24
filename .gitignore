@@ -1,0 +1,19 @@
+# deps and builds
+node_modules/
+.next/
+out/
+spacetime/dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# secrets: only .env.example is committed
+.env
+.env*.local
+
+# python agents
+agents/.venv/
+__pycache__/
+*.pyc
+
+# misc
+.DS_Store
