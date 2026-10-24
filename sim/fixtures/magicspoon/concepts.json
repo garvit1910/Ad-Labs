@@ -1,0 +1,97 @@
+[
+  {
+    "concept_id": "cpt_high_protein",
+    "key": "high_protein",
+    "label": "high protein"
+  },
+  {
+    "concept_id": "cpt_low_sugar",
+    "key": "low_sugar",
+    "label": "low sugar"
+  },
+  {
+    "concept_id": "cpt_low_carb_keto",
+    "key": "low_carb_keto",
+    "label": "low carb or keto"
+  },
+  {
+    "concept_id": "cpt_taste",
+    "key": "taste",
+    "label": "taste"
+  },
+  {
+    "concept_id": "cpt_nostalgia",
+    "key": "nostalgia",
+    "label": "childhood flavors"
+  },
+  {
+    "concept_id": "cpt_crunch_texture",
+    "key": "crunch_texture",
+    "label": "crunch"
+  },
+  {
+    "concept_id": "cpt_flavor_variety",
+    "key": "flavor_variety",
+    "label": "flavor variety"
+  },
+  {
+    "concept_id": "cpt_clean_ingredients",
+    "key": "clean_ingredients",
+    "label": "clean ingredients"
+  },
+  {
+    "concept_id": "cpt_gluten_grain_free",
+    "key": "gluten_grain_free",
+    "label": "gluten-free or grain-free"
+  },
+  {
+    "concept_id": "cpt_keeps_full",
+    "key": "keeps_full",
+    "label": "staying full until the next meal"
+  },
+  {
+    "concept_id": "cpt_fitness",
+    "key": "fitness",
+    "label": "fitness"
+  },
+  {
+    "concept_id": "cpt_weight_goals",
+    "key": "weight_goals",
+    "label": "weight goals"
+  },
+  {
+    "concept_id": "cpt_kid_friendly",
+    "key": "kid_friendly",
+    "label": "food their kids will eat"
+  },
+  {
+    "concept_id": "cpt_convenience",
+    "key": "convenience",
+    "label": "convenience"
+  },
+  {
+    "concept_id": "cpt_value_price",
+    "key": "value_price",
+    "label": "value for money"
+  },
+  {
+    "concept_id": "cpt_discount_offer",
+    "key": "discount_offer",
+    "label": "discounts"
+  },
+  {
+    "concept_id": "cpt_subscription",
+    "key": "subscription",
+    "label": "subscriptions"
+  },
+  {
+    "concept_id": "cpt_social_proof",
+    "key": "social_proof",
+    "label": "what other customers say"
+  },
+  {
+    "concept_id": "cpt_other",
+    "key": "other",
+    "label": "other"
+  }
+]

@@ -1,0 +1,46 @@
+[
+  {
+    "product_id": "prd_magic_spoon_variety_4pk",
+    "brand_id": "br_magic_spoon",
+    "name": "Magic Spoon Variety 4-Pack",
+    "price_usd": 0,
+    "subscription_price_usd": 0,
+    "rating": 0,
+    "review_count": 0,
+    "page_highlights": [],
+    "shipping_note": ""
+  },
+  {
+    "product_id": "prd_catalina_crunch_variety",
+    "brand_id": "br_catalina_crunch",
+    "name": "Catalina Crunch Cereal Variety Pack",
+    "price_usd": 0,
+    "subscription_price_usd": 0,
+    "rating": 0,
+    "review_count": 0,
+    "page_highlights": [],
+    "shipping_note": ""
+  },
+  {
+    "product_id": "prd_three_wishes_variety",
+    "brand_id": "br_three_wishes",
+    "name": "Three Wishes Cereal Variety Pack",
+    "price_usd": 0,
+    "subscription_price_usd": 0,
+    "rating": 0,
+    "review_count": 0,
+    "page_highlights": [],
+    "shipping_note": ""
+  },
+  {
+    "product_id": "prd_wonderworks_variety",
+    "brand_id": "br_wonderworks",
+    "name": "Wonderworks Cereal Variety Pack",
+    "price_usd": 0,
+    "subscription_price_usd": 0,
+    "rating": 0,
+    "review_count": 0,
+    "page_highlights": [],
+    "shipping_note": ""
+  }
+]

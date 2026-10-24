@@ -1,0 +1,98 @@
+[
+  {
+    "arm_id": "arm_01",
+    "angle": "taste_indulgence",
+    "hook": "bold_claim",
+    "strategy": "steal",
+    "rationale": "Placeholder recipe: competitors' taste-first ads with a bold claim.",
+    "evidence": []
+  },
+  {
+    "arm_id": "arm_02",
+    "angle": "dietary_fit",
+    "hook": "problem_callout",
+    "strategy": "steal",
+    "rationale": "Placeholder recipe: competitors call out the carb problem with regular cereal.",
+    "evidence": []
+  },
+  {
+    "arm_id": "arm_03",
+    "angle": "health_nutrition",
+    "hook": "statistic",
+    "strategy": "steal",
+    "rationale": "Placeholder recipe: competitors lead with a protein number.",
+    "evidence": []
+  },
+  {
+    "arm_id": "arm_04",
+    "angle": "craving",
+    "hook": "pov_relatable",
+    "strategy": "steal",
+    "rationale": "Placeholder recipe: competitors use relatable point-of-view cravings.",
+    "evidence": []
+  },
+  {
+    "arm_id": "arm_05",
+    "angle": "natural_clean",
+    "hook": "question",
+    "strategy": "steal",
+    "rationale": "Placeholder recipe: competitors ask what is in your cereal.",
+    "evidence": []
+  },
+  {
+    "arm_id": "arm_06",
+    "angle": "taste_indulgence",
+    "hook": "social_proof",
+    "strategy": "double_down",
+    "rationale": "Placeholder recipe: Magic Spoon's long-running taste ads, backed by reviews.",
+    "evidence": []
+  },
+  {
+    "arm_id": "arm_07",
+    "angle": "health_nutrition",
+    "hook": "testimonial",
+    "strategy": "double_down",
+    "rationale": "Placeholder recipe: Magic Spoon's protein message told by a customer.",
+    "evidence": []
+  },
+  {
+    "arm_id": "arm_08",
+    "angle": "craving",
+    "hook": "curiosity",
+    "strategy": "double_down",
+    "rationale": "Placeholder recipe: Magic Spoon's craving ads with a curiosity hook.",
+    "evidence": []
+  },
+  {
+    "arm_id": "arm_09",
+    "angle": "price_value",
+    "hook": "offer_led",
+    "strategy": "gap",
+    "rationale": "Placeholder recipe: answers the price objection no winning angle addresses.",
+    "evidence": []
+  },
+  {
+    "arm_id": "arm_10",
+    "angle": "trust_safety",
+    "hook": "story_narrative",
+    "strategy": "gap",
+    "rationale": "Placeholder recipe: answers doubts about what goes into the cereal.",
+    "evidence": []
+  },
+  {
+    "arm_id": "arm_11",
+    "angle": "convenience",
+    "hook": "question",
+    "strategy": "gap",
+    "rationale": "Placeholder recipe: answers running out between grocery trips.",
+    "evidence": []
+  },
+  {
+    "arm_id": "arm_control",
+    "angle": null,
+    "hook": null,
+    "strategy": "control",
+    "rationale": "Magic Spoon's own live ads.",
+    "evidence": []
+  }
+]

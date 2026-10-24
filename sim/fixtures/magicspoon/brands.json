@@ -1,0 +1,6 @@
+[
+  { "brand_id": "br_magic_spoon", "name": "Magic Spoon", "is_client": true },
+  { "brand_id": "br_catalina_crunch", "name": "Catalina Crunch", "is_client": false },
+  { "brand_id": "br_three_wishes", "name": "Three Wishes", "is_client": false },
+  { "brand_id": "br_wonderworks", "name": "Wonderworks", "is_client": false }
+]
