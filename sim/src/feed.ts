@@ -1,6 +1,6 @@
 import type { Creative } from "./contract.js";
 import type { World } from "./fixtures.js";
-import type { NoulAnswer, NoulQuestion } from "./jev.js";
+import type { ChoiceQuestion, NoulAnswer, NoulQuestion } from "./jev.js";
 import type { Shopper } from "./population.js";
 import { shuffle, weightedSample } from "./rng.js";
 
@@ -50,6 +50,24 @@ export function feedQuestions(options: FeedOption[], ours: Creative, world: Worl
     believes: { type: "noul", instructions: `Does this shopper believe the main promise of ${postRef(ours, world)}?` },
   };
 }
+
+// The page call ("The questions"): asked for our ad on every impression, tapped or not,
+// because the reward needs it. `buys` is phrased conditionally so it can share the call.
+export const OBJECTIONS = {
+  price: "The price is more than they want to pay.",
+  taste_doubt: "They doubt it tastes good.",
+  trust: "They don't trust the brand or its claims.",
+  not_now: "They don't need cereal right now.",
+  other_brand: "They'd rather buy another brand.",
+  nothing: "Nothing is holding them back.",
+};
+export type Objection = keyof typeof OBJECTIONS;
+
+export const PAGE_QUESTIONS = {
+  stays: { type: "noul", instructions: "Does the shopper look through this page instead of leaving within a few seconds?" },
+  buys: { type: "noul", instructions: "If they stay, do they buy on this visit?" },
+  objection: { type: "choice", instructions: "What is the main thing holding them back, if anything?", criteria: OBJECTIONS },
+} satisfies Record<string, NoulQuestion | ChoiceQuestion>;
 
 // P(tap) per creative id from a feed call's answers.
 export function tapProbabilities(options: FeedOption[], answers: Record<TapKey, NoulAnswer>): Record<string, number> {

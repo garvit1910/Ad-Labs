@@ -21,6 +21,8 @@ export const config = {
     concurrency: 32,
     timeoutMs: 30_000,
     maxAttempts: 5,
+    // Billed on input only.
+    usdPerMillionInputTokens: 0.042,
   },
   run: {
     seed: 13,

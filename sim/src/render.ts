@@ -1,5 +1,5 @@
 import { config } from "./config.js";
-import type { Creative } from "./contract.js";
+import type { Creative, Product } from "./contract.js";
 import type { World } from "./fixtures.js";
 import type { Shopper } from "./population.js";
 
@@ -173,11 +173,64 @@ export function renderFeedState(
       ...ads.map((c) => `- ${renderAd(c, world)}`),
     ].join("\n"),
   ].join("\n\n");
+  return checkLength(state, shopper);
+}
+
+function checkLength(state: string, shopper: Shopper): string {
   const words = wordCount(state);
   if (words > config.render.maxWords) {
     throw new Error(`state for ${shopper.shopper_id} is ${words} words, limit ${config.render.maxWords}`);
   }
   return state;
+}
+
+// Within this relative gap a price reads as "about what they expected".
+const PRICE_SAME = 0.1;
+
+// Rule 3: the price gap arrives pre-computed, in words, rounded to the nearest 10%.
+export function priceComparison(expectedUsd: number | undefined, priceUsd: number): string {
+  if (expectedUsd === undefined) return "first time seeing a price";
+  const gap = (priceUsd - expectedUsd) / expectedUsd;
+  if (gap <= -PRICE_SAME) return "cheaper than expected";
+  if (gap < PRICE_SAME) return "about what they expected";
+  return `about ${Math.round(gap * 10) * 10}% more than expected`;
+}
+
+function usd(n: number): string {
+  return `$${Number.isInteger(n) ? n : n.toFixed(2)}`;
+}
+
+// The page call's state: SHOPPER and MEMORY, then THEY TAPPED (the exact ad, so its promise is
+// checked against its own landing page) and THE PAGE. The price always shows, so the first
+// visit reacts to it (ShopSim bug (a)).
+export function renderPageState(
+  shopper: Shopper,
+  world: World,
+  tick: number,
+  ad: Creative,
+  product: Product,
+  claimedConcepts: readonly string[] = [],
+): string {
+  const subscription =
+    product.subscription_price_usd === null ? "" : `, ${usd(product.subscription_price_usd)} with subscription`;
+  const rating =
+    product.review_count > 0
+      ? `Rated ${product.rating} from ${product.review_count.toLocaleString("en-US")} reviews.`
+      : "No reviews shown.";
+  const highlights = product.page_highlights.length ? ` Page highlights: ${product.page_highlights.join(", ")}.` : "";
+  const shipping = product.shipping_note ? ` ${product.shipping_note}` : "";
+  const state = [
+    renderShopper(shopper, world, claimedConcepts),
+    ["MEMORY", ...memoryLines(shopper, world, tick)].join("\n"),
+    ["THEY TAPPED", renderAd(ad, world)].join("\n"),
+    [
+      "THE PAGE",
+      `${product.name} — ${usd(product.price_usd)} one-time${subscription}.`,
+      `${rating}${highlights}${shipping}`,
+      `Price compared with what they expected: ${priceComparison(shopper.expected_price_usd[product.product_id], product.price_usd)}.`,
+    ].join("\n"),
+  ].join("\n\n");
+  return checkLength(state, shopper);
 }
 
 export function renderAd(creative: Creative, world: World): string {

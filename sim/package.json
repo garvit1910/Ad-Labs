@@ -12,7 +12,8 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test test/*.test.ts",
     "sim:spike": "tsx spike/run.ts",
-    "sim:spike:mechanics": "tsx spike/mechanics.ts"
+    "sim:spike:mechanics": "tsx spike/mechanics.ts",
+    "sim:run": "tsx src/cli.ts"
   },
   "dependencies": {
     "better-sqlite3": "13.0.3",

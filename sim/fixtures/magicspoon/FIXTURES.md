@@ -9,15 +9,14 @@ contract marks json are stored parsed here; `""` and `null` both mean "empty".
 | brands.json | brand | 4 | Final |
 | concepts.json | concept | 19 | Draft vocabulary from "Simulation design"; agree with A |
 | segments.json | segment | 6 | Draft; A's personas replace them at the 2:30 PM integration |
-| products.json | product | 4 | **Placeholder**: prices, rating, review count, highlights and shipping notes are 0 or empty until filled from the brand sites |
+| products.json | product | 4 | Magic Spoon, Catalina Crunch and Three Wishes filled from the brand sites on 2026-10-24 (DECISIONS D44); Wonderworks still 0 |
 | arms.json | arm | 11 recipes + control | Placeholder recipes; steal, double_down and control cite fixture ad ids; gap arms cite nothing until A's voc facts exist |
 | creatives.json | creative | 20 | See below |
 
 ## Placeholders still to replace
 
-- **products.json**: every `price_usd`, `subscription_price_usd`, `rating`, `review_count`,
-  `page_highlights` and `shipping_note`, and possibly the product names. `fixtures:check`
-  warns while a price is 0.
+- **products.json**: Wonderworks only (no direct store found). The others came from the brand
+  sites on 2026-10-24; re-check prices before the demo. `fixtures:check` warns while a price is 0.
 - **creatives.json, competitor_live**: `cr_cc_live_1/2`, `cr_tw_live_1/2` and `cr_ww_live_1/2`
   are invented stand-ins. Replace their headline, primary text, CTA, visual description and
   days running with real ads copied from the Meta Ad Library.

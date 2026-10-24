@@ -7,7 +7,7 @@ When a decision changes, edit its entry and status here in the same commit as th
 **Status:** `OPEN` needs an answer · `NEEDS A` needs Person A's agreement because it touches the
 contract or A's data · `DECIDED` taken by B and reversible · `FORCED` the plan couldn't be followed.
 
-Last updated: 2026-10-24, after B1 (the Jev spike, `SPIKE.md`). B0 entries: commits `c82e80e`, `2a4f72a`.
+Last updated: 2026-10-24, after B2 (the engine core). B0 entries: commits `c82e80e`, `2a4f72a`; B1: `2dd85d2`.
 
 ---
 
@@ -54,8 +54,9 @@ Last updated: 2026-10-24, after B1 (the Jev spike, `SPIKE.md`). B0 entries: comm
   sensibly to each line.
 
 ### D5. Placeholders that must be replaced before B1 results mean anything — `OPEN`
-- **Product prices, ratings, review counts, highlights, shipping notes:** all 0 or empty
-  (`fixtures/magicspoon/products.json`). They don't affect the feed call, only the page call (B2).
+- **Product prices, ratings, review counts, highlights, shipping notes:** filled from the brand
+  sites in B2 for Magic Spoon, Catalina Crunch and Three Wishes (D44). Wonderworks is still 0.
+  Only Magic Spoon's page is ever shown (the page call is for our ad), so this no longer blocks.
 - **The 9 live ads** (`cr_ms_live_1-3`, `cr_cc/tw/ww_live_1-2`): invented stand-ins, and their
   `days_running` drive the neighbour weighting. B1's Sensitivity and Order tests compare ads, so
   their results only mean something with the real Meta Ad Library ads.
@@ -240,9 +241,9 @@ Last updated: 2026-10-24, after B1 (the Jev spike, `SPIKE.md`). B0 entries: comm
   A re-run with the same seed only reproduces numbers when the cache is warm. The demo must replay
   from `.cache/jev-cache.sqlite`; never clear it before the demo.
 
-### D33. Guidance for B2 and B3 from the spike — `OPEN` (to settle in those phases)
-- **B2 dice:** tap Nouls are independent and don't sum to 1. Draw our tap from P_cal(tap ours)
-  alone; a competitor tap only counts as "lost to a competitor".
+### D33. Guidance for B2 and B3 from the spike — `OPEN` (B2 part settled, B3 part open)
+- **B2 dice (done, D39):** tap Nouls are independent and don't sum to 1. Draw our tap from
+  P_cal(tap ours) alone; a competitor tap only counts as "lost to a competitor".
 - **B3 calibration:** fit one log-odds offset on P(tap ours) to a 1% mean. This replaces the plan's
   "P(tap any) = 1 − P(none), then split". Clamp probabilities to [0.005, 0.995] before logit,
   because Choice answers (the page `objection`) hit exact 0 and 1.
@@ -253,3 +254,110 @@ Last updated: 2026-10-24, after B1 (the Jev spike, `SPIKE.md`). B0 entries: comm
 - Test 4 needed a page but products.json has no prices yet. `spike/states.ts` `SPIKE_PAGE` uses
   $47 one-time, $40 with subscription, rated 4.5 from 5,000 reviews. These values were invented for
   a directional test and must never be used outside the spike.
+
+---
+
+## B2: engine core
+
+### D35. Perception is pluggable; a keyword reader stands in — `OPEN` (yours to settle)
+- **Plan:** each creative's claims are extracted once by Claude (image-capable for live ads) and
+  frozen.
+- **Code:** a `Perceiver` interface (`id` + `perceive(creative)` → claims and offer_pct). The
+  default, `keyword-v1`, reads concept keywords from the headline (strength 0.9), primary text
+  (0.7) and visual description (0.5), after removing brand names, so "Catalina Crunch" never
+  claims crunch. `offer_pct` comes only from an explicit "N% off".
+- **Frozen:** results go to a `creative_perception` table in `.cache/jev-cache.sqlite`, keyed by
+  sha256(provider id + ad text + concept vocabulary). Switching providers re-perceives every
+  creative instead of mixing answers. Unknown concepts map to `other`; strengths clamp to 0–1,
+  offers to 0–0.95 (ShopSim's rules).
+- **Claimed:** a concept counts as claimed at strength ≥ 0.5 (`CLAIM_MIN`). Claimed concepts drive
+  the exposure memory ("mostly about …"), the preference line and the evidence updates.
+- **To decide:** which provider replaces `keyword-v1` (Claude or another model) once real ads with
+  images arrive. Bump the id when it lands; the cache then refills on its own.
+- **Where:** `src/perceive.ts`.
+
+### D36. `--rounds N` runs rounds 0 to N−1; round 0 is the warm-up — `OPEN` (for B3)
+- B2's done-when (`--rounds 1`) reads as one round. The plan's run has "a warm-up round plus 5
+  rounds" and `rounds_planned` likely excludes the warm-up. B3 decides whether `--rounds 5`
+  means 5 or 6 rounds once the warm-up does something different (fitting offsets).
+- **Where:** `src/cli.ts`.
+
+### D37. Page call details — `DECIDED`
+- Both calls are rendered from the shopper's state before today's events, in parallel.
+- The page is our ad's `landing_product_id`. The template's line becomes "{product} — $39
+  one-time, $31.20 with subscription." The subscription half is dropped when the price is null,
+  and "No reviews shown." replaces the rating line when the review count is 0.
+- **The guard uses the one-time price.** It is the conservative choice; a first-time buyer may
+  not subscribe. `purchase` subtracts the same price.
+- Objection: the summary uses the Choice's most likely option (ties go to the earlier option).
+- **Where:** `src/render.ts` `renderPageState`, `src/feed.ts` `PAGE_QUESTIONS`, `src/engine.ts`.
+
+### D38. A price is "seen" only on STAY — `DECIDED`
+- The expected price updates (first sighting sets it, then 0.7 old + 0.3 seen) only when the
+  shopper looks through the page. A tap without a stay ("left the page within seconds") teaches
+  nothing, as in the evidence table.
+- **Where:** `src/engine.ts` `remember`, `src/memory.ts` `seePrice`.
+
+### D39. Dice — `DECIDED`
+- Our tap: `uniform(seed, "tap", shopper, tick, creative) < P_cal(tap ours)`. If tapped, stay
+  `(seed, "stay", shopper, tick)`, then buy `(seed, "buy", shopper, tick)`.
+- If ours isn't tapped, each competitor gets its own tap draw keyed by its creative id; any hit is
+  "lost to a competitor" and nothing else happens.
+
+### D40. Decision rows carry the state hash in `options` — `DECIDED`
+- The plan says every decision stores "the raw probabilities and the state hash", but the
+  contract's `decision` row has no hash column. Rather than change the contract, `options` is
+  `{ state_hash, order }` (feed) or `{ state_hash, objections }` (page). `state_hash` is the Jev
+  cache key, so it also locates the exact answer.
+- `draw` holds every uniform the call's dice used: `{ tap }` or `{ stay, buy }` (null if not
+  reached). Actions: feed `tap` / `lost_to_competitor` / `scroll`; page `not_tapped` / `bounce` /
+  `stay` / `buy`. `p_cal.guard` records the budget guard.
+- Only B writes or reads `decision`, so A is unaffected. B4 stringifies the json columns.
+- **Where:** `src/engine.ts` `DecisionRow`.
+
+### D41. Price gap in words — `DECIDED`
+- Within ±10% of the expected price: "about what they expected". At least 10% above: "about N%
+  more than expected", rounded to the nearest 10%. At least 10% below: "cheaper than expected".
+- **Where:** `src/render.ts` `priceComparison`.
+
+### D42. Calibration offsets are 0 until B3 — `DECIDED`
+- `src/calibrate.ts` applies σ(logit(p) + b) after clamping to [0.005, 0.995]. With b = 0 it
+  returns the clamped value exactly. Raw and calibrated values are both stored.
+- The guard is applied after calibration (P_cal(buy) = 0), so the clamp can never lift a guarded
+  0 to 0.005.
+- Until B3, B2's taps run at raw rates (mean P(tap ours) 0.28), far above the 1% target. Only the
+  dice and memory are affected, not the probabilities.
+
+### D43. Arms are picked uniformly until the bandit exists — `DECIDED`
+- `uniformPolicy` draws one live arm per impression from `(seed, "arm", shopper, tick)`. That is
+  also the warm-up's rule. B3 passes the bandit as the engine's `policy`.
+- An arm is live when it has a ranked Magic Spoon creative. Within an arm, the creative is drawn
+  from those written for the shopper's segment, else from all of the arm's (the control's live
+  ads have no segment).
+
+### D44. Product fixtures from the brand sites — `DECIDED` (check before the demo)
+- Fetched 2026-10-24 from each brand's own product page and Shopify product JSON, never from
+  memory or retailers:
+  - **Magic Spoon:** "Variety 4" (4 boxes), $39 one-time, $31.20 with subscription (subscribe and
+    save 20%), rated 4.6 from 25,926 reviews. Highlights: "4-5g net carbs", "0g total sugars",
+    "12-14g complete protein". Source: magicspoon.com/products/variety-pack-cereal-case.
+    - The review count is grouped across products on the site.
+    - No shipping note: the threshold only appears in the cart drawer.
+    - The product name stays "Magic Spoon Variety 4-Pack".
+  - **Catalina Crunch:** "Cereal Best Seller Bundle" (4 × 8 oz pouches), $31, no subscription on
+    the bundle. No rating is shown without scripts. "Free shipping on orders over $45."
+  - **Three Wishes:** no variety pack exists; every flavor is a $39.99 6-pack. The fixture uses
+    "Cocoa Cereal 6-Pack", with no subscription and no rating shown.
+  - **Wonderworks:** no direct store found (a General Mills line, possibly discontinued). Still 0.
+- The product ids keep their B0 names (`prd_*_variety`), though two products aren't variety packs.
+  Only Magic Spoon's page is shown today; competitor products matter only if a later phase
+  models competitor pages.
+- **Where:** `fixtures/magicspoon/products.json`, `FIXTURES.md`.
+
+### D45. Output: summary on stdout, stats on stderr — `DECIDED`
+- `sim:run` prints one JSON summary per round on stdout, built only from Jev's answers and the
+  seeded dice (calls and input tokens count the same cached or fresh). Cache hits, latency and
+  wall time go to stderr. A cold run and a warm run therefore print identical stdout.
+- The plan's round summary also lists the cache hit rate; B4's round row can add it next to the
+  deterministic part.
+- **Where:** `src/cli.ts`, `src/summary.ts`.

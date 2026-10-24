@@ -3,33 +3,45 @@
     "product_id": "prd_magic_spoon_variety_4pk",
     "brand_id": "br_magic_spoon",
     "name": "Magic Spoon Variety 4-Pack",
-    "price_usd": 0,
-    "subscription_price_usd": 0,
-    "rating": 0,
-    "review_count": 0,
-    "page_highlights": [],
+    "price_usd": 39.0,
+    "subscription_price_usd": 31.2,
+    "rating": 4.6,
+    "review_count": 25926,
+    "page_highlights": [
+      "4-5g net carbs",
+      "0g total sugars",
+      "12-14g complete protein"
+    ],
     "shipping_note": ""
   },
   {
     "product_id": "prd_catalina_crunch_variety",
     "brand_id": "br_catalina_crunch",
-    "name": "Catalina Crunch Cereal Variety Pack",
-    "price_usd": 0,
-    "subscription_price_usd": 0,
+    "name": "Catalina Crunch Cereal Best Seller Bundle",
+    "price_usd": 31.0,
+    "subscription_price_usd": null,
     "rating": 0,
     "review_count": 0,
-    "page_highlights": [],
-    "shipping_note": ""
+    "page_highlights": [
+      "good source of protein",
+      "good source of fiber",
+      "low sugar"
+    ],
+    "shipping_note": "Free shipping on orders over $45."
   },
   {
     "product_id": "prd_three_wishes_variety",
     "brand_id": "br_three_wishes",
-    "name": "Three Wishes Cereal Variety Pack",
-    "price_usd": 0,
-    "subscription_price_usd": 0,
+    "name": "Three Wishes Cocoa Cereal 6-Pack",
+    "price_usd": 39.99,
+    "subscription_price_usd": null,
     "rating": 0,
     "review_count": 0,
-    "page_highlights": [],
+    "page_highlights": [
+      "3g sugar per serving",
+      "8g protein per serving",
+      "grain free"
+    ],
     "shipping_note": ""
   },
   {
