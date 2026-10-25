@@ -28,11 +28,11 @@ Everything here is settled. Change a row only by editing this table, so both of 
 
 ## Status
 
-As of Sun Oct 25, 12:30 AM PT.
+As of Sun Oct 25, 5:15 AM PT.
 
 | | Done | In progress | Next |
 | --- | --- | --- | --- |
-| A | A0–A7 built and merged into `simulation`: A6's four Fetch agents, their HTTP API, the agent tables and `/agents`; A7's Brand Identity and Competitor Analysis pages on live Supabase. Verified on the local test bench, a seeded copy of the demo database: A5 ↔ B's sim loop, an API-driven run, and all four agents end to end with nobody touching them (see A6's Result) | A6's real ASI:One check on the bench, once Scout, Strategist and Copywriter have seeds and Agentverse mailboxes | A8: publish and seed `adlab-live`, rehearse the ASI:One flow beside `/agents`, record. During B's real run, keep `npm run a5:creatives -- worker` running from `../calhacks-project-sim` (the agents never act on `adlab-calhacks13`) |
+| A | A0–A7 built and merged into `simulation`. Since 5 AM, on `feat/brand-kit`: the **brand kit** is step one after the landing page (`/start`: brand URL + product photo, a `brand_kit` row in SpacetimeDB); Ad Lab starts nothing without it; round results show taps and the best recipe's cost per order against current ads; the Copywriter leaves out timing objections and the copy prompt applies its notes; after the last round the Copywriter renders each segment's winning ad with the product photo (`RenderWinners` → `WinnersRendered`). Verified on the local bench and the fake-API e2e (12 of 12 checks) | — | Publish and seed `adlab-live`, then the live ASI:One run with real Apify jobs (README "Stage"); record the demo from it |
 | B | B0–B6, merged into `simulation` by A together with B's `fix/real-run` (bench copy, demo ad images) | The real run on `adlab-calhacks13` | Confirm the product row; OK A's two-line edit to `sim/test/module/module.test.ts` (A6's tables); tell A when the demo run is finished and cached |
 
 **Branches.** `simulation` is the integration branch: B commits there, and every A phase opens its PR against it. `B`, GitHub's default branch, is stale; don't branch from it or target it.

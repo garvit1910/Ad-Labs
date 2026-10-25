@@ -89,12 +89,26 @@ npm run bench -- seed --target local --from-snapshot   # brands, segments, recip
 npm run dev:local                                      # http://localhost:3000: /agents, /sim, the two Adcero pages
 npm run sim:worker:local                               # B's worker; never --auto-next or --fixtures here
 npm run a5:worker:local                                # the creative fallback (claims tasks left unclaimed for 60 s)
-npm run agents                                         # or: npm run agents:e2e -- --rounds 2 (headless, offline agents)
+npm run agents                                         # or: npm run agents:e2e -- --rounds 2 --brand-kit <photo> (headless)
 ```
 
 One run per database: `npm run bench:reset:local` wipes the bench and reseeds it from the snapshot in about 30 seconds. `npm run bench -- verify-run --latest --target local --claimer copywriter` checks a finished run end to end.
 
-**Stage** (`adlab-live`, A's SpacetimeDB login): `npm run spacetime:publish:live`, `npm run bench -- seed --target live --from-snapshot`, then the `:live` scripts and `npm run worker:live` (a small Apify cap, with the brand-object rebuild frozen). Clear it between runs with `npm run spacetime:publish:live:clear` and reseed.
+**Step one, on any database: the brand kit.** Open http://localhost:3000, click **Get started**, and save the brand's website and a product photo at `/start`. It writes the `brand_kit` row to SpacetimeDB and the photo to `data/brand-kit/`. Ad Lab won't start a run without it, and the Copywriter renders the winning ads from it. A reset database (`bench:reset:local`, `:live:clear`) needs it again.
+
+**Stage** (`adlab-live` on Maincloud, A's SpacetimeDB login). The demo run: real Apify jobs from Scout, every hop in SpacetimeDB, and the run kept on Maincloud rather than in memory.
+
+```
+npm run spacetime:publish:live                         # once (creates adlab-live); later runs: spacetime:publish:live:clear
+npm run bench -- seed --target live --from-snapshot    # brands, segments, recipes, live ads, round 0, product
+npm run dev:live                                       # the app and agent API in live mode (stop dev:local first: both use port 3000); then /start
+npm run worker:live                                    # the job worker: runs Scout's Apify refreshes (10-ad cap, brand-object frozen)
+npm run sim:worker:live                                # B's sim worker
+npm run a5:worker:live                                 # the creative fallback
+npm run agents                                         # then chat with Ad Lab on ASI:One, /agents beside it
+```
+
+In live mode, Scout's refresh enqueues real Apify actors (the Meta Ad Library scraper for the two stalest pages, plus up to two stale listening sources), and their `ingest_job` rows on `/agents` move from pending to completed while the worker runs them. A refresh feeds the next build, not the run in progress. Clear the database between runs with `npm run spacetime:publish:live:clear`, reseed, and save the brand kit again.
 
 ## Branches
 
