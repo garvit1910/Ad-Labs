@@ -411,3 +411,37 @@ class CopywriterRecovery(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class AdLabBrandKitGate(unittest.TestCase):
+    """The brand kit (/start) is step one: Ad Lab starts nothing until GET /brand-kit is ready."""
+
+    def ask(self, api, text="find ads that beat Magic Spoon's current ones"):
+        env = AdLabEnv(api)
+
+        async def go():
+            env.say(text)
+            await env.a.tick(env.ctx)
+        env.run(go)
+        return env
+
+    def test_no_kit_no_intel_request(self):
+        env = self.ask(FakeApi(brand_kit=False))
+        self.assertNotIn("IntelRequest", sent_types(env.ctx))
+        self.assertEqual(env.sess()["state"], "idle")
+        self.assertIn("/start", env.chats[0].text())
+        self.assertIn("product photo", env.chats[0].text())
+
+    def test_go_after_the_kit_is_set_starts(self):
+        api = FakeApi(brand_kit=False)
+        env = self.ask(api)
+        api.brand_kit_ready = True
+
+        async def go():
+            env.say("go")
+            await env.a.tick(env.ctx)
+        env.run(go)
+        self.assertEqual(sent_types(env.ctx), ["IntelRequest"])
+        req = env.ctx.sent[0][1]
+        self.assertEqual((req.brand_name, req.brand_url, req.product_photo), ("Magic Spoon", "https://magicspoon.com", True))
+        self.assertIn("Brand kit: Magic Spoon", env.chats[-1].text())

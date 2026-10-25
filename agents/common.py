@@ -257,6 +257,15 @@ class ApiError(Exception):
         self.status = status
 
 
+def app_url(api_url: str = "") -> str:
+    """The web app's base URL: ADLAB_APP_URL, else the API URL without /api/agent."""
+    explicit = (os.getenv("ADLAB_APP_URL") or "").strip().rstrip("/")
+    if explicit:
+        return explicit
+    base = (api_url or os.getenv("ADLAB_API_URL") or DEFAULT_API_URL).rstrip("/")
+    return base[: -len("/api/agent")] if base.endswith("/api/agent") else base
+
+
 class Api:
     """Client for app/api/agent (frozen contract v1). Unwraps {ok:true, data}; {ok:false, error,
     code} becomes ApiError(code). One httpx.AsyncClient per running event loop."""
@@ -329,6 +338,9 @@ class Api:
 
     async def distill_start(self, body: dict) -> dict:
         return await self.request("POST", "/distill/start", body=body)
+
+    async def brand_kit(self) -> dict:
+        return await self.request("GET", "/brand-kit", timeout=15.0)
 
     async def brand_summary(self, fresh: bool = False) -> dict:
         return await self.request("GET", "/brand-summary", params={"fresh": "1" if fresh else None},

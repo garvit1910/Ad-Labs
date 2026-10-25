@@ -91,6 +91,10 @@ class RefreshJob(Model):
 class IntelRequest(Model):
     request_id: str
     goal: str
+    # The brand kit Ad Lab checked before starting (GET /brand-kit): the site and the product photo.
+    brand_url: str = ""
+    brand_name: str = ""
+    product_photo: bool = False
     refresh: bool = True
     max_pages: int = 2
     max_sources: int = 2

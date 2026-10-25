@@ -157,10 +157,14 @@ def _voice(items: list, n: int = 3) -> str:
 # --- 1. brand profile (detail) --------------------------------------------------------------
 
 
-def brand_card(report: Any) -> CardOut:
+def brand_card(report: Any, kit: dict | None = None) -> CardOut:
+    """kit: GET /brand-kit, the onboarding step's site and product photo. The photo becomes the
+    card's hero image only with a public URL (ADLAB_PUBLIC_BASE_URL): ASI:One can't load localhost."""
     b = report.brand
     title = f"{b.name or 'Magic Spoon'}{TITLE_BRAND_SUFFIX}"
     rows = []
+    if kit and kit.get("ready"):
+        rows.append(_row("Brand kit", f"{kit.get('brand_url') or b.name}, with your product photo"))
     if b.positioning:
         rows.append(_row("Positioning", b.positioning))
     if b.proof_points:
@@ -182,8 +186,10 @@ def brand_card(report: Any) -> CardOut:
         "ctas": [{"label": "Show competitor winners",
                   "selection": {"action": "show_card", "card": "competitors"}, "primary": True}],
     }
+    if kit and kit.get("image_url"):
+        payload["hero_image"] = kit["image_url"]
     lines = [f"**{b.name or 'Magic Spoon'}**: {b.positioning or 'brand profile'}"]
-    for r in rows[1:] if b.positioning else rows:
+    for r in rows if not b.positioning else [r for r in rows if r["label"] != "Positioning"]:
         lines.append(f"- {r['label']}: {r['value']}")
     return _finish("detail", payload["title"], payload, False, "\n".join(lines))
 

@@ -307,6 +307,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--prose", action="store_true", help="same as --approve prose")
     ap.add_argument("--timeout", type=float, default=None)
     ap.add_argument("--port", type=int, default=8010)
+    ap.add_argument("--brand-kit", metavar="IMAGE", default=None,
+                    help="real API only: save the brand kit (magicspoon.com + this product photo) "
+                         "through POST /api/brand-kit first; else the database must already have one")
     ap.add_argument("--allow-remote", action="store_true",
                     help="allow a non-local API target when its db_name is adlab-live")
     args = ap.parse_args(argv)
@@ -346,6 +349,18 @@ def main(argv: list[str] | None = None) -> int:
                             "(npm run bench:reset:local)")
         if not health.get("is_local") and not (args.allow_remote and health.get("db_name") == "adlab-live"):
             problems.append(f"{health.get('db_name')} is not local (use --allow-remote for adlab-live)")
+        if not problems and args.brand_kit:
+            with open(args.brand_kit, "rb") as f:
+                saved = httpx.post(f"{common.app_url(cfg.api_url)}/api/brand-kit", timeout=60,
+                                   data={"url": "https://magicspoon.com/"},
+                                   files={"image": (os.path.basename(args.brand_kit), f)}).json()
+            if not saved.get("ok"):
+                problems.append(f"saving the brand kit failed: {saved.get('error')}")
+        if not problems:
+            kit = httpx.get(f"{cfg.api_url}/brand-kit", timeout=15).json().get("data") or {}
+            if not kit.get("ready"):
+                problems.append(f"no brand kit ({kit.get('reason') or 'GET /brand-kit failed'}): pass "
+                                "--brand-kit <product photo>")
         if problems:
             print("[e2e] refusing: " + "; ".join(problems), file=sys.stderr)
             return 3

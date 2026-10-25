@@ -15,7 +15,7 @@ from typing import Any
 
 import cards
 import common
-from common import AGENT_SPECS, Hub, StatusReporter, clip, log_body, utcnow
+from common import AGENT_SPECS, ApiError, Hub, StatusReporter, clip, log_body, utcnow
 from protocols import (
     INTEL_SPEC, P_CHAT, P_INTEL, P_PLAN, P_RUN, PLAN_SPEC, PROGRESS_SPEC, RUN_SPEC, IntelReport,
     IntelRequest, PlanRequest, Progress, RecipePlan, RoundResult, RunFailed, RunFinished,
@@ -29,7 +29,14 @@ NEW_RUN_HINT = "For a new run, reset the database (npm run bench:reset:local), t
 GOAL_EXAMPLE = "find ads that beat Magic Spoon's current ones"
 HELP = ("I'm Ad Lab. I test Magic Spoon ad recipes on 300 simulated shoppers with three helper "
         "agents: Scout (brand and competitor intel), Strategist (recipes, rounds and winners) and "
-        "Copywriter (new ads between rounds).")
+        "Copywriter (new ads between rounds, and the winning ads rendered with your product photo). "
+        "It starts from your brand kit: the site and a product photo, set in the app at /start.")
+
+
+def kit_host(url: str) -> str:
+    """"https://www.magicspoon.com/x" -> "magicspoon.com"."""
+    host = url.split("://", 1)[-1].split("/", 1)[0].lower()
+    return host[4:] if host.startswith("www.") else host
 
 
 def new_session(sender: str, session: str) -> dict:
@@ -200,19 +207,42 @@ class AdLab:
             return await self.begin(ctx, st, sess, ui.raw)
         return await self.say(ctx, sess, f"{HELP} {hint(sess)}", kind="reply", remember=False)
 
+    async def brand_kit(self) -> dict | None:
+        """The brand kit (GET /brand-kit), or None when the API can't say (then the run goes on:
+        the gate is for a missing kit, not for an API hiccup)."""
+        try:
+            return await self.hub.api.brand_kit() or {}
+        except ApiError:
+            return None
+
     async def begin(self, ctx, st: dict, sess: dict, goal: str) -> None:
+        # Step one is the brand kit (the site and a product photo, set at /start): no run without it.
+        kit = await self.brand_kit()
+        if kit is not None and not kit.get("ready"):
+            sess["goal"] = goal
+            await self._set_state(sess, "idle", "waiting for the brand kit", "idle")
+            start = f"{common.app_url(getattr(self.hub.api, 'base_url', ''))}/start"
+            return await self.say(ctx, sess, f"First, the brand kit: add your brand's website and a "
+                                  f"product photo at {start}. Every ad image is rendered with the "
+                                  f"real product. Then say **go** and I'll start.", kind="reply")
         request_id = "req_" + uuid.uuid4().hex[:10]
         st["req"][request_id] = sess["sender"]
         sess.update(request_id=request_id, goal=goal, plan=None, plan_id="", run_id="",
-                    rounds_planned=0, cards={}, posted=[], last_card_key="", winners={})
+                    rounds_planned=0, cards={}, posted=[], last_card_key="", winners={},
+                    kit=kit or {})
         await self._set_state(sess, "gathering", "asking Scout for brand and competitor intel")
-        await self.say(ctx, sess, "On it. Scout is checking which competitor pages and review "
-                       "sources are stale; I'll post the brand profile and competitor winners next.",
-                       kind="reply")
+        brand = (kit or {}).get("brand_name") or kit_host((kit or {}).get("brand_url", ""))
+        on_kit = f"Brand kit: {brand} with your product photo. " if kit else ""
+        await self.say(ctx, sess, f"On it. {on_kit}Scout is checking which competitor pages and "
+                       "review sources are stale; I'll post the brand profile and competitor "
+                       "winners next.", kind="reply")
         await common.send_logged(self.hub, ctx, self.hub.peers.address("agt_scout"),
-                                 IntelRequest(request_id=request_id, goal=clip(goal, 500)),
+                                 IntelRequest(request_id=request_id, goal=clip(goal, 500),
+                                              brand_url=(kit or {}).get("brand_url", ""),
+                                              brand_name=(kit or {}).get("brand_name", ""),
+                                              product_photo=bool(kit)),
                                  protocol=P_INTEL, kind="request",
-                                 summary=f"Intel request: {goal}")
+                                 summary=f"Intel request: {goal}" + (f" (brand kit: {brand})" if kit else ""))
 
     async def resume_step(self, ctx, st: dict, sess: dict) -> None:
         """Scout's or Strategist's reply never came (for example after a restart mid-step):
@@ -311,7 +341,7 @@ class AdLab:
         sess = self._sess(st, rep.request_id)
         if not sess or sess.get("request_id") != rep.request_id:
             return self._drop(ctx, "IntelReport", rep.request_id)
-        await self.post_card(ctx, sess, "brand", cards.brand_card(rep))
+        await self.post_card(ctx, sess, "brand", cards.brand_card(rep, sess.get("kit")))
         comp = cards.competitors_card(rep)
         if comp is not None:
             await self.post_card(ctx, sess, "competitors", comp)

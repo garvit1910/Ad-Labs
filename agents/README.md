@@ -18,7 +18,8 @@ Ad Lab keeps `AD_LAB_AGENT_SEED`, so its address and Agentverse registration car
 
 ## The loop
 
-1. You ask Ad Lab: "find ads that beat Magic Spoon's current ones". It acknowledges at once and asks Scout for intel.
+0. **Brand kit first.** In the app, right after the landing page, `/start` takes the brand's website and a product photo and writes the `brand_kit` row to SpacetimeDB. Ad Lab checks it (`GET /brand-kit`) before anything else: without it, it asks you to set it, and `go` starts once it's there.
+1. You ask Ad Lab: "find ads that beat Magic Spoon's current ones". It acknowledges at once, names the brand kit, and asks Scout for intel (the request carries the kit).
 2. Scout plans a refresh (`/ingest/refresh` dry, then the stalest targets) and reports; Ad Lab posts the **brand profile** and **competitor winners** cards.
 3. Strategist checks the recipes (`/contract/build`) and plans the run; Ad Lab posts the **recipes** card.
 4. You tap **Start the run** (or say "go"). Strategist queues round 0 (`/rounds/start`); B's sim worker claims it.
@@ -54,7 +55,7 @@ Ad Lab is already registered. To chat, open its Agentverse profile and click **C
 npm run agents:test                                   # unit tests, offline
 npm run agents:e2e -- --fake-api --rounds 2           # full choreography against the in-memory FakeApi
 npm run agents:e2e -- --fake-api --approve prose      # approve by typing "Start the run" (also: --approve json)
-npm run agents:e2e -- --rounds 2                      # against the real API (dev:local, sim and A5 workers)
+npm run agents:e2e -- --rounds 2 --brand-kit <photo>  # against the real API (dev:local, sim and A5 workers); saves the kit first
 ```
 
 The e2e runs offline: derived seeds (never the registered addresses), no mailbox, no Almanac calls, Bureau on port 8010. A fake ASI:One user asks Ad Lab, approves the recipes card with a card response, pulls "status" after the first leaderboard, and checks the card order, the task board (every `tsk_gen` claimed by `copywriter`), and that every hop was logged. Against the real API it refuses unless `/health` says mode `test`, runs allowed, a free run slot, and a local database (`--allow-remote` allows `adlab-live`). Reports land in `data/agents/e2e-<ts>.json`.

@@ -45,7 +45,8 @@ def load_sample() -> dict:
 class FakeApi:
     def __init__(self, *, step_s: float = 0.4, gen_delay_s: float = 0.2, mode: str = "test",
                  db_name: str = "adlab-fake", runs_allowed: bool = True,
-                 fail_generate: int = 0, claim_lost_on_generate: bool = False):
+                 fail_generate: int = 0, claim_lost_on_generate: bool = False,
+                 brand_kit: bool = True):
         self.step_s = step_s
         self.gen_delay_s = gen_delay_s
         self.mode = mode
@@ -53,6 +54,7 @@ class FakeApi:
         self.runs_allowed = runs_allowed
         self.fail_generate = fail_generate
         self.claim_lost_on_generate = claim_lost_on_generate
+        self.brand_kit_ready = brand_kit
         self.calls: list[tuple[str, str, list[str], bool]] = []
         self.log_messages: list[dict] = []
         self.status_posts: list[dict] = []
@@ -207,6 +209,18 @@ class FakeApi:
             return {"started": False, "reason": "test mode: the brand corpus is current",
                     "facts": {"total": 96, "persona": 40, "market_prior": 24, "voc": 32}}
         return await self._call("POST", "/distill/start", body, fn)
+
+    async def brand_kit(self) -> dict:
+        def fn():
+            if not self.brand_kit_ready:
+                return {"ready": False, "reason": "no brand kit yet: set the brand URL and product "
+                        "photo at /start", "brand_url": "", "brand_name": "", "image_file": "",
+                        "image_path": "", "image_url": "", "updated_at": None}
+            return {"ready": True, "reason": "", "brand_url": "https://magicspoon.com",
+                    "brand_name": "Magic Spoon", "image_file": "0123456789ab.png",
+                    "image_path": "/api/brand-kit/image/0123456789ab.png", "image_url": "",
+                    "updated_at": "2026-10-25T09:00:00.000Z"}
+        return await self._call("GET", "/brand-kit", None, fn)
 
     async def brand_summary(self, fresh: bool = False) -> dict:
         def fn():
