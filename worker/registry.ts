@@ -78,3 +78,21 @@ export const PROCESSOR_REGISTRY: Record<string, (_db: SupabaseClient) => JobProc
 export const SKIPPED_JOB_TYPES: Record<string, string> = {
   [ADLIB_MEDIA_REHOST_JOB_TYPE]: 'media rehost not ported (A1); ads keep their expiring Meta CDN links',
 };
+
+/** The env that freezes the shared brand object (set by `npm run worker:live`). */
+export const FREEZE_BRAND_OBJECT_ENV = 'ADLAB_FREEZE_BRAND_OBJECT';
+
+export const FROZEN_BRAND_OBJECT_REASON =
+  'brand object frozen (ADLAB_FREEZE_BRAND_OBJECT=1): a refresh must not rewrite the persona facts the live run reads';
+
+export const isBrandObjectFrozen = (env: NodeJS.ProcessEnv = process.env): boolean => env[FREEZE_BRAND_OBJECT_ENV]?.trim() === '1';
+
+/**
+ * Why the worker skips this job type, or undefined to run it. With ADLAB_FREEZE_BRAND_OBJECT=1
+ * every brand_object_* job is skipped like SKIPPED_JOB_TYPES (cancelled, never failed or left
+ * pending): a Meta sync chains market -> personas, which rewrites the shared persona facts that
+ * A5 reads for B's live demo run.
+ */
+export function skipReasonFor(type: string, env: NodeJS.ProcessEnv = process.env): string | undefined {
+  return SKIPPED_JOB_TYPES[type] ?? (type.startsWith('brand_object_') && isBrandObjectFrozen(env) ? FROZEN_BRAND_OBJECT_REASON : undefined);
+}

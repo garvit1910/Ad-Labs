@@ -7,7 +7,7 @@ import {
   FunctionTimeoutError,
 } from '@/services/job-processor/function-timeout';
 import type { Job } from '@/services/job-processor/types';
-import { PROCESSOR_REGISTRY, SKIPPED_JOB_TYPES } from './registry';
+import { PROCESSOR_REGISTRY, skipReasonFor } from './registry';
 
 // The local job_queue worker of REUSE_MANIFEST §8.4, in place of Adcero's Vercel crons.
 // npm run worker (worker/index.ts) and the phase scripts both run it through runWorker.
@@ -49,6 +49,52 @@ export interface WorkerOptions {
   signal?: AbortSignal;
   /** Graceful stop: each lane finishes its current job, then returns. */
   stop?: AbortSignal;
+  /**
+   * Called after each claim and each finish (the ingest_job mirror, lib/adlab/ingest-mirror.ts).
+   * Runs through safeNotify: a hook that throws or hangs never touches the job.
+   */
+  onTransition?: JobTransitionHook;
+}
+
+/** A job_queue status a job moves to. */
+export type JobQueueStatus = 'processing' | 'pending' | 'completed' | 'failed' | 'cancelled';
+
+export interface JobTransition {
+  jobId: string;
+  type: string;
+  from: string;
+  to: JobQueueStatus;
+  /** The row's error_message after the move (the retry or pause reason, the failure), or null. */
+  error: string | null;
+  attempts: number;
+}
+
+export type JobTransitionHook = (t: JobTransition) => Promise<void>;
+
+const NOTIFY_TIMEOUT_MS = 5_000;
+
+/** Runs a transition hook with a timeout and a catch: it can delay a job by at most the timeout, never fail it. */
+export async function safeNotify(
+  hook: JobTransitionHook | undefined,
+  t: JobTransition,
+  opts: { timeoutMs?: number; warn?: (line: string) => void } = {},
+): Promise<void> {
+  if (!hook) return;
+  const warn = opts.warn ?? console.warn;
+  const what = `[worker] transition hook ${t.type} ${t.jobId.slice(0, 8)} -> ${t.to}`;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<'timeout'>((resolve) => {
+    timer = setTimeout(() => resolve('timeout'), opts.timeoutMs ?? NOTIFY_TIMEOUT_MS);
+    timer.unref?.();
+  });
+  try {
+    const outcome = await Promise.race([Promise.resolve().then(() => hook(t)).then(() => 'ok' as const), timeout]);
+    if (outcome === 'timeout') warn(`${what}: timed out`);
+  } catch (error) {
+    warn(`${what}: ${error instanceof Error ? error.message : String(error)}`);
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export interface WorkerCounts {
@@ -110,11 +156,23 @@ export async function runWorker(db: SupabaseClient, options: WorkerOptions = {})
   async function finish(job: Job, patch: Record<string, unknown>): Promise<void> {
     const { error } = await db.from('job_queue').update(patch).eq('id', job.id).eq('claim_token', job.claim_token!);
     if (error) throw error;
+    await safeNotify(options.onTransition, {
+      jobId: job.id,
+      type: job.type,
+      from: 'processing',
+      to: patch.status as JobQueueStatus,
+      error:
+        typeof patch.error_message === 'string'
+          ? patch.error_message.slice(0, 500)
+          : ((patch.result as { skipped?: string } | undefined)?.skipped ?? null),
+      attempts: typeof patch.attempts === 'number' ? patch.attempts : job.attempts,
+    });
   }
 
   async function runJob(job: Job): Promise<void> {
     const tag = `${job.type} ${job.id.slice(0, 8)} (attempt ${job.attempts}/${job.max_attempts})`;
-    const skipReason = SKIPPED_JOB_TYPES[job.type];
+    await safeNotify(options.onTransition, { jobId: job.id, type: job.type, from: 'pending', to: 'processing', error: null, attempts: job.attempts });
+    const skipReason = skipReasonFor(job.type);
     if (skipReason) {
       await finish(job, { status: 'cancelled', completed_at: nowIso(), error_message: null, result: { skipped: skipReason } });
       counts.skipped++;
