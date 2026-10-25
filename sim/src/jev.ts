@@ -120,6 +120,7 @@ function checkAnswers(questions: Questions, answers: ParsedResponse["answers"]):
 class JevCache {
   private db: Database.Database;
   private getStmt: Database.Statement<[string], { response: string }>;
+  private entryStmt: Database.Statement<[string], { request: string; response: string }>;
   private putStmt: Database.Statement<[string, string, string, string]>;
 
   constructor(path: string) {
@@ -134,6 +135,7 @@ class JevCache {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     )`);
     this.getStmt = this.db.prepare("SELECT response FROM jev_cache WHERE key = ?");
+    this.entryStmt = this.db.prepare("SELECT request, response FROM jev_cache WHERE key = ?");
     this.putStmt = this.db.prepare(
       "INSERT OR REPLACE INTO jev_cache (key, model, request, response) VALUES (?, ?, ?, ?)",
     );
@@ -142,6 +144,11 @@ class JevCache {
   get(key: string): unknown | undefined {
     const row = this.getStmt.get(key);
     return row ? JSON.parse(row.response) : undefined;
+  }
+
+  entry(key: string): { request: JevRequest<Questions>; response: unknown } | undefined {
+    const row = this.entryStmt.get(key);
+    return row ? { request: JSON.parse(row.request), response: JSON.parse(row.response) } : undefined;
   }
 
   put(key: string, model: string, request: string, response: unknown): void {
@@ -158,6 +165,8 @@ export type JevClientOptions = {
   model?: string;
   concurrency?: number;
   cachePath?: string | null;
+  // Answer only from the cache: a miss throws instead of calling Jev (B6 replays).
+  offline?: boolean;
   // Called once per HTTP attempt (retries included), for call counts and rate-limit stats.
   onAttempt?: (attempt: JevAttempt) => void;
 };
@@ -176,9 +185,11 @@ export class JevClient {
   private cache: JevCache | null;
   private inFlight = new Map<string, Promise<{ parsed: ParsedResponse; latencyMs: number }>>();
   private onAttempt: JevClientOptions["onAttempt"];
+  private offline: boolean;
 
   constructor(opts: JevClientOptions = {}) {
     this.onAttempt = opts.onAttempt;
+    this.offline = opts.offline ?? false;
     this.apiKey = opts.apiKey ?? process.env.TYPESAFE_API_KEY;
     this.model = opts.model ?? config.jev.model;
     this.limit = pLimit(opts.concurrency ?? config.jev.concurrency);
@@ -199,6 +210,7 @@ export class JevClient {
       const parsed = this.validate(cached, questions);
       return toResult(parsed, { latencyMs: 0, cacheHit: true, cacheKey, request });
     }
+    if (this.offline) throw new JevError(`cache miss: replay would call Jev (key ${cacheKey.slice(0, 12)})`);
     // Identical requests in flight share one paid call.
     let pending = this.inFlight.get(cacheKey);
     if (!pending) {
@@ -267,6 +279,11 @@ export class JevClient {
       );
     }
     throw lastError;
+  }
+
+  // A cached call by its key (a decision row's options.state_hash): the exact request and answer.
+  lookup(cacheKey: string): { request: JevRequest<Questions>; response: unknown } | undefined {
+    return this.cache?.entry(cacheKey);
   }
 
   close(): void {
