@@ -10,6 +10,30 @@ import {
   type Infer as __Infer,
 } from "spacetimedb";
 
+export const AgentMessageRow = __t.object("AgentMessageRow", {
+  messageId: __t.string(),
+  runId: __t.string(),
+  fromAgent: __t.string(),
+  toAgent: __t.string(),
+  protocol: __t.string(),
+  kind: __t.string(),
+  summary: __t.string(),
+  payload: __t.string(),
+  createdAt: __t.timestamp(),
+});
+export type AgentMessageRow = __Infer<typeof AgentMessageRow>;
+
+export const AgentRow = __t.object("AgentRow", {
+  agentId: __t.string(),
+  name: __t.string(),
+  role: __t.string(),
+  address: __t.string(),
+  status: __t.string(),
+  currentStep: __t.string(),
+  updatedAt: __t.timestamp(),
+});
+export type AgentRow = __Infer<typeof AgentRow>;
+
 export const ArmRow = __t.object("ArmRow", {
   armId: __t.string(),
   angle: __t.string(),
@@ -94,6 +118,20 @@ export const Decision = __t.object("Decision", {
   cacheHit: __t.bool(),
 });
 export type Decision = __Infer<typeof Decision>;
+
+export const IngestJobRow = __t.object("IngestJobRow", {
+  jobId: __t.string(),
+  requestedBy: __t.string(),
+  jobType: __t.string(),
+  target: __t.string(),
+  actor: __t.string(),
+  status: __t.string(),
+  items: __t.u32(),
+  error: __t.string(),
+  createdAt: __t.timestamp(),
+  updatedAt: __t.timestamp(),
+});
+export type IngestJobRow = __Infer<typeof IngestJobRow>;
 
 export const Learning = __t.object("Learning", {
   learningId: __t.string(),
