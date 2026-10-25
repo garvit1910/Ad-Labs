@@ -28,7 +28,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
-from typing import Any, Awaitable, Callable
+from typing import Any, Awaitable, Callable, Iterator
 
 import httpx
 
@@ -553,16 +553,16 @@ def inbox_put(storage: Any, item: dict) -> str:
     return key
 
 
-def inbox_take(storage: Any) -> list[dict]:
-    """The worker interval drains the inbox oldest first (each key read, then removed)."""
+def inbox_take(storage: Any) -> Iterator[dict]:
+    """The worker interval drains the inbox oldest first. Each key is removed only after its item
+    was handled (when the loop asks for the next one), so a restart mid-item redelivers it.
+    Every caller catches errors per item, so a failing item is still removed."""
     data = getattr(storage, "_data", {})
-    out = []
     for key in sorted(k for k in list(data.keys()) if k.startswith(INBOX)):
         item = storage.get(key)
-        storage.remove(key)
         if isinstance(item, dict):
-            out.append(item)
-    return out
+            yield item
+        storage.remove(key)
 
 
 def typed_to_inbox(model: type) -> Callable[..., Awaitable[None]]:

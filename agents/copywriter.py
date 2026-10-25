@@ -7,8 +7,10 @@ the task as 'copywriter', writes, queues the next run_round and completes it.
 
 Failure model (contract v1): the route never fails the task itself.
 - generate_failed: retry 3 times (20, 40, 80 s), then POST /creatives/fail.
-- claim_lost: A5's fallback worker took it; report the hand-off and don't fight.
-- timeout: the route keeps running server-side; poll GET /tasks?task_id= until it's done.
+- claim_lost: A5's fallback worker took it; report the hand-off and don't fight. If the task
+  is still queued or held by the Copywriter (or nobody), it wasn't lost: retry in 10 s.
+- timeout: the route keeps running server-side; poll GET /tasks?task_id= until it's done, and
+  call the route again while the task is still ours (a repeat call joins the in-flight one).
 """
 
 from __future__ import annotations
@@ -97,7 +99,11 @@ class Copywriter:
         return ctx.storage.get("cw:runs") or {}
 
     def _tasks(self, ctx) -> dict:
-        return ctx.storage.get("cw:tasks") or {}
+        tasks = ctx.storage.get("cw:tasks") or {}
+        for st in tasks.values():
+            if st.get("state") == "generating":
+                st["state"] = "unknown"  # the tick is sequential: a stored call is from before a restart
+        return tasks
 
     async def _progress(self, ctx, run: dict, run_id: str, stage: str, text: str,
                         level: str = "info") -> None:
@@ -194,6 +200,7 @@ class Copywriter:
     async def _generate(self, ctx, run_id: str, run: dict, task_id: str, st: dict,
                         tasks: dict) -> None:
         st["state"] = "generating"
+        ctx.storage.set("cw:tasks", tasks)
         await self.status.set("working", f"writing {task_id}")
         try:
             res = await self.api.creatives_generate(task_id, st.get("chosen") or None)
@@ -206,12 +213,22 @@ class Copywriter:
                         ex: ApiError) -> None:
         r = st.get("round", 0)
         if ex.code == "claim_lost":
-            claimed_by = "creative_worker"
+            row: dict = {}
             try:
                 rows = ((await self.api.tasks(task_id=task_id)) or {}).get("tasks") or []
-                claimed_by = (rows[0].get("claimed_by") if rows else None) or claimed_by
+                row = rows[0] if rows else {}
             except ApiError:
                 pass
+            claimed_by = row.get("claimed_by")
+            if row.get("status") == "queued" or claimed_by in (None, "", "copywriter"):
+                # not taken by another worker: retry instead of standing down
+                st["attempts"] = int(st.get("attempts", 0)) + 1
+                if st["attempts"] <= len(self.hub.cfg.retry_delays):
+                    st["state"] = "retry_wait"
+                    st["next_try"] = utcnow().timestamp() + 10
+                    await self.status.set("working", f"{task_id} claim unclear; retrying in 10s")
+                    return
+                return await self._give_up(ctx, run_id, run, task_id, st, ex)
             st["state"] = "handed_off"
             await self._progress(ctx, run, run_id, "handoff",
                                  f"A5's fallback worker ({claimed_by}) took round {r}'s creative "
@@ -244,6 +261,12 @@ class Copywriter:
                                  "warn")
             await self.status.set("working", f"retrying {task_id} in {delay:.0f}s")
             return
+        await self._give_up(ctx, run_id, run, task_id, st, ex)
+
+    async def _give_up(self, ctx, run_id: str, run: dict, task_id: str, st: dict,
+                       ex: ApiError) -> None:
+        r = st.get("round", 0)
+        delays = self.hub.cfg.retry_delays
         st["state"] = "failed"
         try:
             await self.api.creatives_fail(task_id, f"copywriter gave up after {len(delays)} "
@@ -273,6 +296,10 @@ class Copywriter:
                                  f"Round {st.get('round', 0)}'s creative task failed: {err}", "error")
         elif t.get("status") == "claimed" and t.get("claimed_by") not in (None, "", "copywriter"):
             await self._on_error(ctx, run_id, run, task_id, st, ApiError("claim_lost"))
+        elif t.get("status") == "queued" or (t.get("status") == "claimed"
+                                             and t.get("claimed_by") in (None, "", "copywriter")):
+            # still ours (or unclaimed): the route joins the in-flight call or resumes the claim
+            await self._generate(ctx, run_id, run, task_id, st, tasks)
 
     async def _done(self, ctx, run_id: str, run: dict, task_id: str, st: dict, res: dict) -> None:
         r = st.get("round", 0)
