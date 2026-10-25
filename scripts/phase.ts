@@ -1,6 +1,4 @@
 import { setTimeout as sleep } from 'node:timers/promises';
-import type { SupabaseClient } from '@supabase/supabase-js';
-import { ADLAB_ORG_ID } from '@/lib/adlab/org';
 import { serviceSupabase } from '@/lib/adlab/supabase';
 import { resetStaleJobs, runWorker } from '@/worker/loop';
 
@@ -47,26 +45,8 @@ export interface Pool {
   concurrency: number;
 }
 
-/** The demo brand's site; A2's discover step keyed its profile on it. */
-export const MAGIC_SPOON_URL = 'https://magicspoon.com/';
-
-export interface BrandProfile {
-  id: string;
-  status: string;
-  brand_name: string;
-}
-
-export async function loadBrandProfile(db: SupabaseClient): Promise<BrandProfile> {
-  const { data, error } = await db
-    .from('brand_presence_profiles')
-    .select('id, status, brand_name')
-    .eq('organization_id', ADLAB_ORG_ID)
-    .eq('website_url', MAGIC_SPOON_URL)
-    .maybeSingle();
-  if (error) throw error;
-  if (!data) throw new Error(`No brand_presence_profiles row for ${MAGIC_SPOON_URL}: run npm run a2:ingest -- discover first`);
-  return data as BrandProfile;
-}
+// The profile lookup lives in lib/adlab so worker code can use it without this module's job worker.
+export { MAGIC_SPOON_URL, loadBrandProfile, type BrandProfile } from '@/lib/adlab/brand-profile';
 
 /** A phase script's context; `tag` prefixes its log lines. */
 export function createPhase(tag: string) {

@@ -1,6 +1,6 @@
 # Ad Lab — master plan
 
-Last updated Sat Oct 24, 2026, 6:26 PM PT
+Last updated Sat Oct 24, 2026, 7:03 PM PT
 
 Ad Lab tests Magic Spoon ad recipes on Jev-driven shoppers built from real customer voice, then keeps and refines the winners. Person A owns data and agents; Person B owns the simulation. Both halves are planned below, phase by phase, with a ready prompt for every phase in the "Appendix: Phase prompts" at the end of this file.
 
@@ -28,11 +28,11 @@ Everything here is settled. Change a row only by editing this table, so both of 
 
 ## Status
 
-As of Sat Oct 24, 6:26 PM PT.
+As of Sat Oct 24, 7:03 PM PT.
 
 | | Done | In progress | Next |
 | --- | --- | --- | --- |
-| A | A0 setup, A1 Adcero port, A's half of the contract in SpacetimeDB (`tables_a.ts`, `reducers_a.ts`), A2 ingest, A3 distill (`feat/a3-distill`, PR to `simulation`) | A4 contract rows and A5 creative worker, in parallel. A5 builds on stand-in rows until A4's land (see "Hand-off to A5" under A4) | A6, which can start in parallel on fixtures |
+| A | A0 setup, A1 Adcero port, A's half of the contract in SpacetimeDB (`tables_a.ts`, `reducers_a.ts`), A2 ingest, A3 distill (`feat/a3-distill`, PR to `simulation`), A5's worker on stand-in rows (`feat/a5-creatives`, off A3; see A5's Result) | A4 contract rows. A5's round 0 runs once `npm run a5:creatives -- check` passes on A4's rows and B's Magic Spoon product row | A6, which can start in parallel on fixtures |
 | B | B0–B5: fixtures, Jev spike, engine, calibration, bandit, learnings, task board, worker, and the live sim views on the local bench | — | B6: the finder script and replay mode on fixtures now, the real run after A5's round 0. B4's integration step and B5's Maincloud check wait on A4's rows |
 
 **Branches.** `simulation` is the integration branch: B commits there, and every A phase opens its PR against it. `B`, GitHub's default branch, is stale; don't branch from it or target it.
@@ -447,6 +447,28 @@ Also in this phase:
 - [ ] **If time remains:** a `competitorReference` for steal recipes (the winning ad's angle, hook and execution notes, competitor names scrubbed with `sanitizeExecutionNotes`), rendered in the same strategy block.
 
 **Done when**, before A4 lands, the fixture diff passes and the stand-in dry run turns A3's facts into gated creatives for every stand-in (recipe, segment). After A4 lands, round 0 is in SpacetimeDB and a `generate_creatives` task turns into ranked creative rows and a queued `run_round` with nobody touching it.
+
+**Result so far (Oct 24, `npm run a5:creatives`).** The pre-A4 half is done; round 0 waits on A4's rows.
+
+- **Fixture diff:** `-- smoke` reproduces `creative-output.json` with 0 mismatches. That covers the rows, both pack fingerprints, the copy prompts, all 5 copy requests (the retry included) and the 4 creatives. The fixture records only the requests and the accepted copy, so the model replies are mocked.
+- **Stand-in dry run:** `-- dry` ran on A3's 96 live facts. It dropped the 21 market\_prior facts and kept 75 compiler rows. 6 recipes × 5 segments, minus 1 logged skip, gave 29 creatives from 20 packs, all ranked with LLM copy. That took 29 gpt-4o calls, about $0.58.
+  - The skip is testimonial on `seg_unaware_projection`, missing customer\_verbatim.
+- **Check:** `-- check` reports NOT YET, because A's and B's SpacetimeDB tables are still empty. It also waits for a Magic Spoon `product` row (see the first decision below).
+- **Write path:** a probe proved that `upsert_creatives` decodes A5's typed rows. The reducer rejected the probe's unknown brand, and nothing was written.
+- **Tests:** `npm test` passes 39, including:
+  - the fixture diff;
+  - every check rule;
+  - a full `generate_creatives` task against an in-memory SpacetimeDB.
+- **Decisions beyond the steps above:**
+  - **Writes need a landing product.** B's engine throws on a creative with no landing\_product\_id (`sim/src/engine.ts:230`), so `check` waits for B's product row instead of writing `""`. **A4:** brand\_live creatives need a landing\_product\_id too.
+  - **Fallback copy is gated out.** Copy that falls back to the brief after two failed gpt-4o attempts is `gated_out`, because it isn't that hook's execution.
+  - **The key message ranks the persona's own cited facts first.** Adcero's ingest limits a fact a persona cites to that persona. So the cereal USP "12-14g protein with 0g sugar" reaches only Macro-Nostalgia Regular, and the other segments lead with the granola or protein-treat USPs.
+  - **The worker claims as `creative_worker`.** It resumes its own claims after a restart, because no reducer requeues a stuck claim. A failing task is retried on the next 2 polls, then failed.
+- **For A6:** call `runGenerateCreatives(taskId, { claimedBy: 'copywriter' })` from `worker/creatives`.
+  - It claims a queued task itself and returns a done task's stored result.
+  - On error it throws with the task still claimed; call `failTask` then.
+  - It doesn't need `NODE_ENV=production`.
+- **Commands:** `npm run a5:creatives -- smoke | dry [--source=standin|spacetime] [--out=<file>] | check | round0 | task <task_id> | worker`.
 
 ### A6 · Sat 5:30 – 10:30 PM · Fetch agents: A2A orchestration in ASI:One
 

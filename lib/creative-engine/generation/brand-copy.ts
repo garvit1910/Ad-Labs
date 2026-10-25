@@ -166,6 +166,12 @@ export interface GenerateBrandCopyInput {
      * wants a staged still life, not a person in a kitchen.
      */
     sceneDirective?: string;
+    /**
+     * Ad Lab (A5): number-free directives from simulated learnings, rendered as
+     * "Notes from testing". They ride this wrapper, never `copyPrompt.user`, so
+     * a number in a note can never ground a number in the copy.
+     */
+    notes?: string[];
   };
   options?: { signal?: AbortSignal; model?: string; providerId?: string };
 }
@@ -322,6 +328,9 @@ function buildStrategyBlock(
 ): string {
   const hook = strategy.hookDirective;
   const scene = strategy.sceneDirective?.replace(/\s+/gu, ' ').trim() ?? '';
+  const notes = (strategy.notes ?? [])
+    .map((note) => note.replace(/\s+/gu, ' ').trim())
+    .filter((note) => note.length > 0);
   const lines = [
     ...(hook.trim() ? [`Hook archetype to execute: ${hook}`] : []),
     ...(scene
@@ -329,6 +338,9 @@ function buildStrategyBlock(
           `Image shot direction for this variant: ${scene}`,
           'The visualConcept must fit this shot direction — keep its shot type, framing and setting (a studio product-hero direction means a staged still life of the product, not a person in a kitchen).',
         ]
+      : []),
+    ...(notes.length > 0
+      ? ['Notes from testing:', ...notes.map((note) => `- ${note}`)]
       : []),
   ];
   return lines.length > 0
