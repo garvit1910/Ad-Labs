@@ -8,6 +8,7 @@ One run per database: a plan is blocked when /health says !runs_allowed or !run_
 
 from __future__ import annotations
 
+import asyncio
 import re
 import uuid
 from datetime import datetime
@@ -28,6 +29,9 @@ WORKER_MISSING_S = 60
 WORKER_MISSING_REPEAT_S = 300
 COPYWRITER_LATE_S = 30
 ROUND_STUCK_S = 600
+START_REFUSALS = {"runs_not_allowed", "db_has_run", "round0_incomplete", "bad_request"}
+START_CHECK_TRIES = 6  # after a rounds/start timeout or drop: look for r0 for about 30 s
+START_CHECK_GAP_S = 5.0
 
 # --- pure helpers (unit-tested) -------------------------------------------------------------
 
@@ -243,6 +247,10 @@ class Strategist:
             except Exception as ex:
                 ctx.logger.exception(f"strategist item failed: {ex}")
         rs = self._active(ctx)
+        if rs and rs.get("state") == "starting":
+            # start_run runs inside this sequential tick, so 'starting' here was left by a restart
+            await self.resolve_start(ctx, rs)
+            rs = self._active(ctx)
         now = utcnow().timestamp()
         if rs and rs.get("state") == "watching" and now - self._last_watch >= self.hub.cfg.watch_s:
             self._last_watch = now
@@ -306,6 +314,53 @@ class Strategist:
                                  summary=f"Run {req.run_id} not started: {error}", run_id=req.run_id)
         await self.status.set("idle", f"run {req.run_id} not started")
 
+    async def _r0_queued(self, run_id: str, task_id: str, tries: int = 1) -> bool | None:
+        """Is the run's round 0 task on the board? None when the board couldn't be read."""
+        seen: bool | None = None
+        for i in range(tries):
+            if i:
+                await asyncio.sleep(START_CHECK_GAP_S)
+            try:
+                st = await self.api.rounds_status(run_id) or {}
+            except ApiError:
+                continue
+            seen = any(t.get("task_id") == task_id for t in st.get("tasks") or [])
+            if seen:
+                return True
+        return seen
+
+    async def _send_started(self, ctx, ad_lab: str, rs: dict, task_id: str) -> None:
+        started = RunStarted(request_id=rs["request_id"], run_id=rs["run_id"], task_id=task_id,
+                             rounds_planned=rs["rounds_planned"], db_name=rs.get("db_name", ""))
+        summary = f"Queued {task_id} on {rs.get('db_name', '')} ({rs['rounds_planned']} rounds)"
+        await common.send_logged(self.hub, ctx, ad_lab, started, protocol=P_RUN, kind="reply",
+                                 summary=summary, run_id=rs["run_id"])
+        await common.send_logged(self.hub, ctx, self.hub.peers.address("agt_copywriter"), started,
+                                 protocol=P_RUN, kind="request",
+                                 summary=f"Run {rs['run_id']} started: watch its creative tasks",
+                                 run_id=rs["run_id"])
+        await self.status.set("working", f"watching {rs['run_id']}")
+
+    async def resolve_start(self, ctx, rs: dict) -> None:
+        """A 'starting' run left by a restart: watching if round 0 is queued, else failed."""
+        run_id = rs["run_id"]
+        task_id = f"tsk_run_{run_id}_r0"
+        queued = await self._r0_queued(run_id, task_id)
+        if queued is None:
+            return  # board unreachable: try again next tick
+        ad_lab = self.hub.peers.address("agt_ad_lab")
+        if queued:
+            rs["state"] = "watching"
+            self._save_run(ctx, rs)
+            return await self._send_started(ctx, ad_lab, rs, task_id)
+        rs["state"] = "failed"
+        self._save_run(ctx, rs)
+        ctx.storage.set("strat:active", None)
+        req = StartRun(request_id=rs["request_id"], plan_id=rs.get("plan_id", ""), run_id=run_id,
+                       rounds_planned=rs["rounds_planned"])
+        await self._fail_start(ctx, ad_lab, req, "The start was interrupted before round 0 was "
+                               "queued.", RESET_HINT)
+
     async def start_run(self, ctx, item: dict) -> None:
         req = StartRun.parse_obj(item["data"])
         ad_lab = item["sender"]
@@ -316,7 +371,16 @@ class Strategist:
         if plan.get("blocked_reason"):
             return await self._fail_start(ctx, ad_lab, req, plan["blocked_reason"], RESET_HINT)
         active = self._active(ctx)
-        if active and active.get("state") in ("starting", "watching"):
+        if active and active.get("run_id") == req.run_id \
+                and active.get("state") in ("starting", "watching"):
+            # the same StartRun again (inbox redelivery after a restart): don't refuse it
+            r0 = f"tsk_run_{req.run_id}_r0"
+            if active["state"] == "watching" or await self._r0_queued(req.run_id, r0):
+                active["state"] = "watching"
+                self._save_run(ctx, active)
+                return await self._send_started(ctx, ad_lab, active, r0)
+            # round 0 isn't queued yet: start it below
+        elif active and active.get("state") in ("starting", "watching"):
             return await self._fail_start(ctx, ad_lab, req,
                                           f"A run is already in progress: {active['run_id']}.")
         await self.status.set("working", f"starting {req.run_id}")
@@ -345,12 +409,10 @@ class Strategist:
             rs["rounds_planned"] = int((res or {}).get("rounds_planned") or rounds)
         except ApiError as ex:
             resumed = False
-            if ex.code == "run_exists":
-                try:
-                    st = await self.api.rounds_status(req.run_id)
-                    resumed = any(t.get("task_id") == task_id for t in st.get("tasks") or [])
-                except ApiError:
-                    resumed = False
+            if ex.code not in START_REFUSALS:
+                # a timeout or dropped connection may still have started the run (and run_exists
+                # means it did): look for round 0 before calling it a failure
+                resumed = bool(await self._r0_queued(req.run_id, task_id, START_CHECK_TRIES))
             if not resumed:
                 rs["state"] = "failed"
                 self._save_run(ctx, rs)
@@ -362,16 +424,7 @@ class Strategist:
                                               hints.get(ex.code, ""))
         rs["state"] = "watching"
         self._save_run(ctx, rs)
-        started = RunStarted(request_id=req.request_id, run_id=req.run_id, task_id=task_id,
-                             rounds_planned=rs["rounds_planned"], db_name=rs["db_name"])
-        summary = f"Queued {task_id} on {rs['db_name']} ({rs['rounds_planned']} rounds)"
-        await common.send_logged(self.hub, ctx, ad_lab, started, protocol=P_RUN, kind="reply",
-                                 summary=summary, run_id=req.run_id)
-        await common.send_logged(self.hub, ctx, self.hub.peers.address("agt_copywriter"), started,
-                                 protocol=P_RUN, kind="request",
-                                 summary=f"Run {req.run_id} started: watch its creative tasks",
-                                 run_id=req.run_id)
-        await self.status.set("working", f"watching {req.run_id}")
+        await self._send_started(ctx, ad_lab, rs, task_id)
 
     def record_creatives(self, ctx, item: dict) -> None:
         cw = item["data"]

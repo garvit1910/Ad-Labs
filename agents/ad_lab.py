@@ -24,6 +24,8 @@ from strategist import RESET_HINT, rounds_from_text
 
 SPEC = AGENT_SPECS["ad_lab"]
 ACTIVE = {"gathering", "planning", "starting", "running"}
+STALE_STEP_S = 300  # a gathering/planning step whose reply never came is re-issued after this
+NEW_RUN_HINT = "For a new run, reset the database (npm run bench:reset:local), then say **new run**."
 GOAL_EXAMPLE = "find ads that beat Magic Spoon's current ones"
 HELP = ("I'm Ad Lab. I test Magic Spoon ad recipes on 300 simulated shoppers with three helper "
         "agents: Scout (brand and competitor intel), Strategist (recipes, rounds and winners) and "
@@ -44,6 +46,8 @@ def hint(sess: dict) -> str:
         return "The recipes stay ready: say **go** when you want to run them."
     if s in ("gathering", "planning", "starting", "running"):
         return "Say **status** for the latest card."
+    if s == "done":
+        return f"{sess.get('run_id')} is done; each database holds one run. {NEW_RUN_HINT}"
     return f'Say "{GOAL_EXAMPLE}" to start.'
 
 
@@ -66,11 +70,10 @@ class AdLab:
         return st["sessions"].get(sender) if sender else None
 
     async def tick(self, ctx) -> None:
-        items = common.inbox_take(ctx.storage)
-        if not items:
-            return
-        st = self._load(ctx)
-        for item in items:
+        st = None
+        for item in common.inbox_take(ctx.storage):
+            if st is None:
+                st = self._load(ctx)
             try:
                 await self.handle(ctx, st, item)
             except Exception as ex:
@@ -110,6 +113,7 @@ class AdLab:
 
     async def _set_state(self, sess: dict, state: str, step: str, status: str = "working") -> None:
         sess["state"] = state
+        sess["state_since"] = utcnow().timestamp()
         await self.status.set(status, step)
 
     # -- chat --
@@ -143,6 +147,11 @@ class AdLab:
             return await self.show_ad(ctx, sess, ui.args.get("creative_id", ""))
         if i == "help":
             return await self.say(ctx, sess, f"{HELP} {hint(sess)}", kind="reply", remember=False)
+        if i in ("request", "retry", "replan") and s in ("gathering", "planning") \
+                and utcnow().timestamp() - float(sess.get("state_since") or 0) > STALE_STEP_S:
+            return await self.resume_step(ctx, st, sess)
+        if i == "retry" and s == "done":
+            return await self.new_run_after_done(ctx, st, sess)
         if i == "retry":
             return await self.say(ctx, sess, f"Each database holds one run, so a new run needs a "
                                   f"fresh database. {RESET_HINT}", kind="reply", remember=False)
@@ -173,9 +182,15 @@ class AdLab:
                                       kind="reply", remember=False)
             if s == "done":
                 return await self.say(ctx, sess, f"{sess.get('run_id')} is done. Each database holds "
-                                      f"one run. {RESET_HINT}", kind="reply", remember=False)
+                                      f"one run. {NEW_RUN_HINT}", kind="reply", remember=False)
             return await self.begin(ctx, st, sess, ui.raw or GOAL_EXAMPLE)
         if i == "request":
+            if s == "done":  # a follow-up ("Which ads won?", "See full ad"): never a new run
+                low = (ui.raw or "").lower()
+                cid = next((c for c in sess.get("winners") or {} if c.lower() in low), "")
+                if cid:
+                    return await self.show_ad(ctx, sess, cid)
+                return await self.status_reply(ctx, sess, extra=NEW_RUN_HINT)
             if s in ACTIVE:
                 return await self.say(ctx, sess, f"A run is already going ({sess.get('last_line')}). "
                                       "Say **status**.", kind="reply", remember=False)
@@ -198,6 +213,28 @@ class AdLab:
                                  IntelRequest(request_id=request_id, goal=clip(goal, 500)),
                                  protocol=P_INTEL, kind="request",
                                  summary=f"Intel request: {goal}")
+
+    async def resume_step(self, ctx, st: dict, sess: dict) -> None:
+        """Scout's or Strategist's reply never came (for example after a restart mid-step):
+        re-issue the step."""
+        if sess["state"] == "planning" and sess.get("request_id"):
+            return await self.ask_plan(ctx, sess, "Strategist's plan never came back, so I'm "
+                                       "picking it up again: asked Strategist for the plan.")
+        await self.say(ctx, sess, "Scout's intel never came back, so I'm picking it up again.",
+                       kind="reply", remember=False)
+        await self.begin(ctx, st, sess, sess.get("goal") or GOAL_EXAMPLE)
+
+    async def new_run_after_done(self, ctx, st: dict, sess: dict) -> None:
+        """After a finished run, "new run" starts over only once the database has a free run slot
+        (it was reset); otherwise it explains the reset."""
+        try:
+            health = await self.hub.api.health() or {}
+        except Exception:
+            health = {}
+        if health.get("runs_allowed") and health.get("run_slot_free"):
+            return await self.begin(ctx, st, sess, sess.get("goal") or GOAL_EXAMPLE)
+        await self.say(ctx, sess, f"{sess.get('run_id')} is done and the database still holds it. "
+                       f"{NEW_RUN_HINT}", kind="reply", remember=False)
 
     async def ask_plan(self, ctx, sess: dict, line: str) -> None:
         await self._set_state(sess, "planning", "waiting for Strategist's plan")
@@ -229,12 +266,12 @@ class AdLab:
         await self.say(ctx, sess, f"Starting {run_id}: {req.rounds_planned} rounds after the "
                        "warm-up, 300 shoppers.", kind="reply")
 
-    async def status_reply(self, ctx, sess: dict) -> None:
+    async def status_reply(self, ctx, sess: dict, extra: str = "") -> None:
         line = sess.get("last_line") or "nothing has happened yet"
         key = sess.get("last_card_key")
         if key and key in sess.get("cards", {}):
             card = cards.CardOut.from_dict(sess["cards"][key])
-            text = f"{cards.STATUS_PREFIX} {line}\n\n{card.text}"
+            text = f"{cards.STATUS_PREFIX} {line}\n\n{card.text}" + (f"\n\n{extra}" if extra else "")
             await common.send_chat(self.hub, ctx, sess["sender"], text, card=card,
                                    session=sess["session"], kind="reply",
                                    run_id=sess.get("run_id", ""), summary=f"Status: {line}")
