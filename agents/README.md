@@ -10,9 +10,9 @@ Python 3.12 managed by uv, with `uagents==0.25.5` (AgentChatProtocol 0.3.0, Inte
 | Agent | Address | Job |
 | --- | --- | --- |
 | Ad Lab | `agent1qdefjvvn2z2lhxx394lvgw6upyk979a7znajm8xwuy2kqlssc932q5r7q3m` | The ASI:One chat: delegates, posts the five cards, answers "status" |
-| Ad Lab Scout | `agent1q…` (fill in from `npm run agents:addresses`) | Picks stale competitor pages and review sources, refreshes them, reports brand and competitor intel |
-| Ad Lab Strategist | `agent1q…` (fill in from `npm run agents:addresses`) | Checks the recipes, queues the rounds on the task board, reports each round, declares winners |
-| Ad Lab Copywriter | `agent1q…` (fill in from `npm run agents:addresses`) | Claims each round's creative task, chooses the learnings to apply, writes the next round's ads |
+| Ad Lab Scout | `agent1qgppdeqca6sgqvljm0xg4sg4c9at3rjym2kjjaaxx4h6kh4zhegecew9x8c` | Picks stale competitor pages and review sources, refreshes them, reports brand and competitor intel |
+| Ad Lab Strategist | `agent1qwtcefe5kjt0tlwdy6fkg4zx94wcnzzx63gw0f52kgl2lep52arp796dgqw` | Checks the recipes, queues the rounds on the task board, reports each round, declares winners |
+| Ad Lab Copywriter | `agent1qwqcwufn0jz3a6plkv3arsef6htm6gwntvw5607wmuxepyw5alyvuwxmqjf` | Claims each round's creative task, chooses the learnings to apply, writes the next round's ads |
 
 Ad Lab keeps `AD_LAB_AGENT_SEED`, so its address and Agentverse registration carry over from `hello_agent.py`. Each agent's Agentverse profile is in `profiles/`.
 

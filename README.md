@@ -12,9 +12,9 @@ You talk to **Ad Lab** in ASI:One. It delegates to three other uAgents, and ever
 | Agent | Address | Job |
 | --- | --- | --- |
 | Ad Lab | `agent1qdefjvvn2z2lhxx394lvgw6upyk979a7znajm8xwuy2kqlssc932q5r7q3m` | The ASI:One chat: delegates, posts the brand, competitor, recipe, leaderboard and winner cards, answers "status" |
-| Ad Lab Scout | see `npm run agents:addresses` | Picks the stalest competitor pages and review sources, refreshes them through Apify, reports brand and competitor intel |
-| Ad Lab Strategist | see `npm run agents:addresses` | Checks the recipes, queues the simulation rounds on the task board, reports each round, declares the winners |
-| Ad Lab Copywriter | see `npm run agents:addresses` | Claims each round's creative task, chooses which learnings to apply, writes the next round's ads |
+| Ad Lab Scout | `agent1qgppdeqca6sgqvljm0xg4sg4c9at3rjym2kjjaaxx4h6kh4zhegecew9x8c` | Picks the stalest competitor pages and review sources, refreshes them through Apify, reports brand and competitor intel |
+| Ad Lab Strategist | `agent1qwtcefe5kjt0tlwdy6fkg4zx94wcnzzx63gw0f52kgl2lep52arp796dgqw` | Checks the recipes, queues the simulation rounds on the task board, reports each round, declares the winners |
+| Ad Lab Copywriter | `agent1qwqcwufn0jz3a6plkv3arsef6htm6gwntvw5607wmuxepyw5alyvuwxmqjf` | Claims each round's creative task, chooses which learnings to apply, writes the next round's ads |
 
 How they work, how to register them on Agentverse and how to test them: [agents/README.md](agents/README.md). The HTTP API they call is [docs/AGENT_API.md](docs/AGENT_API.md).
 
