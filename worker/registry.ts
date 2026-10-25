@@ -4,6 +4,7 @@ import type { Job } from '@/services/job-processor/types';
 import { AdLibrarySyncProcessor } from '@/services/job-processor/ad-library/sync-processor';
 import { AdLibraryLabelBatchProcessor } from '@/services/job-processor/ad-library/label-processor';
 import { AdLibraryEmbedBatchProcessor } from '@/services/job-processor/ad-library/embed-processor';
+import { ADLIB_MEDIA_REHOST_JOB_TYPE } from '@/services/job-processor/ad-library/types';
 import { BrandPresenceDiscoverProcessor } from '@/services/job-processor/brand-presence/discover-processor';
 import { BrandPresenceSubredditDiscoveryProcessor } from '@/services/job-processor/brand-presence/subreddit-discovery-processor';
 import { BrandPresenceRedditScrapeProcessor } from '@/services/job-processor/brand-presence/reddit-scrape-processor';
@@ -67,4 +68,13 @@ export const PROCESSOR_REGISTRY: Record<string, (_db: SupabaseClient) => JobProc
   brand_object_identity: (db) => new BrandObjectIdentityProcessor(db),
   brand_object_market: (db) => new BrandObjectMarketProcessor(db),
   brand_object_personas: (db) => new BrandObjectPersonasProcessor(db),
+};
+
+/**
+ * Job types Ad Lab enqueues but never runs: the worker marks them cancelled
+ * with result.skipped, never failed. Every competitor sync enqueues media
+ * rehost batches; the rehost processor is R2-only and wasn't ported.
+ */
+export const SKIPPED_JOB_TYPES: Record<string, string> = {
+  [ADLIB_MEDIA_REHOST_JOB_TYPE]: 'media rehost not ported (A1); ads keep their expiring Meta CDN links',
 };

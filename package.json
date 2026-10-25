@@ -15,6 +15,7 @@
     "setup:supabase": "tsx scripts/setup-supabase.mts",
     "db:migrate": "tsx supabase/migrate.mts",
     "worker": "node --env-file-if-exists=.env.local --import tsx worker/index.ts",
+    "a2:ingest": "node --env-file-if-exists=.env.local --import tsx scripts/a2-ingest.ts",
     "spacetime:publish": "spacetime publish adlab-calhacks13 --server maincloud --module-path spacetime --yes",
     "spacetime:publish:clear": "spacetime publish adlab-calhacks13 --server maincloud --module-path spacetime --delete-data --yes",
     "agent": "uv run --project agents python agents/hello_agent.py",
