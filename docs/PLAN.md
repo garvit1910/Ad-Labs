@@ -1,6 +1,6 @@
 # Ad Lab — master plan
 
-Last updated Sat Oct 24, 2026, 4:44 PM PT
+Last updated Sat Oct 24, 2026, 5:32 PM PT
 
 Ad Lab tests Magic Spoon ad recipes on Jev-driven shoppers built from real customer voice, then keeps and refines the winners. Person A owns data and agents; Person B owns the simulation. Both halves are planned below, phase by phase, with a ready prompt for every phase in the "Appendix: Phase prompts" at the end of this file.
 
@@ -28,11 +28,11 @@ Everything here is settled. Change a row only by editing this table, so both of 
 
 ## Status
 
-As of Sat Oct 24, 3 PM PT.
+As of Sat Oct 24, 5:30 PM PT.
 
 | | Done | In progress | Next |
 | --- | --- | --- | --- |
-| A | A0 setup, A1 Adcero port, A's half of the contract in SpacetimeDB (`tables_a.ts`, `reducers_a.ts`) | A2 ingest, on its own agent (`feat/a2-ingest`) | A3 distill, then A4 writes the contract rows. A5 and A6 can start in parallel, on fixtures first |
+| A | A0 setup, A1 Adcero port, A's half of the contract in SpacetimeDB (`tables_a.ts`, `reducers_a.ts`), A2 ingest (`feat/a2-ingest`, PR to `simulation`) | — | A3 distill, then A4 writes the contract rows. A5 and A6 can start in parallel, on fixtures first |
 | B | B0–B4: fixtures, Jev spike, engine, calibration, bandit, learnings, task board and worker | — | B5 live sim views. B4's integration step waits on A4's rows |
 
 **Branches.** `simulation` is the integration branch: B commits there, and every A phase opens its PR against it. `B`, GitHub's default branch, is stale; don't branch from it or target it.
@@ -49,7 +49,7 @@ How to work with it:
 - **Who publishes.** Only A can: the database belongs to A's SpacetimeDB login. Publish from an up-to-date `simulation` with `npm run spacetime:publish`, which stops instead of breaking clients. `npm run spacetime:publish:clear` wipes both sides' data, so agree first.
 - **Clients.** B's worker and A's agents call reducers and SQL over HTTP. The web app subscribes through the `spacetimedb` SDK, using the generated client in `lib/spacetime/`. After any module change, run `npm run spacetime:generate` and commit the result.
 
-**Supabase.** The 17 Adcero tables, `library_ads_enriched` and `job_queue` are applied (`npm run db:migrate`). A2 is filling them.
+**Supabase.** The 17 Adcero tables, `library_ads_enriched` and `job_queue` are applied (`npm run db:migrate`). A2 filled them: see "A2" for the counts.
 
 **Agents.** Since Oct 24, 4:30 PM, Fetch's agents run the loop as an agent-to-agent system, mirrored in SpacetimeDB: see Locked decisions ("Agents") and A6.
 
@@ -199,7 +199,7 @@ Finish with: what works, what is stubbed or skipped, the command that proves the
 | A0 Setup | Locked decisions, The contract | Fetch hackpack and "ASI:One compatible uAgents" guide; SpacetimeDB TypeScript quickstart | — |
 | A1 Port core | The contract, Person A | reuse-export: REUSE\_MANIFEST §0, §8, §12, §13, files.txt, deps.json | Adcero, for `services/job-processor/job-executor.ts` L121–165 (the worker registry) |
 | A2 Ingest | Person A | REUSE\_MANIFEST §1, §2, §3, §10 | Adcero, for `tests/fixtures/ad-library/apify-sample.json` (normalizer smoke test) |
-| A3 Distill | Person A | REUSE\_MANIFEST §4, §5 | Adcero, for `scripts/brand-object-{build,promote,distill}.ts`, the in-process run harness that wasn't copied |
+| A3 Distill | Person A, A2's Result | REUSE\_MANIFEST §4, §5; `scripts/a2-ingest.ts`, `worker/loop.ts` | Adcero, for `scripts/brand-object-{build,promote,distill}.ts`, the in-process run harness that wasn't copied |
 | A4 Contract rows | The contract, Simulation design, Person A | reuse-export `contracts.ts` (PersonaDetails, EnrichedAd); `spacetime/tables_b.ts` | — |
 | A5 Creatives | The contract, Reward bandit and learnings, Person A | CREATIVE\_MANIFEST.md (§1b, §2–§6, §8, §9, Text-only mode, §11.3–§11.5), contracts-creative.ts, the two creative fixtures | Adcero |
 | A6 Fetch agents | Locked decisions, How A and B fit together, The contract, A6, Demo | Fetch hackpack requirements; Innovation Lab docs on uAgent-to-uAgent communication, mailbox agents, ASI-compatible agents and Interactive Cards; `agents/hello_agent.py`; B's `sim/SAMPLE_ROUND_SUMMARY.json`; A2's `scripts/a2-ingest.ts` and `worker/loop.ts` | — |
@@ -273,10 +273,10 @@ A turns Magic Spoon's public footprint into the rows the sim needs, writes the a
 
 ### A2 · Sat 8 – 10:30 AM · Ingest Magic Spoon and its seven competitors
 
-- [ ] Run `brand_presence_discover` on magicspoon.com. Check the draft profile's name variants and competitor list, then confirm it.
-- [ ] Sources: Reddit, Trustpilot, Google Maps, X, Instagram, TikTok. Where discovery missed a handle, set it by hand and confirm it through the copied `confirm-source.ts` functions from a script.
-- [ ] Caps: Reddit and X about 300 each, reviews about 100–200, Instagram and TikTok comments from about 10 posts each (Adcero's planner defaults).
-- [ ] `tracked_competitors`, Meta only, with `APIFY_AD_LIBRARY_MAX_ADS=50`:
+- [x] Run `brand_presence_discover` on magicspoon.com. Check the draft profile's name variants and competitor list, then confirm it.
+- [x] Sources: Reddit, Trustpilot, Google Maps, X, Instagram, TikTok. Where discovery missed a handle, set it by hand and confirm it through the copied `confirm-source.ts` functions from a script.
+- [x] Caps: Reddit and X about 300 each, reviews about 100–200, Instagram and TikTok comments from about 10 posts each (Adcero's planner defaults).
+- [x] `tracked_competitors`, Meta only, with `APIFY_AD_LIBRARY_MAX_ADS=50`:
   - the seven competitors under Locked decisions, each tracked by its Meta page id (table below), never a keyword
   - Magic Spoon's own page ("Magic Spoon Cereal", page id 1978160732305312), which feeds the control and double-down recipes
 - Competitor set, locked Oct 24: the seven brands with a page id below. Page ids come from each brand's own website; "live" means running Meta ads that day:
@@ -293,16 +293,24 @@ A turns Magic Spoon's public footprint into the rows the sim needs, writes the a
   | Three Wishes, HighKey, Schoolyard Snacks, Snack House, Lovebird, Nature's Path | — | none | — |
   | Wonderworks | no page of its own (General Mills line) | none | — |
 - Insurance datasets from A0 (Apify): Magic Spoon ads `3gFmofqMK6sEyeHto` (45), Catalina Crunch ads `1IPZWLnFfFMWN01fa` (5), Magic Spoon Trustpilot, English, `8XhvrGA89aht0K74A` (39 reviews).
-- [ ] Keep Magic Spoon's own ads out of market priors with Adcero's own flag: its `tracked_competitors` row gets `is_brand_self = true` and Magic Spoon's `brand_profile_id`. The market step skips self rows; the identity step reads their ad copy.
-- [ ] Run competitor sync → label → embed.
-- [ ] **If an actor fails or comes back empty:** import that source's A0 insurance dataset through the copied normalizers instead.
+- [x] Keep Magic Spoon's own ads out of market priors with Adcero's own flag: its `tracked_competitors` row gets `is_brand_self = true` and Magic Spoon's `brand_profile_id`. The market step skips self rows; the identity step reads their ad copy.
+- [x] Run competitor sync → label → embed.
+- [x] **If an actor fails or comes back empty:** import that source's A0 insurance dataset through the copied normalizers instead.
 
 **Done when** brand\_mentions has rows from at least 5 sources, and library\_ads has labelled, embedded ads for Magic Spoon's page and every competitor page.
 
+**Result (Oct 24, `npm run a2:ingest -- report`).** Done; no insurance dataset was needed.
+
+- `brand_mentions`: 454 rows from 5 sources. Reddit 257 (brand search, category, r/keto, r/cereal, r/LowCalFoodFinds), Instagram @magicspooncereal 109, Trustpilot 39 (every review on the page), TikTok @magicspooncereal 29, X @eatmagicspoon 20. Google Maps was skipped: the search found a 7-Eleven, and the brand-match gate rejected it. X and TikTok are small because Magic Spoon gets little chatter there, not because of the caps.
+- `library_ads`: 239 ads, all labelled (gpt-6-luna, industry pinned to `food`) and 236 embedded. Magic Spoon 45 (`is_brand_self`), GHOST 50, Premier Protein 50, Quest 50, Seven Sundays 21, Legendary Foods 18, Catalina Crunch 5. Surreal's US sync found no ads; Person A accepted that, and the GB retry is opt-in (`--surreal-gb`).
+- TikTok comment fields pinned against a live run: `cid`, `text`, `uniqueId`, `videoWebUrl`, `createTimeISO`, `diggCount`, `replyCommentTotal`.
+- `prove`: the market step's ad pool, replayed, holds 194 competitor ads and 0 of Magic Spoon's.
+- Accounts: Apify allows 5 concurrent actor runs, and the OpenAI key is on a paid tier (it was capped at 50 requests a day per model until Oct 24, 5 PM). The worker waits out both limits without spending attempts.
+
 ### A3 · Sat 10:30 AM – 1 PM · Distill the brand context
 
-- [ ] Let listening drain: relevance → extract → cluster → promote.
-- [ ] Run `brand_object_crawl` with `chain: true`: crawl → identity → market → personas → chunks. The identity facts (positioning, USPs, proof points such as grams of protein) are what the ads get built from.
+- [x] Let listening drain: relevance → extract → cluster. Done in A2: 0 mentions pending relevance or extraction, and 74 themes from 781 phrases.
+- [ ] Run `brand_object_crawl` with `chain: true`: crawl → identity → promote → market → personas, with chunks after identity, market and personas. Promote is part of the chain. The identity facts (positioning, USPs, proof points such as grams of protein) are what the ads get built from.
 - [ ] Count facts per section, and spot-check 10 VOC facts against their quotes.
 - [ ] Smoke-test `retrieveBrandSlice` with "protein", "taste" and "price".
 
@@ -964,13 +972,30 @@ Finish with: counts per source and per page, anything skipped and why, and a com
 
 ```
 Ad Lab, phase A3: distill the brand context. Cal Hacks 13.0; hard deadline Sun Oct 25, 9 AM PT. You are Person A's coding agent.
-Read first: docs/PLAN.md "A3" and the A gotchas (cooldowns, the 60-call cap, LLM_FLEX_TIER=0).
-Also read: REUSE_MANIFEST.md §4 and §5.
+Read first: docs/PLAN.md "Locked decisions", "A2" (its Result) and "A3", and the A gotchas (cooldowns, the 60-call cap, LLM_FLEX_TIER=0).
+Also read: REUSE_MANIFEST.md §4 and §5; scripts/a2-ingest.ts (how A2 drives the copied jobs in-process) and worker/loop.ts.
 ../adcero is read-only; use scripts/brand-object-{build,promote,distill}.ts as the reference run harness.
-Goal: let listening drain (relevance → extract → cluster → promote), then run brand_object_crawl with chain: true (crawl → identity → market → personas → chunks). Write scripts/a3-report.ts printing fact counts per section, 10 random VOC facts with their quotes, and retrieveBrandSlice results for "protein", "taste" and "price".
+Work on a new branch off simulation once A2's PR (feat/a2-ingest) is merged, or off feat/a2-ingest until then. Open the PR against simulation.
+State after A2:
+- One confirmed brand: Magic Spoon, brand_profile_id e7252185-7867-4662-846b-71a57ded35a6, under ADLAB_ORG_ID (lib/adlab/org.ts).
+- Listening has drained: 454 brand_mentions, 0 pending relevance or extraction, 74 themes from 781 phrases. 260 short or one-off phrases have no theme, which is normal. Don't rescrape or recluster.
+- library_ads: 239 ads, all labelled and 236 embedded, on Magic Spoon's own page (is_brand_self, 45 ads, which identity reads) and six competitors; Surreal has none. Market priors need at least 5 winner ads (minWinnerAds). Active ads running 30+ days: GHOST 49, Quest 25, Legendary Foods 12, Seven Sundays 8; Premier Protein and Catalina Crunch have none. A2's prove step showed the market pool holds no Magic Spoon ads.
+- No brand_object_state row and no brand_facts yet: no cooldowns are set and the monthly call cap is untouched.
+Goal: a script scripts/a3-distill.ts that calls enqueueBrandObjectCrawl({ organizationId, brandProfileId, chain: true }) (services/job-processor/brand-object/queue.ts) and drains the chain in-process with runWorker from worker/loop.ts on the brand_object_* job types. scripts/a2-ingest.ts already has drainUntilIdle for this, but it runs its CLI on import: move it into a shared module under scripts/ that both scripts use, and don't copy the loop. The chain is crawl → identity → promote → market → personas, with chunks after identity, market and personas; promote is in the chain, so listening needs no separate step. Then scripts/a3-report.ts prints:
+- fact counts per section;
+- 10 random VOC facts with their quotes;
+- the market_prior facts and the competitors behind them;
+- the 2–4 personas;
+- retrieveBrandSlice (lib/brand-object/retrieval/service.ts) results for "protein", "taste" and "price".
+Add npm scripts for both, run the way npm run worker runs (node --env-file-if-exists=.env.local --import tsx).
+Know before you start:
+- The OpenAI key is on a paid tier (5,000 requests a minute per model). Identity and personas use gpt-5.4, chunks embed with text-embedding-3-small, and promote and market make no LLM calls. Apify allows 5 concurrent runs. The worker already waits for an Apify slot and pauses on OpenAI rate limits without spending attempts.
+- The crawl runs Apify's website-content-crawler on magicspoon.com and archives pages through the local R2 stub (data/r2/), which identity reads back.
+- Only identity and personas call an LLM. To rerun one: identity has a 7-day cooldown, personas a 24-hour one, and the brand has 60 LLM calls a month. Raise BRAND_OBJECT_MONTHLY_LLM_CALL_CAP and clear the cooldown fields in brand_object_state; never delete facts to force a rerun.
+- If market writes no market_prior facts (too few winners), stop and tell me. Don't loosen the winner gate.
 Done when: brand_facts holds identity, voc_*, market_prior and 2–4 persona facts, and retrieval returns sensible quotes.
-Rules: change copied code only to fix a real bug, and tell me which file. Secrets only in .env.local.
-Finish with: the report output and a commit "A3: distill".
+Rules: write only scripts/, worker/ and config. Change copied code only to fix a real bug; stop and tell me which file first. Secrets only in .env.local.
+Finish with: the report output, anything skipped and why, and a commit "A3: distill".
 ```
 
 ### A4 · Contract rows
