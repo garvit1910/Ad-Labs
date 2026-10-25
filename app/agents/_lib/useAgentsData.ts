@@ -1,6 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { useRef } from 'react';
 import { useSpacetimeDB, useTable } from 'spacetimedb/react';
 import { tables } from '@/lib/spacetime/bindings';
 
@@ -36,7 +37,10 @@ export function useAgentsData() {
   const conn = useSpacetimeDB();
   const health = useQuery({ queryKey: ['agent-health'], queryFn: fetchHealth, refetchInterval: 15_000, retry: 1 });
   // Wait for /health before subscribing; if it can't be read, subscribe anyway and let the rows show.
-  const agentTables = health.data ? health.data.agent_tables : health.isError;
+  // A /health that couldn't reach SpacetimeDB says nothing about the tables, and once seen they stay.
+  const seen = useRef(false);
+  if (health.data?.agent_tables) seen.current = true;
+  const agentTables = seen.current || (health.data ? health.data.agent_tables || !health.data.spacetime_ok : health.isError);
   const [agents, agentsReady] = useTable(tables.agent, { enabled: agentTables });
   const [messages, messagesReady] = useTable(tables.agentMessage, { enabled: agentTables });
   const [jobs, jobsReady] = useTable(tables.ingestJob, { enabled: agentTables });

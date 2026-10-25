@@ -18,7 +18,9 @@ async function loadBuildProgress(db: SupabaseClient, brandProfileId: string) {
       .select('id, last_synced_at')
       .eq('organization_id', ADLAB_ORG_ID)
       .eq('brand_profile_id', brandProfileId)
-      .eq('status', 'active'),
+      .eq('status', 'active')
+      // Magic Spoon's own page is tracked too (is_brand_self); it isn't a competitor.
+      .eq('is_brand_self', false),
     db
       .from('job_queue')
       .select('dedupe_key')

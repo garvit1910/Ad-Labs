@@ -8,6 +8,7 @@ import { EyebrowChip } from '@/components/ui/eyebrow-chip';
 import { PageHeader } from '@/components/ui/page-header';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { SPACETIMEDB_DB_NAME, SPACETIMEDB_URI } from '@/lib/spacetime/config';
 import { databaseLabel, isLocalDatabase } from '@/app/sim/_components/SimProvider';
 import { Section } from '@/app/sim/_components/Section';
 import { AgentCard } from './_components/AgentCard';
@@ -61,7 +62,11 @@ function AgentsPage() {
   const jobs = useMemo(() => jobRows(data.jobs, data.agents), [data.jobs, data.agents]);
 
   const h = health.data;
-  const noAgentTables = h ? !h.agent_tables : false;
+  const noAgentTables = h ? h.spacetime_ok && !h.agent_tables && !data.agentTables : false;
+  // Compared here, against the database this browser bundle subscribes to (only NEXT_PUBLIC_* reach it),
+  // because the server can't see what the client was built with.
+  const browserUri = SPACETIMEDB_URI.replace(/\/$/, '');
+  const mismatch = !!h && (h.db_name !== SPACETIMEDB_DB_NAME || h.db_uri !== browserUri);
 
   return (
     <>
@@ -80,9 +85,9 @@ function AgentsPage() {
               : 'checking the agent API…'}
         </span>
       </div>
-      {h && !h.browser_matches && (
+      {h && mismatch && (
         <div className="rounded-lg border border-status-error/40 bg-status-error-soft px-4 py-3 text-sm font-semibold text-status-error">
-          Database mismatch: this page reads {h.browser_db_name} @ {h.browser_uri.replace(/^https?:\/\//, '')}, but the agent API writes{' '}
+          Database mismatch: this page reads {SPACETIMEDB_DB_NAME} @ {browserUri.replace(/^https?:\/\//, '')}, but the agent API writes{' '}
           {h.db_name} @ {h.db_uri.replace(/^https?:\/\//, '')}. Start the app with npm run dev:local or dev:live so both match.
         </div>
       )}

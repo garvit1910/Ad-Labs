@@ -14,6 +14,8 @@ import { isLaterRound, isLiveAd, isRoundZero, planSeed, readTargetState, type Se
 
 export type Level = 'PASS' | 'WARN' | 'FAIL';
 
+const TABLES = ['brand', 'concept', 'segment', 'arm', 'product', 'creative'] as const;
+
 export class Report {
   readonly lines: Array<{ level: Level; text: string }> = [];
   pass(text: string) {
@@ -64,11 +66,15 @@ export async function verifySeed(target: Spacetime, opts: VerifySeedOptions): Pr
   );
   if (opts.selection) {
     const plan = planSeed(opts.selection, state);
-    const differs = (['brand', 'concept', 'segment', 'arm', 'product', 'creative'] as const)
-      .filter((table) => plan.tables[table].write.length)
-      .map((table) => `${table} ${plan.tables[table].added} new / ${plan.tables[table].changed} changed`);
+    const byId = new Map(creatives.map((c) => [String(c.creative_id), c]));
+    // Extra creatives from earlier runs get their own warning below; any other extra row is a difference.
+    const extra = (table: (typeof TABLES)[number]) =>
+      table === 'creative' ? plan.tables.creative.extra.filter((id) => !isLaterRound(byId.get(id)!)).length : plan.tables[table].extra.length;
+    const differs = TABLES.filter((table) => plan.tables[table].write.length || extra(table)).map(
+      (table) => `${table} ${plan.tables[table].added} new / ${plan.tables[table].changed} changed / ${extra(table)} extra`,
+    );
     report.check(differs.length === 0, 'the target matches the source selection exactly', `the target differs from the source: ${differs.join(', ')}`);
-    for (const warning of plan.warnings) report.warn(warning);
+    for (const refusal of plan.refusals) if (!refusal.includes('that simulated its current rows')) report.fail(`seed would refuse: ${refusal}`);
   }
   const later = creatives.filter(isLaterRound);
   if (later.length) report.warn(`${later.length} creative(s) from earlier runs are in the database; a new run would see them`);

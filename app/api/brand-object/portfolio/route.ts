@@ -35,7 +35,7 @@ export const POST = pageHandler({
         .eq('organization_id', ADLAB_ORG_ID)
         .in('type', [...BRAND_OBJECT_JOB_TYPES])
         .in('status', ['pending', 'processing']),
-      db.from('tracked_competitors').select('brand_profile_id').eq('organization_id', ADLAB_ORG_ID).eq('status', 'active'),
+      db.from('tracked_competitors').select('brand_profile_id').eq('organization_id', ADLAB_ORG_ID).eq('status', 'active').eq('is_brand_self', false),
     ]);
     if (statesRes.error) throw dbError('Failed to load brand object state', statesRes.error);
     if (factsRes.error) throw dbError('Failed to count brand facts', factsRes.error);

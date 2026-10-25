@@ -1,8 +1,14 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { SPACETIMEDB_DB_NAME as BROWSER_DB_NAME, SPACETIMEDB_URI as BROWSER_URI } from '@/lib/spacetime/config';
 import { connectSpacetime, resolveSpacetimeTarget, type Spacetime, type SpacetimeTarget } from './spacetime-http';
 import { serviceSupabase } from './supabase';
-import { DEMO_DATABASE, runsAllowed } from './targets';
+import { DEMO_DATABASE, DEMO_TARGET, runsAllowed } from './targets';
+
+// The database the browser bundle subscribes to: only NEXT_PUBLIC_* reach the client, so the
+// server's SPACETIMEDB_* fallback in lib/spacetime/config.ts doesn't apply there.
+const browserTarget = () => ({
+  uri: (process.env.NEXT_PUBLIC_SPACETIMEDB_URI || DEMO_TARGET.uri).replace(/\/$/, ''),
+  dbName: process.env.NEXT_PUBLIC_SPACETIMEDB_DB_NAME || DEMO_TARGET.dbName,
+});
 
 /*
  * Server-side state for the agents' HTTP API (app/api/agent/**, docs/AGENT_API.md): which database
@@ -73,7 +79,7 @@ const message = (err: unknown) => (err instanceof Error ? err.message : String(e
 export async function healthSnapshot(): Promise<HealthSnapshot> {
   const target = agentTarget();
   const allowed = runsAllowed(target);
-  const browserUri = BROWSER_URI.replace(/\/$/, '');
+  const browser = browserTarget();
   let spacetimeOk = false;
   let agentTables = false;
   let runs: string[] = [];
@@ -114,9 +120,9 @@ export async function healthSnapshot(): Promise<HealthSnapshot> {
     run_slot_free: spacetimeOk && !occupied,
     blocked_reason: blockedReason,
     runs,
-    browser_db_name: BROWSER_DB_NAME,
-    browser_uri: browserUri,
-    browser_matches: browserUri === target.uri && BROWSER_DB_NAME === target.dbName,
+    browser_db_name: browser.dbName,
+    browser_uri: browser.uri,
+    browser_matches: browser.uri === target.uri && browser.dbName === target.dbName,
     spacetime_ok: spacetimeOk,
     agent_tables: agentTables,
   };

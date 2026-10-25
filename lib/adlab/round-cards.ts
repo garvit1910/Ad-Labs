@@ -254,7 +254,8 @@ export function winnersCard(i: {
     const declared = i.learnings
       .filter((l) => l.run_id === i.runId && l.kind === 'winner' && l.valid_to_round === null && l.segment_id === segment.segment_id && !isControl(l.arm_id))
       .sort((a, b) => b.valid_from_round - a.valid_from_round || (a.learning_id < b.learning_id ? 1 : -1))[0];
-    const leader = board?.top?.[0];
+    // B's top rows include the control when it leads; the fallback is the leading recipe.
+    const leader = board?.top?.find((e) => !isControl(e.arm_id));
     let armId: string;
     let statement: string;
     let basis: WinnerCard['basis'];
@@ -262,7 +263,7 @@ export function winnersCard(i: {
       armId = declared.arm_id;
       statement = declared.statement;
       basis = 'winner';
-    } else if (leader && !isControl(leader.arm_id)) {
+    } else if (leader) {
       armId = leader.arm_id;
       const recipe = recipeLabel(armOf(armId));
       statement = `${recipe} leads for ${segment.name} so far${typeof leader.p_best === 'number' ? ` (${pct(leader.p_best)} chance it's best)` : ''}.`;

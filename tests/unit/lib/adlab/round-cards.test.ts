@@ -159,6 +159,17 @@ describe('winnersCard', () => {
     assert.equal(cards.length, 6);
   });
 
+  it('skips the control when it leads a segment, and falls back to the leading recipe', () => {
+    const summary = structuredClone(SAMPLE);
+    const keto = summary.leaderboard.find((row: { segment_id: string }) => row.segment_id === 'seg_keto_low_carb');
+    keto.top = [keto.control, ...keto.top];
+    const card = winnersCard({ runId: RUN, learnings, arms, segments, creatives, latestDone: { ...round1, summary: JSON.stringify(summary) } });
+    const row = card.find((c) => c.segment_id === 'seg_keto_low_carb')!;
+    assert.equal(row.basis, 'leading');
+    assert.equal(row.arm_id, 'arm_02');
+    assert.equal(card.length, 6);
+  });
+
   it('ignores closed winners and returns nothing before any round is done', () => {
     const closed = learnings.map((l) => ({ ...l, valid_to_round: 2 }));
     const card = winnersCard({ runId: RUN, learnings: closed, arms, segments, creatives, latestDone: round1 });
