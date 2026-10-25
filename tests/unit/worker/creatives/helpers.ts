@@ -4,6 +4,7 @@ import type { UpstreamFact } from '@/lib/creative-engine/brand-context/ingest';
 import { toRows } from '@/worker/creatives/facts';
 import { CONCEPTS } from '@/lib/adlab/contract';
 import { SpacetimeError, type SqlRow, type Spacetime, type SpacetimeTarget } from '@/lib/adlab/spacetime-http';
+import { agentProblem, ingestJobProblem, ingestReportProblem, isIngestTerminal, messageProblem } from '@/spacetime/src/agent_rules';
 
 const FIXTURES = join(import.meta.dirname, '../../../../docs/reuse-export/fixtures');
 export const briefFixture = JSON.parse(readFileSync(join(FIXTURES, 'creative-brief.json'), 'utf8'));
@@ -95,8 +96,8 @@ function literal(text: string): unknown {
 
 /**
  * An in-memory SpacetimeDB for A's and B's tables: `SELECT * FROM t [WHERE a = 'x' AND b = 1]`,
- * plus the task reducers, A's upserts, upsert_products and upsert_run, with the published rules
- * that matter here.
+ * plus the task reducers, A's upserts, upsert_products, upsert_run and the four agent-table reducers,
+ * with the published rules that matter here.
  */
 export class FakeStdb implements Spacetime {
   readonly label: string;
@@ -195,6 +196,45 @@ export class FakeStdb implements Spacetime {
         const row = JSON.parse(rowJson) as SqlRow;
         const old = (this.tables.run ??= []).find((run) => run.run_id === row.run_id);
         upsertBy(this.tables.run, 'run_id', [{ ...row, created_at: old?.created_at ?? now }]);
+        return;
+      }
+      // The agent tables (spacetime/src/reducers_a.ts), with the module's own rules.
+      case 'upsert_agent': {
+        const [agent_id, name, role, address, status, current_step] = args as string[];
+        const row = { agent_id, name, role, address, status, current_step };
+        const problem = agentProblem(row);
+        if (problem) throw new SpacetimeError(`agent ${agent_id}: ${problem}`, 530);
+        upsertBy((this.tables.agent ??= []), 'agent_id', [{ ...row, updated_at: now }]);
+        return;
+      }
+      case 'log_agent_message': {
+        const [message_id, run_id, from_agent, to_agent, protocol, kind, summary, payload] = args as string[];
+        const row = { message_id, run_id, from_agent, to_agent, protocol, kind, summary, payload };
+        const problem = messageProblem(row);
+        if (problem) throw new SpacetimeError(`message ${message_id}: ${problem}`, 530);
+        this.tables.agent_message ??= [];
+        if (this.tables.agent_message.some((old) => old.message_id === message_id)) {
+          throw new SpacetimeError(`message ${message_id}: already logged`, 530);
+        }
+        this.tables.agent_message.push({ ...row, created_at: now });
+        return;
+      }
+      case 'upsert_ingest_job': {
+        const [job_id, requested_by, job_type, target, actor, status, items, error] = args as [string, string, string, string, string, string, number, string];
+        const row = { job_id, requested_by, job_type, target, actor, status, items, error };
+        const problem = ingestJobProblem(row);
+        if (problem) throw new SpacetimeError(`ingest_job ${job_id}: ${problem}`, 530);
+        const old = (this.tables.ingest_job ??= []).find((job) => job.job_id === job_id);
+        upsertBy(this.tables.ingest_job, 'job_id', [{ ...row, created_at: old?.created_at ?? now, updated_at: now }]);
+        return;
+      }
+      case 'report_ingest_job': {
+        const [job_id, status, items, error] = args as [string, string, number, string];
+        const problem = ingestReportProblem({ job_id, status, items, error });
+        if (problem) throw new SpacetimeError(`ingest_job ${job_id}: ${problem}`, 530);
+        const old = (this.tables.ingest_job ?? []).find((job) => job.job_id === job_id);
+        if (!old || (isIngestTerminal(String(old.status)) && !isIngestTerminal(status))) return;
+        Object.assign(old, { status, items: items > 0 ? items : old.items, error, updated_at: now });
         return;
       }
       default:

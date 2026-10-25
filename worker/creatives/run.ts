@@ -367,7 +367,21 @@ export interface TaskResult {
   skips: Skip[];
   errors: string[];
   next_task: string | null;
+  /**
+   * The learnings that reached at least one of the task's ranked creatives (their learning_ids), out of the
+   * payload's list narrowed by the caller's `learningIds`. Absent on results stored before it existed.
+   */
+  learning_ids_applied?: string[];
 }
+
+const parseIds = (json: string): string[] => {
+  try {
+    const value: unknown = JSON.parse(json);
+    return Array.isArray(value) ? value.filter((item): item is string => typeof item === 'string') : [];
+  } catch {
+    return [];
+  }
+};
 
 const isUint = (value: unknown): value is number => Number.isInteger(value) && (value as number) >= 0;
 const isStrings = (value: unknown): value is string[] =>
@@ -399,6 +413,20 @@ interface LearningRow {
 }
 
 /**
+ * The learnings a task writes from: the payload's list, or, when the caller chose some
+ * (A6's Copywriter), the payload's ids it chose, in the payload's order. The caller can
+ * only narrow B's list; an id outside it is logged and ignored.
+ */
+export function narrowLearnings(payloadIds: string[], chosen: string[] | undefined, log: (line: string) => void = () => {}): string[] {
+  if (!chosen) return payloadIds;
+  const wanted = new Set(chosen);
+  for (const id of wanted) if (!payloadIds.includes(id)) log(`warning: learning ${id} is not in the task's payload; ignored`);
+  const kept = payloadIds.filter((id) => wanted.has(id));
+  log(`learnings chosen: ${kept.length} of the payload's ${payloadIds.length}`);
+  return kept;
+}
+
+/**
  * The payload's learnings as notes: a learning applies to its segment's
  * creatives, and to one arm's when it names one. Only directives reach the
  * copywriter, and one that still holds a digit is dropped and logged.
@@ -427,6 +455,12 @@ export interface TaskOptions extends RunDeps {
   takeover?: boolean;
   /** 'skip' writes the creatives without queuing the next run_round (for an agent that ends the run). */
   nextRound?: 'queue' | 'skip';
+  /**
+   * The learnings to write from, chosen by the caller (A6's Copywriter). Intersected with the
+   * payload's learning_ids, so it can only narrow B's list; other ids are logged and ignored.
+   * Default: the payload's list.
+   */
+  learningIds?: string[];
 }
 
 /**
@@ -467,7 +501,8 @@ export async function runGenerateCreatives(taskId: string, opts: TaskOptions = {
   const inputs = await spacetimeInputs(spacetime, client.rows);
   const run = (await spacetime.sql<{ rounds_planned: number }>(`SELECT * FROM run WHERE run_id = ${sqlString(payload.run_id)}`))[0];
   if (!run) throw new Error(`run ${payload.run_id} not found`);
-  const notesFor = await notesFromLearnings(spacetime, payload, log);
+  const learningIds = narrowLearnings(payload.learning_ids, opts.learningIds, log);
+  const notesFor = await notesFromLearnings(spacetime, { ...payload, learning_ids: learningIds }, log);
 
   // The payload names (arm, segments); unknown ids are logged skips like any unproducible pair.
   const recipes = new Map(inputs.recipes.map((recipe) => [recipe.arm_id, recipe]));
@@ -538,6 +573,7 @@ export async function runGenerateCreatives(taskId: string, opts: TaskOptions = {
 
   const all = [...reused, ...fresh];
   const { ranked, gatedOut } = counts(all);
+  const used = new Set(all.filter((row) => row.status === 'ranked').flatMap((row) => parseIds(row.learning_ids)));
   const result: TaskResult = {
     round_created: roundCreated,
     written: fresh.length,
@@ -548,6 +584,7 @@ export async function runGenerateCreatives(taskId: string, opts: TaskOptions = {
     skips,
     errors,
     next_task: nextTask,
+    learning_ids_applied: learningIds.filter((id) => used.has(id)),
   };
   try {
     await spacetime.call('complete_task', [taskId, JSON.stringify(result)]);

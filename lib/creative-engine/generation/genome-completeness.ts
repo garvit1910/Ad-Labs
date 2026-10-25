@@ -375,7 +375,8 @@ export function enforceGenomeCompleteness(
   context: string
 ): void {
   if (result.defects.length === 0) return;
-  if (process.env.NODE_ENV === 'production') {
+  // Ad Lab: CREATIVE_GENOME_STRICT=off makes `next dev` (the agents' API) fail soft like production.
+  if (process.env.NODE_ENV === 'production' || process.env.CREATIVE_GENOME_STRICT === 'off') {
     for (const defect of result.defects) {
       console.error(
         `[GenomeCompleteness] ${defect.code} ${context} ${defect.dimension}: ${defect.reason} — ${defect.remediation}`

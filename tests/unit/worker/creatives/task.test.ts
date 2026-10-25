@@ -3,7 +3,7 @@ import { afterEach, describe, it } from 'node:test';
 import type { SqlRow } from '@/lib/adlab/spacetime-http';
 import { SpacetimeError } from '@/lib/adlab/spacetime-http';
 import { runCreativeTaskLoop } from '@/worker/creatives/loop';
-import { ClaimLostError, failTask, runGenerateCreatives, type TaskResult } from '@/worker/creatives/run';
+import { ClaimLostError, failTask, narrowLearnings, runGenerateCreatives, type TaskResult } from '@/worker/creatives/run';
 import { a4Tables, briefFixture, CLEAN_COPY, FakeStdb, mockChat, SEG_TRACKER, SEG_UNAWARE, testRows } from './helpers';
 
 const RUN_ID = 'run_test';
@@ -106,6 +106,37 @@ describe('runGenerateCreatives', () => {
     assert.equal(tasks[`tsk_run_${RUN_ID}_r1`].kind, 'run_round');
     assert.deepEqual(JSON.parse(String(tasks[`tsk_run_${RUN_ID}_r1`].payload)), { run_id: RUN_ID, round: 1 });
     assert.equal(result.next_task, `tsk_run_${RUN_ID}_r1`);
+  });
+
+  it('writes from only the learnings the caller chose, never from ones outside the payload, and reports which landed', async () => {
+    const chat = mockChat(() => CLEAN_COPY);
+    restore = chat.restore;
+    const all = board();
+    const full = await runGenerateCreatives(TASK_ID, { spacetime: all, client: client(), log: quiet });
+    // The payload's own list: only the objection reaches a creative (the winner names another arm, and the
+    // directive with a number is dropped).
+    assert.deepEqual(full.learning_ids_applied, [OBJECTION]);
+
+    const chosen = board();
+    const lines: string[] = [];
+    const narrowed = await runGenerateCreatives(TASK_ID, {
+      spacetime: chosen,
+      client: client(),
+      log: (line) => lines.push(line),
+      learningIds: ['lrn_test_the_macro_tracker_winner_pov_v1', 'lrn_not_in_payload'],
+    });
+    assert.deepEqual(narrowed.learning_ids_applied, []);
+    const rows = chosen.tables.creative.filter((creative) => creative.origin === 'generated');
+    assert.equal(rows.length, 3);
+    // Without the objection, no creative carries a learning (the winner names another arm).
+    assert.ok(rows.every((row) => row.learning_ids === '[]'));
+    assert.ok(lines.some((line) => /lrn_not_in_payload is not in the task's payload/.test(line)));
+    const only = board();
+    const kept = await runGenerateCreatives(TASK_ID, { spacetime: only, client: client(), log: quiet, learningIds: [OBJECTION] });
+    assert.deepEqual(kept.learning_ids_applied, [OBJECTION]);
+    assert.deepEqual(narrowLearnings(['a', 'b', 'c'], ['c', 'a', 'z']), ['a', 'c']);
+    assert.deepEqual(narrowLearnings(['a', 'b'], undefined), ['a', 'b']);
+    assert.deepEqual(narrowLearnings(['a', 'b'], []), []);
   });
 
   it('returns a done task’s stored result without generating again', async () => {
