@@ -21,6 +21,7 @@ export type AdImages = {
       arm_id: string;
       round0?: { rank: number; mean_reward: number; impressions: number };
       winner?: { mean_reward: number; impressions: number; cpo_usd: number | null; control_cpo_usd: number | null };
+      created_at?: string;
     }
   >;
 };
@@ -28,11 +29,13 @@ export type AdImages = {
 // sourceRun: the run the images were rendered for (this run, or the run it replays); see imageRunFor.
 type Props = { images: AdImages; runId: string; sourceRun: string | null; creatives: readonly CreativeRow[]; arms: readonly ArmRow[]; segments: readonly SegmentRow[] };
 
-function AdCard({ id, creative, children }: { id: string; creative: CreativeRow | undefined; children: React.ReactNode }) {
+// `version` (the image's created_at) changes the URL when an image is re-rendered under the same id,
+// so the browser doesn't keep showing its cached copy.
+function AdCard({ id, version, creative, children }: { id: string; version?: string; creative: CreativeRow | undefined; children: React.ReactNode }) {
   return (
     <figure className="flex flex-col overflow-hidden rounded-lg border border-border bg-background/60">
       {/* eslint-disable-next-line @next/next/no-img-element -- local, already-sized PNGs */}
-      <img src={`/api/sim/ad-image/${id}`} alt={creative?.visualDescription ?? id} loading="lazy" className="aspect-square w-full object-cover" />
+      <img src={`/api/sim/ad-image/${id}${version ? `?v=${encodeURIComponent(version)}` : ''}`} alt={creative?.visualDescription ?? id} loading="lazy" className="aspect-square w-full object-cover" />
       <figcaption className="flex flex-col gap-1.5 p-3 text-xs">
         <b className="text-sm font-semibold leading-snug text-foreground">{creative?.headline ?? id}</b>
         {creative?.primaryText && <p className="line-clamp-3 text-muted-foreground">{creative.primaryText}</p>}
@@ -76,7 +79,7 @@ export function AdGallery({ images, runId, sourceRun, creatives, arms, segments 
       <TabsContent value="winners">
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {winners.map(([id, e]) => (
-            <AdCard key={id} id={id} creative={creative.get(id)}>
+            <AdCard key={id} id={id} version={e.created_at} creative={creative.get(id)}>
               <div className="flex flex-wrap items-center gap-1.5">
                 <Badge variant="secondary" className="text-[10px]">{segment.get(e.segment_id) ?? e.segment_id}</Badge>
                 <Badge variant="outline" className="text-[10px]">{armLabel(arm.get(e.arm_id))}</Badge>
@@ -92,7 +95,7 @@ export function AdGallery({ images, runId, sourceRun, creatives, arms, segments 
       <TabsContent value="round0">
         <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-5">
           {round0.map(([id, e]) => (
-            <AdCard key={id} id={id} creative={creative.get(id)}>
+            <AdCard key={id} id={id} version={e.created_at} creative={creative.get(id)}>
               <div className="flex flex-wrap items-center gap-1.5">
                 <Badge className="text-[10px]">#{e.round0!.rank}</Badge>
                 <Badge variant="secondary" className="text-[10px]">{segment.get(e.segment_id) ?? e.segment_id}</Badge>
