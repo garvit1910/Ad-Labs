@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { STATE_WORD_LIMIT, worstStateWords } from '@/lib/adlab/contract-check';
 import { checkA4Rows, readA4Tables, type A4Tables } from '@/worker/creatives/check';
 import { a4Tables, FakeStdb, SEG_UNAWARE, testRows } from './helpers';
 
@@ -11,7 +12,9 @@ async function failuresWith(edit: (t: A4Tables) => void): Promise<string[]> {
   return checkA4Rows(t, testRows()).failures;
 }
 
-describe('checkA4Rows', () => {
+const has = (failures: string[], text: string) => assert.ok(failures.some((failure) => failure.includes(text)), `no failure mentions "${text}":\n${failures.join('\n')}`);
+
+describe('checkA4Rows (the shared contract check, from A5)', () => {
   it('passes on usable rows and reports the round-0 count against the logged skips', async () => {
     const result = checkA4Rows(await tables(), testRows());
     assert.deepEqual(result.failures, []);
@@ -23,6 +26,7 @@ describe('checkA4Rows', () => {
       { arm_id: 'arm_taste_indulgence_testimonial', hook: 'testimonial', segment_id: SEG_UNAWARE, missing: 'customer_verbatim' },
     ]);
     assert.equal(result.expected, 10 * 2 - 1);
+    assert.ok(result.worstStateWords > 0 && result.worstStateWords < STATE_WORD_LIMIT);
   });
 
   it('lists every failure, not just the first', async () => {
@@ -32,55 +36,61 @@ describe('checkA4Rows', () => {
       t.arms = t.arms.filter((arm) => arm.strategy !== 'control');
       t.products = [];
     });
-    assert.deepEqual(failures, [
-      'brand: expected exactly one is_client row, found 0',
-      'segment: expected at least 2 rows, found 1',
-      'segment: shares sum to 0.7, not 1',
-      'arm: expected exactly one control arm, found 0',
-      "product: no product row for the client brand yet (B's); generated creatives need a landing_product_id",
-    ]);
+    has(failures, 'exactly one client brand (none)');
+    has(failures, '1 segments (need 2)');
+    has(failures, 'segment shares sum to 0.700000000');
+    has(failures, 'every live persona has a segment (missing: seg_unaware_projection)');
+    has(failures, 'exactly one control arm, arm_control (none)');
+    has(failures, 'B has written a product for the client (0, no client brand yet)');
   });
 
   it('checks segments against the live persona facts', async () => {
     const failures = await failuresWith((t) => {
       t.segments[1] = { ...t.segments[1], segment_id: 'seg_ghost' };
     });
-    assert.deepEqual(failures, ['segment seg_ghost: no live persona fact (persona_ghost)']);
+    has(failures, 'every segment maps to a live persona fact (not: seg_ghost)');
   });
 
-  it('checks the recipe count, vocabulary and unique (angle, hook) pairs', async () => {
+  it('checks the recipe count, vocabulary, backing and unique (angle, hook) pairs', async () => {
     const failures = await failuresWith((t) => {
       t.arms = t.arms.filter((arm) => arm.arm_id !== 'arm_price_value_bold_claim');
       t.arms.push(
-        { arm_id: 'arm_health_bold_claim', angle: 'health', hook: 'bold_claim', strategy: 'steal', rationale: 'x', evidence: '[]' },
-        { arm_id: 'arm_craving_jingle', angle: 'craving', hook: 'jingle', strategy: 'gap', rationale: 'x', evidence: 'oops' },
-        { arm_id: 'arm_convenience_problem_callout_2', angle: 'convenience', hook: 'problem_callout', strategy: 'steal', rationale: 'x', evidence: '[]' },
+        { arm_id: 'arm_health_bold_claim', angle: 'health', hook: 'bold_claim', strategy: 'steal', evidence: '[]' },
+        { arm_id: 'arm_craving_jingle', angle: 'craving', hook: 'jingle', strategy: 'gap', evidence: 'oops' },
+        { arm_id: 'arm_price_value_offer_led', angle: 'price_value', hook: 'offer_led', strategy: 'steal', evidence: '[]' },
+        { arm_id: 'arm_convenience_problem_callout_2', angle: 'convenience', hook: 'problem_callout', strategy: 'steal', evidence: '[]' },
       );
     });
-    assert.deepEqual(failures, [
-      'arm arm_craving_jingle: evidence is not a JSON array of strings',
-      'arm arm_convenience_problem_callout_2: same (angle, hook) as arm_convenience_problem_callout',
-      'arm arm_craving_jingle: hook "jingle" is not a HOOK_ARCHETYPE',
-      'arm arm_health_bold_claim: angle "health" is not a food-industry token',
-    ]);
+    has(failures, '13 recipes (need 10-12)');
+    has(failures, 'every recipe angle is a food token (not: arm_health_bold_claim)');
+    has(failures, "every recipe hook is one the copywriter can produce (not: arm_craving_jingle)");
+    // The fixture brand has no offer fact, so offer_led can't be backed.
+    has(failures, "every recipe hook's fact requirement is met by the brand facts (not: arm_price_value_offer_led)");
+    has(failures, 'every (angle, hook) pair is unique');
+    has(failures, "every arm's evidence is a JSON list of ids (not: arm_craving_jingle)");
   });
 
-  it('waits for A4 to write the live ads, and for B to add a client product', async () => {
+  it('waits for B to add a client product, and rejects a stray product', async () => {
     const failures = await failuresWith((t) => {
-      t.brandLive = [];
-      t.products = [{ product_id: 'prd_rival', brand_id: 'br_rival_crunch', name: 'Rival' }];
+      t.products = [{ product_id: 'prd_three_wishes', brand_id: 'br_three_wishes', name: 'Three Wishes' }];
     });
-    assert.deepEqual(failures, [
-      'creative: the control arm arm_control has no brand_live creative yet (A4 writes them last)',
-      "product: no product row for br_halden_oat_co yet (B's); generated creatives need a landing_product_id",
-    ]);
+    has(failures, 'every client creative lands on a client product in B\'s product table (not yet: prd_halden_box');
+    has(failures, "every product's brand exists (B's loader rejects: prd_three_wishes)");
   });
 
-  it('lands on the lowest product_id when B has several, with a warning', async () => {
+  it('fails when the longest possible Jev state would reach B’s 450-word limit', async () => {
     const t = await tables();
-    t.products.push({ product_id: 'prd_halden_bars', brand_id: 'br_halden_oat_co', name: 'Bars' });
+    t.creatives[1] = { ...t.creatives[1], primary_text: Array.from({ length: 260 }, () => 'crunchy').join(' ') };
     const result = checkA4Rows(t, testRows());
-    assert.equal(result.landingProductId, 'prd_halden_bars');
-    assert.deepEqual(result.warnings, ['product: 2 rows for br_halden_oat_co; landing on prd_halden_bars']);
+    assert.ok(worstStateWords(t) >= STATE_WORD_LIMIT);
+    has(result.failures, `(B throws at ${STATE_WORD_LIMIT})`);
+  });
+
+  it('lands generated ads where the live ads land when B has several products', async () => {
+    const t = await tables();
+    t.products.unshift({ product_id: 'prd_aaa_bars', brand_id: 'br_halden_oat_co', name: 'Bars' });
+    const result = checkA4Rows(t, testRows());
+    assert.equal(result.landingProductId, 'prd_halden_box');
+    assert.deepEqual(result.warnings.filter((w) => w.startsWith('product:')), ['product: 2 rows for br_halden_oat_co; landing on prd_halden_box']);
   });
 });

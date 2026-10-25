@@ -6,7 +6,7 @@ import { createLlm } from './a4/llm';
 import type { SegmentRow } from './a4/segments';
 import { factHints } from './a4/vocabulary';
 import { createPhase, errorMessage, table } from './phase';
-import { type Spacetime, connectSpacetime } from './spacetime-http';
+import { type Spacetime, connectSpacetime } from '@/lib/adlab/spacetime-http';
 
 /*
  * Ad Lab A4: A's contract rows in SpacetimeDB (docs/PLAN.md "A4" and "Hand-off to A5").
@@ -60,7 +60,7 @@ async function check(): Promise<void> {
   const { facts } = await loadFacts(db);
   const world = await readWorld(spacetime);
   const result = checkWorld(world, personaInfo(facts), factHints(facts).hints);
-  printCheck(`A4 check: what ${spacetime.database} holds`, result);
+  printCheck(`A4 check: what ${spacetime.label} holds`, result);
   if (result.failed) process.exitCode = 1;
 }
 
@@ -158,7 +158,7 @@ async function build(): Promise<void> {
   }
 
   const written = checkWorld(await readWorld(spacetime), rows.personas, rows.hints.hints);
-  printCheck(`A4 check: what ${spacetime.database} holds`, written);
+  printCheck(`A4 check: what ${spacetime.label} holds`, written);
   if (written.failed) process.exitCode = 1;
 }
 

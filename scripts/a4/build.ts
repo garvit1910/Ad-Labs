@@ -3,7 +3,7 @@ import { ADLAB_ORG_ID } from '@/lib/adlab/org';
 import type { InsightFact } from '@/lib/brand-object/insights';
 import { loadLiveBrandFacts } from '@/lib/brand-object/live-facts';
 import { loadBrandProfile, loadMentionText } from '@/lib/adlab/brand-profile';
-import type { Spacetime } from '../spacetime-http';
+import type { Spacetime } from '@/lib/adlab/spacetime-http';
 import { type ArmReport, buildArms } from './arms';
 import type { BrandRow, ConceptRow, PersonaInfo, ProductRow, World } from './check';
 import { type LiveCreatives, buildLiveCreatives, loadAds } from './live-ads';

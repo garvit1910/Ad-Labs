@@ -1,24 +1,34 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import { generatedCreativeId } from '@/lib/adlab/contract';
+import { adWords } from '@/lib/adlab/contract-check';
 import { ADLAB_ORG_ID } from '@/lib/adlab/org';
+import { connectSpacetime, SpacetimeError, sqlString, type Spacetime } from '@/lib/adlab/spacetime-http';
 import { serviceSupabase } from '@/lib/adlab/supabase';
 import type { BrandContextRow } from '@/lib/creative-engine/brand-context/types';
 import { generateBrief } from './brief';
+import { checkA4Rows, readA4Tables, type A4Tables } from './check';
 import { keyMessageFor, loadClientRows, personaAudience, valuePropositions, type ClientRows } from './facts';
 import { spacetimeInputs, type CreativeInputs } from './inputs';
 import { derivePackHints, segmentRows } from './pack-hints';
 import { planPairs } from './pairs';
-import { connectStdb, sqlString, StdbError, type Stdb } from './spacetime';
 import type { CreativeRow, GeneratedCreative, Pair, Recipe, Skip } from './types';
 
 /** Who the worker loop claims tasks as. Stable across restarts, so a restarted worker resumes its own claims. */
 export const CREATIVE_WORKER = 'creative_worker';
 
 const BRIEF_CONCURRENCY = 6;
-const WRITE_CHUNK = 20;
-const CREATIVE_ID = /^cr_[a-z0-9_]+$/;
+/** A brief that throws (an LLM or compile error) is tried this many times before it's reported. */
+const BRIEF_ATTEMPTS = 3;
+/**
+ * The longest generated ad, in the words B's renderAd prints, that the sim can show
+ * next to two competitor ads and still stay under its 450-word state limit.
+ */
+export const MAX_AD_WORDS = 85;
+/** B prints visual_description as the ad's "[Image: …]"; the sim needs a glance, not the art brief. */
+const VISUAL_MAX_WORDS = 15;
 
 export interface RunDeps {
-  stdb?: Stdb;
+  spacetime?: Spacetime;
   db?: SupabaseClient;
   /** Pre-loaded compiler rows; otherwise the live facts are read through `db`. */
   client?: ClientRows;
@@ -32,7 +42,7 @@ export interface WrittenCreative extends GeneratedCreative {
 
 export interface GenerateResult {
   creatives: WrittenCreative[];
-  /** Briefs that threw (one line each); the rest still write. */
+  /** Briefs that still threw after every attempt (one line each); the rest still write. */
   errors: string[];
 }
 
@@ -52,27 +62,40 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
   return results;
 }
 
-/** `cr_g<round_created>_<arm minus arm_>_<segment minus seg_>_<variant>`: a rerun updates rows instead of adding them. */
-export function creativeId(roundCreated: number, armId: string, segmentId: string, variant: number): string {
-  const id = `cr_g${roundCreated}_${armId.slice('arm_'.length)}_${segmentId.slice('seg_'.length)}_${variant}`;
-  if (!CREATIVE_ID.test(id)) throw new Error(`creative id "${id}" is not lowercase letters, digits and _`);
-  return id;
-}
+const flat = (text: string) => text.replace(/\s+/g, ' ').trim();
 
 /**
- * Generates one creative per (pair, variant). Pairs are grouped by (segment,
- * angle): each group is one brief, and each recipe's hook one copy variant.
+ * The image line the sim shows: the first sentence of the visual concept, cut to
+ * VISUAL_MAX_WORDS at a clause boundary when one is long enough to keep.
  */
-export async function generateCreatives(params: {
+export function simVisual(text: string): string {
+  const sentence = flat(text).split(/(?<=[.!?])\s/)[0] ?? '';
+  const words = sentence.split(' ').filter(Boolean);
+  if (words.length <= VISUAL_MAX_WORDS) return sentence;
+  const head = words.slice(0, VISUAL_MAX_WORDS).join(' ');
+  const clauseEnd = Math.max(head.lastIndexOf(','), head.lastIndexOf(';'), head.lastIndexOf(' —'));
+  const clause = clauseEnd > 0 ? head.slice(0, clauseEnd) : '';
+  const cut = clause.split(' ').length >= 6 ? clause : head;
+  return `${cut.replace(/[\s,;:—-]+$/u, '')}.`;
+}
+
+export const pairKey = (pair: Pick<Pair, 'segmentId'> & { recipe: Pick<Recipe, 'arm_id'> }) => `${pair.recipe.arm_id}|${pair.segmentId}`;
+
+interface GenerateParams {
   inputs: CreativeInputs;
   rows: BrandContextRow[];
   brandProfileId: string;
   pairs: Pair[];
   roundCreated: number;
+  /** The run whose round this is; generated ids after round 0 carry it. */
+  runId: string;
   variants: number;
   notesFor?: NotesFor;
-}): Promise<GenerateResult> {
-  const { inputs, rows, roundCreated, variants, notesFor } = params;
+}
+
+/** One pass: pairs grouped by (segment, angle), each group one brief, each recipe's hook one copy variant. */
+async function generatePass(params: GenerateParams): Promise<GenerateResult> {
+  const { inputs, rows, roundCreated, runId, variants, notesFor } = params;
   const groups = new Map<string, Pair[]>();
   for (const pair of params.pairs) {
     const key = `${pair.segmentId}|${pair.recipe.angle}`;
@@ -88,42 +111,41 @@ export async function generateCreatives(params: {
     const keyFact = keyMessageFor(own, angle, personaRef);
     const recipeByHook = new Map<string, Recipe>(pairs.map((pair) => [pair.recipe.hook, pair.recipe]));
     const notes = (hook: string) => notesFor?.(recipeByHook.get(hook)!.arm_id, segmentId) ?? { notes: [], learningIds: [] };
-    try {
-      const run = await generateBrief({
-        briefId: `brf_${segmentId.slice('seg_'.length)}_${angle}_g${roundCreated}`,
-        rows,
-        brandProfileId: params.brandProfileId,
-        personaRef,
-        angle,
-        hooks: pairs.map((pair) => pair.recipe.hook),
-        packHints: derivePackHints(own),
-        context: {
-          organizationId: ADLAB_ORG_ID,
-          brandSummary: { brandName: inputs.brand.name, valuePropositions: valuePropositions(own) },
-          audience: personaAudience(persona),
-          ...(keyFact ? { keyMessage: String(keyFact.content.statement) } : {}),
-          // The compliance facts reach the copywriter as the pack's Rules section.
-          compliance: { prohibitedClaims: [], requiredDisclaimers: [] },
-          source: 'agent',
-        },
-        variants,
-        angleTheme: angle,
-        ...(keyFact ? { keyMessageRef: keyFact.rowId } : {}),
-        notesFor: (hook) => notes(hook).notes,
-      });
-      return run.creatives.map((creative): WrittenCreative => {
-        const armId = recipeByHook.get(creative.arm.hookArchetype)!.arm_id;
-        return {
-          ...creative,
-          row: {
-            creative_id: creativeId(roundCreated, armId, segmentId, creative.variant),
+    for (let attempt = 1; ; attempt++) {
+      try {
+        const run = await generateBrief({
+          briefId: `brf_${segmentId.slice('seg_'.length)}_${angle}_g${roundCreated}`,
+          rows,
+          brandProfileId: params.brandProfileId,
+          personaRef,
+          angle,
+          hooks: pairs.map((pair) => pair.recipe.hook),
+          packHints: derivePackHints(own),
+          context: {
+            organizationId: ADLAB_ORG_ID,
+            brandSummary: { brandName: inputs.brand.name, valuePropositions: valuePropositions(own) },
+            audience: personaAudience(persona),
+            ...(keyFact ? { keyMessage: String(keyFact.content.statement) } : {}),
+            // The compliance facts reach the copywriter as the pack's Rules section.
+            compliance: { prohibitedClaims: [], requiredDisclaimers: [] },
+            source: 'agent',
+          },
+          variants,
+          angleTheme: angle,
+          ...(keyFact ? { keyMessageRef: keyFact.rowId } : {}),
+          notesFor: (hook) => notes(hook).notes,
+        });
+        return run.creatives.map((creative): WrittenCreative => {
+          const armId = recipeByHook.get(creative.arm.hookArchetype)!.arm_id;
+          const row: CreativeRow = {
+            creative_id: generatedCreativeId(roundCreated, runId, armId, segmentId, creative.variant),
             arm_id: armId,
             brand_id: inputs.brand.brand_id,
             origin: 'generated',
-            headline: creative.headline,
-            primary_text: creative.primaryText,
+            headline: flat(creative.headline),
+            primary_text: flat(creative.primaryText),
             cta: creative.cta,
-            visual_description: creative.visualDescription,
+            visual_description: simVisual(creative.visualDescription),
             image_url: '',
             landing_product_id: inputs.landingProductId,
             days_running: 0,
@@ -132,69 +154,182 @@ export async function generateCreatives(params: {
             segment_id: segmentId,
             pack_fingerprint: creative.packFingerprint,
             status: creative.status,
-          },
-        };
-      });
-    } catch (error) {
-      errors.push(`${key}: ${error instanceof Error ? error.message : String(error)}`);
-      return [];
+          };
+          // B's renderer throws on a state of 450 words or more, which fails the whole round.
+          const length = adWords(row, inputs.brand.name);
+          if (row.status === 'ranked' && length > MAX_AD_WORDS) {
+            return { ...creative, status: 'gated_out', statusReason: `${length} words in the sim's feed (limit ${MAX_AD_WORDS})`, row: { ...row, status: 'gated_out' } };
+          }
+          return { ...creative, row };
+        });
+      } catch (error) {
+        if (attempt < BRIEF_ATTEMPTS) continue;
+        errors.push(`${key}: ${error instanceof Error ? error.message : String(error)}`);
+        return [];
+      }
     }
   });
   return { creatives: perGroup.flat(), errors };
 }
 
-/** One upsert_creatives call per chunk; each call is one transaction on the database side. */
-export async function writeCreatives(stdb: Stdb, rows: CreativeRow[]): Promise<void> {
-  for (let i = 0; i < rows.length; i += WRITE_CHUNK) {
-    await stdb.call('upsert_creatives', [rows.slice(i, i + WRITE_CHUNK)]);
+/**
+ * Generates one creative per (pair, variant). A pair whose creatives all gated out
+ * gets one more try, so a recipe isn't dropped from the sim by one bad draw; the
+ * retry's creatives are kept only when they rank.
+ */
+export async function generateCreatives(params: GenerateParams): Promise<GenerateResult> {
+  const first = await generatePass(params);
+  const byPair = new Map<string, WrittenCreative[]>();
+  for (const creative of first.creatives) {
+    const key = pairKey({ recipe: { arm_id: creative.row.arm_id }, segmentId: creative.row.segment_id });
+    byPair.set(key, [...(byPair.get(key) ?? []), creative]);
   }
+  const gated = params.pairs.filter((pair) => (byPair.get(pairKey(pair)) ?? []).every((c) => c.status === 'gated_out') && byPair.has(pairKey(pair)));
+  if (gated.length === 0) return first;
+  const second = await generatePass({ ...params, pairs: gated });
+  const retried = new Map<string, WrittenCreative[]>();
+  for (const creative of second.creatives) {
+    const key = pairKey({ recipe: { arm_id: creative.row.arm_id }, segmentId: creative.row.segment_id });
+    retried.set(key, [...(retried.get(key) ?? []), creative]);
+  }
+  for (const [key, creatives] of retried) if (creatives.some((c) => c.status === 'ranked')) byPair.set(key, creatives);
+  return { creatives: [...byPair.values()].flat(), errors: [...first.errors, ...second.errors] };
+}
+
+/** All rows in one upsert_creatives call: one transaction, so a batch lands whole or not at all. */
+export async function writeCreatives(spacetime: Spacetime, rows: CreativeRow[]): Promise<void> {
+  if (rows.length > 0) await spacetime.call('upsert_creatives', [rows]);
 }
 
 export const skipLine = (skip: Skip) => `skip ${skip.arm_id} hook=${skip.hook} ${skip.segment_id}: missing ${skip.missing}`;
 
+const counts = (creatives: Array<{ status: string }>) => ({
+  ranked: creatives.filter((creative) => creative.status === 'ranked').length,
+  gatedOut: creatives.filter((creative) => creative.status === 'gated_out').length,
+});
+
+// ── Round 0 ─────────────────────────────────────────────────────────────────
+
+export interface RoundZeroStatus {
+  /** True when B can queue round 0: A4's rows pass, every pair has its creative and every recipe has a ranked one. */
+  complete: boolean;
+  /** Why not, when not. */
+  problems: string[];
+  expected: number;
+  ranked: string[];
+  gatedOut: string[];
+  missing: string[];
+  /** Recipes with no ranked round-0 creative: B's sim would drop them. */
+  recipesWithoutRanked: string[];
+}
+
+/** Round 0's ids for the planned pairs (variant 1, shared by every run). */
+const roundZeroId = (pair: Pair) => generatedCreativeId(0, '', pair.recipe.arm_id, pair.segmentId, 1);
+
+export function roundZeroStatusOf(tables: A4Tables, rows: BrandContextRow[]): RoundZeroStatus {
+  const check = checkA4Rows(tables, rows);
+  const { pairs } = planPairs(check.recipes, check.segments.map((segment) => segment.segment_id), rows);
+  const status = new Map(tables.creatives.filter((c) => c.origin === 'generated').map((c) => [c.creative_id, c.status]));
+  const ranked: string[] = [];
+  const gatedOut: string[] = [];
+  const missing: string[] = [];
+  const rankedArms = new Set<string>();
+  for (const pair of pairs) {
+    const id = roundZeroId(pair);
+    const state = status.get(id);
+    if (state === 'ranked') {
+      ranked.push(id);
+      rankedArms.add(pair.recipe.arm_id);
+    } else if (state === 'gated_out') gatedOut.push(id);
+    else missing.push(id);
+  }
+  const recipesWithoutRanked = check.recipes.map((recipe) => recipe.arm_id).filter((armId) => !rankedArms.has(armId));
+  const problems = [
+    ...check.failures.map((failure) => `A4's rows: ${failure}`),
+    ...(missing.length ? [`${missing.length} round-0 creative(s) not written: ${missing.slice(0, 5).join(', ')}${missing.length > 5 ? ', …' : ''}`] : []),
+    ...(recipesWithoutRanked.length ? [`recipes with no ranked round-0 creative: ${recipesWithoutRanked.join(', ')}`] : []),
+  ];
+  return { complete: problems.length === 0, problems, expected: pairs.length, ranked, gatedOut, missing, recipesWithoutRanked };
+}
+
+export async function roundZeroStatus(deps: RunDeps = {}): Promise<RoundZeroStatus> {
+  const spacetime = deps.spacetime ?? (await connectSpacetime());
+  const client = deps.client ?? (await loadClientRows(deps.db ?? serviceSupabase()));
+  return roundZeroStatusOf(await readA4Tables(spacetime), client.rows);
+}
+
+export interface RoundZeroOptions extends RunDeps {
+  /** Regenerate every pair, not only the missing and gated-out ones. */
+  regenerate?: boolean;
+  /** Write even though B has started a run (its round 0 then reads different copy than it simulated). */
+  force?: boolean;
+}
+
 export interface RoundZeroReport {
   expected: number;
+  /** Ranked round-0 creatives already in SpacetimeDB, left as they are. */
+  kept: number;
   written: number;
   ranked: number;
   gatedOut: number;
   skips: Skip[];
   errors: string[];
   creatives: WrittenCreative[];
+  status: RoundZeroStatus;
 }
-
-const counts = (creatives: WrittenCreative[]) => ({
-  written: creatives.length,
-  ranked: creatives.filter((creative) => creative.status === 'ranked').length,
-  gatedOut: creatives.filter((creative) => creative.status === 'gated_out').length,
-});
 
 /**
  * Round 0: one creative per (recipe, segment), round_created 0, on A4's rows.
- * Throws NotReadyError while the check fails. Doesn't queue round 0's
- * run_round or create the run; A6's Strategist or B does.
+ * Writes only what's missing or gated out (`regenerate` for all), in one
+ * transaction, and refuses once B has started a run unless forced: B has then
+ * simulated the copy. Throws NotReadyError while the check fails. Doesn't queue
+ * round 0's run_round or create the run; A6's Strategist or B does, once
+ * roundZeroStatus is complete.
  */
-export async function runRound0(deps: RunDeps = {}): Promise<RoundZeroReport> {
-  const log = deps.log ?? console.log;
-  const stdb = deps.stdb ?? (await connectStdb());
-  const client = deps.client ?? (await loadClientRows(deps.db ?? serviceSupabase()));
-  const inputs = await spacetimeInputs(stdb, client.rows);
+export async function runRound0(opts: RoundZeroOptions = {}): Promise<RoundZeroReport> {
+  const log = opts.log ?? console.log;
+  const spacetime = opts.spacetime ?? (await connectSpacetime());
+  const client = opts.client ?? (await loadClientRows(opts.db ?? serviceSupabase()));
+  const inputs = await spacetimeInputs(spacetime, client.rows);
   for (const warning of inputs.warnings) log(`warning: ${warning}`);
+  if (!opts.force) {
+    const [runs, runTasks] = await Promise.all([
+      spacetime.sql<{ run_id: string }>('SELECT * FROM run'),
+      spacetime.sql<{ task_id: string }>("SELECT * FROM task WHERE kind = 'run_round'"),
+    ]);
+    if (runs.length > 0 || runTasks.length > 0) {
+      const started = [...runs.map((run) => run.run_id), ...runTasks.map((task) => task.task_id)].join(', ');
+      throw new Error(`B has started (${started}): round 0 is what it simulated, so it isn't rewritten. Pass --force to rewrite it anyway`);
+    }
+  }
+
   const segmentIds = inputs.segments.map((segment) => segment.segment_id);
   const { pairs, skips } = planPairs(inputs.recipes, segmentIds, client.rows);
   for (const skip of skips) log(skipLine(skip));
-  const expected = inputs.recipes.length * segmentIds.length - skips.length;
-  log(`round 0: ${pairs.length} creatives to write (${inputs.recipes.length} recipes × ${segmentIds.length} segments − ${skips.length} skips)`);
+  const existing = new Map(
+    (await spacetime.sql<CreativeRow>("SELECT * FROM creative WHERE origin = 'generated'"))
+      .filter((row) => row.round_created === 0)
+      .map((row) => [row.creative_id, row.status]),
+  );
+  const todo = opts.regenerate ? pairs : pairs.filter((pair) => existing.get(roundZeroId(pair)) !== 'ranked');
+  const kept = pairs.length - todo.length;
+  log(
+    `round 0: ${pairs.length} creatives planned (${inputs.recipes.length} recipes × ${segmentIds.length} segments − ${skips.length} skips); ` +
+      `${kept} already ranked, writing ${todo.length}`,
+  );
 
   const { creatives, errors } = await generateCreatives({
     inputs,
     rows: client.rows,
     brandProfileId: client.brandProfileId,
-    pairs,
+    pairs: todo,
     roundCreated: 0,
+    runId: '',
     variants: 1,
   });
-  await writeCreatives(stdb, creatives.map((creative) => creative.row));
-  return { expected, ...counts(creatives), skips, errors, creatives };
+  await writeCreatives(spacetime, creatives.map((creative) => creative.row));
+  const status = roundZeroStatusOf(await readA4Tables(spacetime), client.rows);
+  return { expected: pairs.length, kept, written: creatives.length, ...counts(creatives), skips, errors, creatives, status };
 }
 
 // ── The task board ──────────────────────────────────────────────────────────
@@ -208,6 +343,7 @@ interface TaskRow {
   claimed_by: string | null;
   result: string | null;
   created_at: string;
+  updated_at: string;
 }
 
 /** The generate_creatives payload B's bandit queues (docs/PLAN.md "The contract"). */
@@ -219,7 +355,7 @@ export interface GenerationPayload {
   learning_ids: string[];
 }
 
-/** Another worker or the Copywriter claimed the task first. */
+/** Another worker or the Copywriter holds the task. */
 export class ClaimLostError extends Error {
   constructor(taskId: string, reason: string) {
     super(`task ${taskId} was claimed elsewhere: ${reason}`);
@@ -230,6 +366,8 @@ export class ClaimLostError extends Error {
 export interface TaskResult {
   round_created: number;
   written: number;
+  /** Creatives a resumed task found already written and kept. */
+  reused: number;
   ranked: number;
   gated_out: number;
   creative_ids: string[];
@@ -256,8 +394,8 @@ export function parseGenerationPayload(raw: string): GenerationPayload {
   return payload as GenerationPayload;
 }
 
-export async function readTask(stdb: Stdb, taskId: string): Promise<TaskRow | undefined> {
-  return (await stdb.sql(`SELECT * FROM task WHERE task_id = ${sqlString(taskId)}`))[0] as unknown as TaskRow | undefined;
+export async function readTask(spacetime: Spacetime, taskId: string): Promise<TaskRow | undefined> {
+  return (await spacetime.sql<TaskRow>(`SELECT * FROM task WHERE task_id = ${sqlString(taskId)}`))[0];
 }
 
 interface LearningRow {
@@ -272,9 +410,9 @@ interface LearningRow {
  * creatives, and to one arm's when it names one. Only directives reach the
  * copywriter, and one that still holds a digit is dropped and logged.
  */
-async function notesFromLearnings(stdb: Stdb, payload: GenerationPayload, log: (line: string) => void): Promise<NotesFor> {
+async function notesFromLearnings(spacetime: Spacetime, payload: GenerationPayload, log: (line: string) => void): Promise<NotesFor> {
   const wanted = new Set(payload.learning_ids);
-  const rows = (await stdb.sql(`SELECT * FROM learning WHERE run_id = ${sqlString(payload.run_id)}`)) as unknown as LearningRow[];
+  const rows = await spacetime.sql<LearningRow>(`SELECT * FROM learning WHERE run_id = ${sqlString(payload.run_id)}`);
   const learnings = rows.filter((row) => wanted.has(row.learning_id));
   for (const id of wanted) if (!learnings.some((row) => row.learning_id === id)) log(`warning: learning ${id} not found`);
   const usable = learnings.filter((row) => {
@@ -290,49 +428,53 @@ async function notesFromLearnings(stdb: Stdb, payload: GenerationPayload, log: (
   };
 }
 
+export interface TaskOptions extends RunDeps {
+  claimedBy?: string;
+  /** Run a task someone else claimed and abandoned (the loop's stale-claim rule). */
+  takeover?: boolean;
+  /** 'skip' writes the creatives without queuing the next run_round (for an agent that ends the run). */
+  nextRound?: 'queue' | 'skip';
+}
+
 /**
  * Turns one generate_creatives task into creative rows, queues the next
  * run_round and completes the task. Called by the worker loop and by A6's
  * Copywriter (app/api/agent/creatives), each under its own `claimedBy`.
  *
- * A queued task is claimed here; one this caller already holds is resumed
- * (its creative ids are deterministic, so a rerun overwrites); a done task
- * returns its stored result. Errors propagate with the task still claimed:
- * the caller retries or calls `failTask`.
+ * A queued task is claimed here; one this caller already holds is resumed; a done
+ * task returns its stored result. Creatives already written for the task's ids are
+ * kept, never regenerated, so copy B may have read stays as it was. Errors
+ * propagate with the task still claimed: the caller retries or calls `failTask`.
  */
-export async function runGenerateCreatives(
-  taskId: string,
-  opts: RunDeps & { claimedBy?: string } = {},
-): Promise<TaskResult> {
+export async function runGenerateCreatives(taskId: string, opts: TaskOptions = {}): Promise<TaskResult> {
   const claimedBy = opts.claimedBy ?? CREATIVE_WORKER;
   const log = opts.log ?? ((line: string) => console.log(`[creatives ${taskId}] ${line}`));
-  const stdb = opts.stdb ?? (await connectStdb());
+  const spacetime = opts.spacetime ?? (await connectSpacetime());
 
-  const task = await readTask(stdb, taskId);
+  const task = await readTask(spacetime, taskId);
   if (!task) throw new Error(`task ${taskId} not found`);
   if (task.kind !== 'generate_creatives') throw new Error(`task ${taskId} is ${task.kind}, not generate_creatives`);
   if (task.status === 'done') return JSON.parse(task.result ?? '{}') as TaskResult;
   if (task.status === 'failed') throw new Error(`task ${taskId} already failed: ${task.result ?? ''}`);
   if (task.status === 'queued') {
     try {
-      await stdb.call('claim_task', [taskId, claimedBy]);
+      await spacetime.call('claim_task', [taskId, claimedBy]);
     } catch (error) {
-      if (error instanceof StdbError) throw new ClaimLostError(taskId, error.message);
+      if (error instanceof SpacetimeError) throw new ClaimLostError(taskId, error.message);
       throw error;
     }
   } else if (task.claimed_by !== claimedBy) {
-    throw new ClaimLostError(taskId, `held by ${task.claimed_by}`);
+    if (!opts.takeover) throw new ClaimLostError(taskId, `held by ${task.claimed_by}`);
+    log(`taking over from ${task.claimed_by} (claimed, untouched since ${task.updated_at})`);
   }
 
   const payload = parseGenerationPayload(task.payload);
   const roundCreated = payload.round + 1;
   const client = opts.client ?? (await loadClientRows(opts.db ?? serviceSupabase()));
-  const inputs = await spacetimeInputs(stdb, client.rows);
-  const run = (await stdb.sql(`SELECT * FROM run WHERE run_id = ${sqlString(payload.run_id)}`))[0] as
-    | { rounds_planned: number }
-    | undefined;
+  const inputs = await spacetimeInputs(spacetime, client.rows);
+  const run = (await spacetime.sql<{ rounds_planned: number }>(`SELECT * FROM run WHERE run_id = ${sqlString(payload.run_id)}`))[0];
   if (!run) throw new Error(`run ${payload.run_id} not found`);
-  const notesFor = await notesFromLearnings(stdb, payload, log);
+  const notesFor = await notesFromLearnings(spacetime, payload, log);
 
   // The payload names (arm, segments); unknown ids are logged skips like any unproducible pair.
   const recipes = new Map(inputs.recipes.map((recipe) => [recipe.arm_id, recipe]));
@@ -358,46 +500,75 @@ export async function runGenerateCreatives(
   }
   for (const skip of skips) log(skipLine(skip));
 
+  // A resumed task keeps whatever it already wrote.
+  const ids = (pair: Pair) =>
+    Array.from({ length: payload.n_per_arm }, (_, i) => generatedCreativeId(roundCreated, payload.run_id, pair.recipe.arm_id, pair.segmentId, i + 1));
+  const written = new Map(
+    (await spacetime.sql<CreativeRow>("SELECT * FROM creative WHERE origin = 'generated'"))
+      .filter((row) => row.round_created === roundCreated)
+      .map((row) => [row.creative_id, row]),
+  );
+  const reused = pairs.flatMap(ids).flatMap((id) => (written.has(id) ? [written.get(id)!] : []));
+  const todo = pairs.filter((pair) => ids(pair).some((id) => !written.has(id)));
+
   const { creatives, errors } = await generateCreatives({
     inputs,
     rows: client.rows,
     brandProfileId: client.brandProfileId,
-    pairs,
+    pairs: todo,
     roundCreated,
+    runId: payload.run_id,
     variants: payload.n_per_arm,
     notesFor,
   });
   for (const error of errors) log(`error: ${error}`);
-  await writeCreatives(stdb, creatives.map((creative) => creative.row));
+  const fresh = creatives.map((creative) => creative.row).filter((row) => !written.has(row.creative_id));
+  await writeCreatives(spacetime, fresh);
 
   let nextTask: string | null = null;
-  if (roundCreated <= run.rounds_planned) {
+  if ((opts.nextRound ?? 'queue') === 'queue' && roundCreated <= run.rounds_planned) {
     nextTask = `tsk_run_${payload.run_id}_r${roundCreated}`;
     try {
-      await stdb.call('enqueue_task', [nextTask, 'run_round', JSON.stringify({ run_id: payload.run_id, round: roundCreated })]);
+      await spacetime.call('enqueue_task', [nextTask, 'run_round', JSON.stringify({ run_id: payload.run_id, round: roundCreated })]);
     } catch (error) {
       // enqueue_task isn't idempotent; a resumed task finds its run_round already queued.
-      if (!(error instanceof StdbError && /already exists/.test(error.message))) throw error;
+      if (!(error instanceof SpacetimeError && /already exists/.test(error.message))) throw error;
     }
   }
 
-  const { written, ranked, gatedOut } = counts(creatives);
+  const all = [...reused, ...fresh];
+  const { ranked, gatedOut } = counts(all);
   const result: TaskResult = {
     round_created: roundCreated,
-    written,
+    written: fresh.length,
+    reused: reused.length,
     ranked,
     gated_out: gatedOut,
-    creative_ids: creatives.map((creative) => creative.row.creative_id),
+    creative_ids: all.map((row) => row.creative_id),
     skips,
     errors,
     next_task: nextTask,
   };
-  await stdb.call('complete_task', [taskId, JSON.stringify(result)]);
+  try {
+    await spacetime.call('complete_task', [taskId, JSON.stringify(result)]);
+  } catch (error) {
+    // Two callers raced (a takeover, or the Copywriter and the loop): the first to finish wins.
+    const now = await readTask(spacetime, taskId);
+    if (error instanceof SpacetimeError && now?.status === 'done') return JSON.parse(now.result ?? '{}') as TaskResult;
+    throw error;
+  }
   log(`done: ${ranked} ranked, ${gatedOut} gated out, ${skips.length} skipped${nextTask ? `, queued ${nextTask}` : ''}`);
   return result;
 }
 
-export async function failTask(stdb: Stdb, taskId: string, error: unknown): Promise<void> {
+/**
+ * Fails a task, but only while `holder` still has it claimed. B's fail_task has no
+ * status check, so a late call would otherwise flip a task someone finished to failed.
+ */
+export async function failTask(spacetime: Spacetime, taskId: string, error: unknown, holder: string = CREATIVE_WORKER): Promise<boolean> {
+  const task = await readTask(spacetime, taskId);
+  if (task?.status !== 'claimed' || task.claimed_by !== holder) return false;
   const message = error instanceof Error ? error.message : String(error);
-  await stdb.call('fail_task', [taskId, message.slice(0, 2000)]);
+  await spacetime.call('fail_task', [taskId, message.slice(0, 2000)]);
+  return true;
 }

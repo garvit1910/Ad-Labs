@@ -2,7 +2,7 @@ import type { BrandContextRow } from '@/lib/creative-engine/brand-context/types'
 import type { StrategyPackHints } from '@/lib/creative-engine/generation/strategy';
 import { personaRefFor } from './facts';
 import { derivePackHints, missingRequirement, segmentRows } from './pack-hints';
-import { FOOD_ANGLES } from './strategy-from-arms';
+import { FOOD_ANGLES } from '@/lib/adlab/contract';
 import type { Pair, Recipe, Skip } from './types';
 
 /**

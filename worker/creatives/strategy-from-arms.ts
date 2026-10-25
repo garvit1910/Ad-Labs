@@ -1,4 +1,4 @@
-import { getAngleVocabulary } from '@/lib/brand-identity/industry-taxonomy';
+import { FOOD_ANGLES } from '@/lib/adlab/contract';
 import {
   buildStrategyGroups,
   deterministicAngleDirective,
@@ -9,8 +9,8 @@ import {
 } from '@/lib/creative-engine/generation/strategy';
 import { ANGLES, type AdFormat, type HookArchetype } from '@/services/ad-library/label-taxonomy';
 
-/** The arm table's angle vocabulary: Adcero's food-industry tokens, `other` excluded. */
-export const FOOD_ANGLES: readonly string[] = getAngleVocabulary('food').filter((angle) => angle !== 'other');
+/** The arm table's angle vocabulary (lib/adlab/contract.ts): Adcero's food-industry tokens, `other` excluded. */
+export { FOOD_ANGLES };
 
 /**
  * `food` for Ad Lab's recipes; `universal` (the 8 global ANGLES) only for the

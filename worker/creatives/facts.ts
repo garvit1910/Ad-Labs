@@ -39,11 +39,8 @@ export async function loadClientRows(db: SupabaseClient): Promise<ClientRows> {
   return { brandProfileId: profile.id, rows: toRows(kept), dropped: facts.length - kept.length };
 }
 
-/** `seg_macro_nostalgia_regular` → `persona_macro_nostalgia_regular`, the compiler's persona row id. */
-export const personaRefFor = (segmentId: string) => `persona_${segmentId.slice('seg_'.length)}`;
-
-/** The inverse, for stand-in segments built from persona rows. */
-export const segmentIdFor = (personaRowId: string) => `seg_${personaRowId.slice('persona_'.length)}`;
+// Segment ↔ persona row ids are the contract's (lib/adlab/contract.ts).
+export { personaRefFor, segmentIdForPersonaRow } from '@/lib/adlab/contract';
 
 const statement = (row: BrandContextRow) => String(row.content.statement ?? '');
 const section = (row: BrandContextRow) => String(row.content.section ?? '');

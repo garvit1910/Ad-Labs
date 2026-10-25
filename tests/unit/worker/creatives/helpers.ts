@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import type { UpstreamFact } from '@/lib/creative-engine/brand-context/ingest';
 import { toRows } from '@/worker/creatives/facts';
-import type { SqlRow, Stdb } from '@/worker/creatives/spacetime';
-import { StdbError } from '@/worker/creatives/spacetime';
+import { CONCEPTS } from '@/lib/adlab/contract';
+import { SpacetimeError, type SqlRow, type Spacetime } from '@/lib/adlab/spacetime-http';
 
 const FIXTURES = join(import.meta.dirname, '../../../../docs/reuse-export/fixtures');
 export const briefFixture = JSON.parse(readFileSync(join(FIXTURES, 'creative-brief.json'), 'utf8'));
@@ -79,7 +79,8 @@ export const CLEAN_COPY = {
  * An in-memory SpacetimeDB for A's and B's tables: `SELECT * FROM t [WHERE col = 'v']`,
  * plus the task reducers and upsert_creatives with the published rules that matter here.
  */
-export class FakeStdb implements Stdb {
+export class FakeStdb implements Spacetime {
+  readonly label = 'fake / adlab-test (LOCAL)';
   tables: Record<string, SqlRow[]> = {};
   reducerCalls: Array<{ reducer: string; args: unknown[] }> = [];
 
@@ -87,17 +88,17 @@ export class FakeStdb implements Stdb {
     for (const [name, rows] of Object.entries(tables)) this.tables[name] = rows.map((row) => ({ ...row }));
   }
 
-  async sql(query: string): Promise<SqlRow[]> {
+  async sql<T = SqlRow>(query: string): Promise<T[]> {
     const match = /^SELECT \* FROM (\w+)(?: WHERE (\w+) = '((?:[^']|'')*)')?$/.exec(query.trim());
     if (!match) throw new Error(`FakeStdb can't run: ${query}`);
     const [, table, column, value] = match;
     const rows = this.tables[table] ?? [];
-    return rows.filter((row) => !column || row[column] === value.replaceAll("''", "'")).map((row) => ({ ...row }));
+    return rows.filter((row) => !column || row[column] === value.replaceAll("''", "'")).map((row) => ({ ...row }) as T);
   }
 
   private task(taskId: string): SqlRow {
     const task = (this.tables.task ?? []).find((row) => row.task_id === taskId);
-    if (!task) throw new StdbError(`task ${taskId} not found`, 530);
+    if (!task) throw new SpacetimeError(`task ${taskId} not found`, 530);
     return task;
   }
 
@@ -108,14 +109,14 @@ export class FakeStdb implements Stdb {
       case 'claim_task': {
         const [taskId, claimedBy] = args as [string, string];
         const task = this.task(taskId);
-        if (task.status !== 'queued') throw new StdbError(`task ${taskId} is ${String(task.status)}`, 530);
+        if (task.status !== 'queued') throw new SpacetimeError(`task ${taskId} is ${String(task.status)}`, 530);
         Object.assign(task, { status: 'claimed', claimed_by: claimedBy, updated_at: now });
         return;
       }
       case 'complete_task': {
         const [taskId, result] = args as [string, string];
         const task = this.task(taskId);
-        if (task.status !== 'claimed') throw new StdbError(`task ${taskId} is ${String(task.status)}, not claimed`, 530);
+        if (task.status !== 'claimed') throw new SpacetimeError(`task ${taskId} is ${String(task.status)}, not claimed`, 530);
         Object.assign(task, { status: 'done', result, updated_at: now });
         return;
       }
@@ -127,7 +128,7 @@ export class FakeStdb implements Stdb {
       case 'enqueue_task': {
         const [taskId, kind, payload] = args as [string, string, string];
         this.tables.task ??= [];
-        if (this.tables.task.some((row) => row.task_id === taskId)) throw new StdbError(`task ${taskId} already exists`, 530);
+        if (this.tables.task.some((row) => row.task_id === taskId)) throw new SpacetimeError(`task ${taskId} already exists`, 530);
         const runId = (JSON.parse(payload) as { run_id: string }).run_id;
         this.tables.task.push({ task_id: taskId, run_id: runId, kind, payload, status: 'queued', claimed_by: null, result: null, created_at: now, updated_at: now });
         return;
@@ -141,7 +142,7 @@ export class FakeStdb implements Stdb {
             ['segment', this.tables.segment?.some((segment) => segment.segment_id === row.segment_id)],
             ['arm', this.tables.arm?.some((arm) => arm.arm_id === row.arm_id)],
           ] as const) {
-            if (!ok) throw new StdbError(`creative ${String(row.creative_id)}: unknown ${field}`, 530);
+            if (!ok) throw new SpacetimeError(`creative ${String(row.creative_id)}: unknown ${field}`, 530);
           }
           const existing = this.tables.creative.findIndex((creative) => creative.creative_id === row.creative_id);
           if (existing >= 0) this.tables.creative[existing] = { ...row };
@@ -150,7 +151,7 @@ export class FakeStdb implements Stdb {
         return;
       }
       default:
-        throw new StdbError(`FakeStdb has no reducer ${reducer}`, 530);
+        throw new SpacetimeError(`FakeStdb has no reducer ${reducer}`, 530);
     }
   }
 }
@@ -168,6 +169,26 @@ const RECIPES: Array<[string, string, string]> = [
   ['price_value', 'bold_claim', 'steal'],
 ];
 
+const WEIGHTS = JSON.stringify(Object.fromEntries(CONCEPTS.map((concept) => [concept.key, 0.5])));
+const QUOTES = JSON.stringify(['I want my protein in the morning.', 'Other cereals leave me hungry by ten.']);
+
+const liveAd = (creative_id: string, brand_id: string, extra: SqlRow): SqlRow => ({
+  creative_id,
+  brand_id,
+  headline: 'Oat clusters that keep you full',
+  primary_text: 'Baked in small batches with whole rolled oats.',
+  cta: 'Shop Now',
+  visual_description: 'A bowl of oat clusters on a kitchen counter.',
+  image_url: '',
+  days_running: 30,
+  round_created: 0,
+  learning_ids: '[]',
+  segment_id: '',
+  pack_fingerprint: '',
+  status: 'ranked',
+  ...extra,
+});
+
 /** A4's rows as they'll land: one client, two segments, 10 recipes plus the control, live ads, B's product. */
 export function a4Tables(): Record<string, SqlRow[]> {
   return {
@@ -175,9 +196,10 @@ export function a4Tables(): Record<string, SqlRow[]> {
       { brand_id: 'br_halden_oat_co', name: 'Halden Oat Co.', is_client: true },
       { brand_id: 'br_rival_crunch', name: 'Rival Crunch', is_client: false },
     ],
+    concept: CONCEPTS.map((concept) => ({ concept_id: `cpt_${concept.key}`, ...concept })),
     segment: [
-      { segment_id: SEG_TRACKER, name: 'The Macro Tracker', share: 0.7 },
-      { segment_id: SEG_UNAWARE, name: 'Convenience-First Cereal Eater', share: 0.3 },
+      { segment_id: SEG_TRACKER, name: 'The Macro Tracker', description: 'Trains before work most weekdays.', share: 0.7, prior_weights: WEIGHTS, quotes: QUOTES },
+      { segment_id: SEG_UNAWARE, name: 'Convenience-First Cereal Eater', description: 'Eats breakfast at home before work.', share: 0.3, prior_weights: WEIGHTS, quotes: QUOTES },
     ],
     arm: [
       ...RECIPES.map(([angle, hook, strategy]) => ({
@@ -190,7 +212,10 @@ export function a4Tables(): Record<string, SqlRow[]> {
       })),
       { arm_id: 'arm_control', angle: '', hook: '', strategy: 'control', rationale: 'live ads', evidence: '[]' },
     ],
-    creative: [{ creative_id: 'cr_live_halden_1', arm_id: 'arm_control', origin: 'brand_live' }],
+    creative: [
+      liveAd('cr_live_halden_1', 'br_halden_oat_co', { arm_id: 'arm_control', origin: 'brand_live', landing_product_id: 'prd_halden_box' }),
+      liveAd('cr_live_rival_1', 'br_rival_crunch', { arm_id: '', origin: 'competitor_live', landing_product_id: '' }),
+    ],
     product: [{ product_id: 'prd_halden_box', brand_id: 'br_halden_oat_co', name: 'Halden Oat Clusters' }],
   };
 }

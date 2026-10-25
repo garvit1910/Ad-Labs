@@ -1,6 +1,5 @@
+import { CONCEPTS } from '@/lib/adlab/contract';
 import type { InsightFact } from '@/lib/brand-object/insights';
-import { getAngleVocabulary } from '@/lib/brand-identity/industry-taxonomy';
-import { slugify } from '@/lib/creative-engine/brand-context/ingest';
 import { HOOK_PRODUCIBILITY, type HookRequirement } from '@/lib/creative-engine/generation/producibility';
 import { producibleHookAllowlist, type StrategyPackHints } from '@/lib/creative-engine/generation/strategy';
 import type { HookArchetype } from '@/services/ad-library/label-taxonomy';
@@ -9,44 +8,12 @@ import type { HookArchetype } from '@/services/ad-library/label-taxonomy';
  * The closed vocabularies A4's rows use, and which hooks the brand facts can back.
  */
 
-/**
- * The concept vocabulary (docs/PLAN.md "Simulation design"). Keys and labels match
- * B's sim/fixtures/magicspoon/concepts.json (D25), copied rather than imported:
- * A and B share only SpacetimeDB.
- */
-export const CONCEPTS: ReadonlyArray<{ key: string; label: string }> = [
-  { key: 'high_protein', label: 'high protein' },
-  { key: 'low_sugar', label: 'low sugar' },
-  { key: 'low_carb_keto', label: 'low carb or keto' },
-  { key: 'taste', label: 'taste' },
-  { key: 'nostalgia', label: 'childhood flavors' },
-  { key: 'crunch_texture', label: 'crunch' },
-  { key: 'flavor_variety', label: 'flavor variety' },
-  { key: 'clean_ingredients', label: 'clean ingredients' },
-  { key: 'gluten_grain_free', label: 'gluten-free or grain-free' },
-  { key: 'keeps_full', label: 'staying full until the next meal' },
-  { key: 'fitness', label: 'fitness' },
-  { key: 'weight_goals', label: 'weight goals' },
-  { key: 'kid_friendly', label: 'kid-friendly' },
-  { key: 'convenience', label: 'convenience' },
-  { key: 'value_price', label: 'value for money' },
-  { key: 'discount_offer', label: 'discounts' },
-  { key: 'subscription', label: 'subscriptions' },
-  { key: 'social_proof', label: 'what other customers say' },
-  { key: 'other', label: 'other' },
-];
+// The contract's vocabularies and id formats are shared with A5 and A6 (lib/adlab/contract.ts).
+export { CONCEPTS, CONTROL_ARM_ID, FOOD_ANGLES as ANGLES, armIdFor, brandIdFor, segmentIdForFactKey as segmentIdFor } from '@/lib/adlab/contract';
 
 /** Concepts the segment LLM weighs; `other` is never shown or claimed in the sim. */
 export const WEIGHTED_CONCEPTS = CONCEPTS.filter((concept) => concept.key !== 'other');
 export const OTHER_PRIOR_WEIGHT = 0.1;
-
-/** Adcero's food-industry angle tokens plus price_value and trust_safety (the reducers' ANGLES). */
-export const ANGLES: readonly string[] = getAngleVocabulary('food').filter((angle) => angle !== 'other');
-
-export const brandIdFor = (name: string) => `br_${slugify(name)}`;
-export const segmentIdFor = (personaFactKey: string) => `seg_${slugify(personaFactKey)}`;
-export const armIdFor = (angle: string, hook: string) => `arm_${angle}_${hook}`;
-export const CONTROL_ARM_ID = 'arm_control';
 
 /** Pack-row sections that are never `fact` rows (lib/creative-engine/brand-context/ingest.ts rowTypeForSection). */
 const NON_FACT_SECTIONS = new Set(['voice', 'compliance', 'persona', 'performance_prior']);
@@ -59,9 +26,9 @@ export interface FactHints {
 }
 
 /**
- * Which hook requirements the brand facts meet. Mirrors A5's derivePackHints
+ * Which hook requirements the brand facts meet, brand-wide: A5's derivePackHints
  * (CREATIVE_MANIFEST §4) on the live facts minus market_prior, which A5 drops
- * before compiling. Merge with A5's version once both land.
+ * before compiling. A5 checks each segment's own rows on top (worker/creatives/pairs.ts).
  */
 export function factHints(facts: InsightFact[]): FactHints {
   const live = facts.filter((fact) => fact.section !== 'market_prior');

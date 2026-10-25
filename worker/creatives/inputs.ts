@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import type { Spacetime } from '@/lib/adlab/spacetime-http';
 import type { BrandContextRow } from '@/lib/creative-engine/brand-context/types';
 import { checkA4Rows, readA4Tables } from './check';
-import { segmentIdFor } from './facts';
-import type { Stdb } from './spacetime';
+import { segmentIdForPersonaRow } from './facts';
 import type { ClientBrand, Recipe, Segment } from './types';
 
 /*
@@ -46,7 +46,7 @@ export function standInInputs(rows: BrandContextRow[]): CreativeInputs {
     brand: STAND_IN_BRAND,
     // One segment per live persona fact, with ids already in A4's format.
     segments: personas.map((persona) => ({
-      segment_id: segmentIdFor(persona.rowId),
+      segment_id: segmentIdForPersonaRow(persona.rowId),
       name: String(persona.content.name ?? persona.rowId),
       share: 1 / personas.length,
     })),
@@ -57,8 +57,8 @@ export function standInInputs(rows: BrandContextRow[]): CreativeInputs {
 }
 
 /** A4's rows, validated by the same check the `check` command prints. */
-export async function spacetimeInputs(stdb: Stdb, rows: BrandContextRow[]): Promise<CreativeInputs> {
-  const check = checkA4Rows(await readA4Tables(stdb), rows);
+export async function spacetimeInputs(spacetime: Spacetime, rows: BrandContextRow[]): Promise<CreativeInputs> {
+  const check = checkA4Rows(await readA4Tables(spacetime), rows);
   if (check.failures.length > 0 || !check.brand) throw new NotReadyError(check.failures);
   return {
     source: 'spacetime',
