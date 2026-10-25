@@ -1,6 +1,6 @@
 # Ad Lab — master plan
 
-Last updated Sat Oct 24, 2026, 9:36 PM PT
+Last updated Sun Oct 25, 2026, 12:30 AM PT
 
 Ad Lab tests Magic Spoon ad recipes on Jev-driven shoppers built from real customer voice, then keeps and refines the winners. Person A owns data and agents; Person B owns the simulation. Both halves are planned below, phase by phase, with a ready prompt for every phase in the "Appendix: Phase prompts" at the end of this file.
 
@@ -28,12 +28,12 @@ Everything here is settled. Change a row only by editing this table, so both of 
 
 ## Status
 
-As of Sat Oct 24, 9:36 PM PT.
+As of Sun Oct 25, 12:30 AM PT.
 
 | | Done | In progress | Next |
 | --- | --- | --- | --- |
-| A | A0–A5, merged into `simulation`: A0 setup, A1 Adcero port, A's half of the contract, A2 ingest, A3 distill, A4 contract rows and A5's creative worker. Maincloud holds A4's rows, Magic Spoon's product row (written by A on B's behalf, B to confirm) and A5's 54 round-0 creatives; `npm run a5:creatives -- round0-status` says COMPLETE. A local rehearsal ran B6's worker and A5's worker through rounds 0–2 with nobody touching it (see A5's Result) | — | A6. During B's real run, keep `npm run a5:creatives -- worker` running until A6's Copywriter takes over |
-| B | B0–B5, and B6's pinned shopper and paced replay, on `feat/b5-live-views` and `feat/b6-demo-run` (not yet in `simulation`) | — | Merge B5/B6 onto the new `simulation`; confirm or replace the product row; start the real run (round 0 is ready; see "Hand-off to B" under A5) |
+| A | A0–A7 built and merged into `simulation`: A6's four Fetch agents, their HTTP API, the agent tables and `/agents`; A7's Brand Identity and Competitor Analysis pages on live Supabase. Verified on the local test bench, a seeded copy of the demo database: A5 ↔ B's sim loop, an API-driven run, and all four agents end to end with nobody touching them (see A6's Result) | A6's real ASI:One check on the bench, once Scout, Strategist and Copywriter have seeds and Agentverse mailboxes | A8: publish and seed `adlab-live`, rehearse the ASI:One flow beside `/agents`, record. During B's real run, keep `npm run a5:creatives -- worker` running from `../calhacks-project-sim` (the agents never act on `adlab-calhacks13`) |
+| B | B0–B6, merged into `simulation` by A together with B's `fix/real-run` (bench copy, demo ad images) | The real run on `adlab-calhacks13` | Confirm the product row; OK A's two-line edit to `sim/test/module/module.test.ts` (A6's tables); tell A when the demo run is finished and cached |
 
 **Branches.** `simulation` is the integration branch: B commits there, and every A phase opens its PR against it. `B`, GitHub's default branch, is stale; don't branch from it or target it.
 
@@ -42,7 +42,8 @@ As of Sat Oct 24, 9:36 PM PT.
 - 14 public tables: A's 5 and B's 9, the task board included.
 - 20 reducers: `ping`, A's 6 and B's 13.
 - Every table was empty at publish time. A's rows (A4's and A5's round 0) and the Magic Spoon product row are in since 9:30 PM; B's rows arrive with its first real round.
-- A6 adds three A tables for the agents (`agent`, `agent_message`, `ingest_job`; see The contract) and publishes them in place.
+- A6 adds three A tables for the agents (`agent`, `agent_message`, `ingest_job`; see The contract) and four reducers. They are published to the agents' own databases (the local bench and `adlab-live`); `adlab-calhacks13` gets them only after B's demo run, because a publish reloads the module under B's worker.
+- **One generating run per database.** The creative table has no run column, so the agents' runs go to their own seeded databases: `adlab-local` (the test bench) and `adlab-live` (Maincloud, the stage). B's demo run alone uses `adlab-calhacks13`. `npm run bench` seeds and resets them; see the README's "Running the stack".
 
 How to work with it:
 
@@ -546,8 +547,8 @@ The loop, as one chat:
 
 Every hop is a typed message, logged to `agent_message` as it's sent, so `/agents` shows the conversation between the agents live, beside the chat.
 
-- [ ] **SpacetimeDB:** the `agent`, `agent_message` and `ingest_job` tables (The contract) and their reducers in `tables_a.ts` and `reducers_a.ts`. Publish in place and regenerate the client.
-- [ ] **HTTP API** in `app/api/agent/`, called by the agents. Every job an endpoint starts gets an `ingest_job` row.
+- [x] **SpacetimeDB:** the `agent`, `agent_message` and `ingest_job` tables (The contract) and their reducers in `tables_a.ts` and `reducers_a.ts`. Published to the agents' databases (not yet to `adlab-calhacks13`; see Status); client regenerated.
+- [x] **HTTP API** in `app/api/agent/`, called by the agents (the frozen contract is `docs/AGENT_API.md`). Every job an endpoint starts gets an `ingest_job` row.
   - ingest/refresh: a small live refresh (the stalest pages and sources, small limits) through the copied queue functions, reusing A2's steps
   - distill/start: `brand_object_crawl` with chain: true, when the brand context is missing or stale
   - jobs: the status of a set of job ids
@@ -555,39 +556,97 @@ Every hop is a typed message, logged to `agent_message` as it's sent, so `/agent
   - contract/build: A4's segment builder, arm builder and live-ad rows
   - creatives/generate: A5's `runGenerateCreatives` for a claimed task
   - rounds: start (queues `run_round` on the task board), status and summary
-- [ ] **Job mirror:** `worker/loop.ts` reports each claim and finish, and the job's `ingest_job` row follows it.
-- [ ] **Four uAgents** in `agents/`, started together by `npm run agents`:
+- [x] **Job mirror:** `worker/loop.ts` reports each claim and finish, and the job's `ingest_job` row follows it (opt-in with `ADLAB_INGEST_MIRROR=1`, set by `npm run worker:live`).
+- [x] **Four uAgents** in `agents/`, started together by `npm run agents` (Scout, Strategist and Copywriter still need their seeds and Agentverse mailboxes):
   - each with its own seed, address and mailbox, registered on Agentverse in the Innovation Lab category;
   - typed protocols (uAgents Models) for every hop: intel request and report, progress, plan request and recipe plan, start run, round result, creatives written, run finished;
   - each also speaks the chat protocol, so judges can ask Scout or Strategist directly in ASI:One. The primary flow goes through Ad Lab only;
   - one helper sends every message and logs it to `agent_message` in the same step, and each agent keeps its `agent` row current;
   - Strategist and Copywriter watch SpacetimeDB (round rows, queued tasks) every few seconds and act on changes.
-- [ ] **The ASI:One flow:** Ad Lab acknowledges every request at once and turns each hop between agents into a one-line progress message ("Scout started 4 Apify runs: Meta ads for Catalina Crunch, …"). Interactive Cards for:
+- [x] **The ASI:One flow:** Ad Lab acknowledges every request at once and turns each hop between agents into a one-line progress message ("Scout started 4 Apify runs: Meta ads for Catalina Crunch, …"). Interactive Cards for:
   - the brand profile
   - competitor winners
   - the recipes
   - each round's leaderboard
   - the final winning ads per segment
-- [ ] **/agents** in `app/agents/`, a live view built on `lib/spacetime`, with Adcero's components and a nav link next to `/sim`. It shows:
+- [x] **/agents** in `app/agents/`, a live view built on `lib/spacetime`, with Adcero's components and a nav link next to `/sim`. It shows:
   - the four agents, with their status and current step
   - the message stream between them (from → to, kind, summary)
   - the ingest jobs, with their Apify actors and status
   - the task board
-- [ ] **README:**
-  - each agent's name, address and job
+- [x] **README:**
+  - each agent's name, address and job (three addresses follow from their seeds)
   - the innovationlab and hackathon badges
   - how to run it
-- [ ] **If time remains:** the Payment Protocol. Ad Lab asks the user to approve a small fee before each test run.
+- [ ] **If time remains:** the Payment Protocol. Ad Lab asks the user to approve a small fee before each test run. **Cut** (first cut line).
 
 **Done when** one ASI:One message ("find ads that beat Magic Spoon's current ones") makes the agents refresh the data on Apify, post the brand and competitor cards, propose recipes, run the rounds with the Copywriter writing between them, and post the winners, with no other screen needed. Every hop also shows up live on `/agents` and in `agent_message`.
 
+**Result (Oct 25, 12:30 AM).** Built and proven end to end on the local test bench. What's left is the real ASI:One check, which needs the three new agents registered.
+
+- **The test bench** is a seeded copy of the demo database: `npm run bench -- snapshot`, then `seed --target local --from-snapshot`.
+  - It holds 8 brands, 19 concepts, 5 segments, 12 arms, the 144 live ads, the 54 round-0 creatives and the product row. It never copies another run's later creatives.
+  - The seed writes only what changed: a rerun makes 0 calls.
+  - `bench:reset:local` rebuilds it offline in about 30 seconds.
+  - `bench verify-run` judges a run straight from SpacetimeDB:
+    - rounds done and no failed task;
+    - who claimed each creative task, and when;
+    - the new copy shown in the next round;
+    - no other run's ads.
+- **Three runs passed every check:**
+
+  | Run | What it proves | Creative writer | Ranked creatives | New copy shown (round 1 / round 2) |
+  | --- | --- | --- | --- | --- |
+  | `run_l2` | A5 ↔ B's sim, from the merged tree, nobody touching it | `creative_worker`, about 63 s after each task was queued | 9 | 200 / 168 |
+  | `run_p0_t1` | The API alone drives a run | `copywriter`; a duplicate concurrent call joined the first | 9 | 248 / 190 |
+  | `run_test_1025_0710` | All four agents, headless: `npm run agents:e2e -- --rounds 2`, offline agents, a fake ASI:One user | `copywriter` | 8 | 254 / 144 |
+
+  - `run_p0_t1` also checked the refusals: `rounds/start` returned `run_exists` for the same run and `db_has_run` for a second one.
+  - In `run_test_1025_0710`, all 11 e2e checks passed in 60 s:
+    - acknowledgement immediately;
+    - the six cards in order (brand, competitors, recipes, three leaderboards, winners);
+    - the "status" pull answered in 0.5 s;
+    - the approval taken from the card;
+    - 43 hops logged and none missed;
+    - learnings applied (6 of 6, then 6 of 7);
+    - Scout's refresh planned and logged as `skipped` (test mode never touches Supabase's `job_queue`).
+- **Decisions built in:**
+  - **Agents never act on `adlab-calhacks13`:** writing routes refuse it, and `startRun` refuses any database outside the bench and `adlab-live`.
+  - **One run per database:** `db_has_run`, and `/health` reports `run_slot_free`.
+  - **`startRun` pre-creates the run row** with `rounds_planned` (B's D63/D64), so the Strategist sets the run's length.
+  - **`/creatives/generate` never fails a task itself:** the Copywriter retries 3 times, then calls `/creatives/fail`, and A5's worker is the fallback.
+  - **`worker:live` freezes every `brand_object_*` job.** A Meta sync otherwise chains market → personas and rewrites the persona facts that A5 reads for B's run.
+- **Changes to other code:**
+  - `sim/test/module/module.test.ts` gained the 3 agent tables and 4 reducers (B to OK).
+  - PLAN.md's agent-table block moved above "Shared: the task board", so B's module test parses it.
+  - `genome-completeness.ts` (copied from Adcero) gained `CREATIVE_GENOME_STRICT=off` for `next dev`.
+  - B's ad-image test skips where the PNGs aren't rendered.
+- **Still to do:**
+  - The three agent seeds and their Agentverse mailboxes (`npm run agents:solo -- scout|strategist|copywriter`, inspector, Connect → Mailbox).
+  - The real ASI:One chat on the bench. That will also show whether ASI:One displays late, unprompted messages; "status" always returns the latest card.
+  - `adlab-live` for the stage.
+
 ### A7 · Sat 10:30 PM – Sun 1 AM · The two Adcero pages, live
 
-- [ ] Route handlers for the endpoints in REUSE\_MANIFEST §7.4. Serve the fixtures first, then switch to Supabase. dashboard and competitors/list use the §5.5 rewrite.
-- [ ] The Competitor Analysis page first, then Brand Identity.
-- [ ] Nav links to `/sim` and `/agents`.
+- [x] Route handlers for the endpoints in REUSE\_MANIFEST §7.4. Built straight on Supabase (the fixtures describe an invented brand); dashboard and competitors/list use the §5.5 rewrite.
+- [x] The Competitor Analysis page first, then Brand Identity.
+- [x] Nav links to `/sim` and `/agents` (a top nav in the root layout, plus an `/agents` card on the home page).
 
 **Done when** both pages render Magic Spoon's real data in Adcero's look.
+
+**Result (Oct 25, 12:15 AM).** Both pages render live Supabase data. `npx tsx scripts/a7-check-routes.ts --base http://localhost:3000` passes every line.
+
+- **Competitor Analysis:**
+  - 7 competitors, with Magic Spoon's own page excluded from the list and the dashboard.
+  - 194 ads, all labelled.
+  - `provenWinners` 51, equal to Σ winnerCount and to A3's market step.
+  - GHOST alone: 50 ads and 16 winners.
+- **Brand Identity:** 96 facts; 45 own ads labelled for Chapter 05; 13 sources; 454 mentions, 368 kept.
+- **Choices:**
+  - Chapter 02's narrative is assembled deterministically from real brand facts: positioning, value props, top praise, pains and objections with their mention counts. No LLM, no invented text.
+  - The own-performance and competitive-landscape chapters return 404, so they hide: no own-ad metrics or competitor presence profiles were ported.
+  - Collections are stubs.
+- **Shared with A6:** `lib/adlab/pages/ads.ts` serves A6's `competitor-summary`, so the ASI:One card and the page show the same numbers.
 
 ### A8 · Sun 1 – 8 AM · Demo and submission, with B
 
