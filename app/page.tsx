@@ -1,13 +1,18 @@
 import Link from 'next/link';
-import { Activity, Bot, Fingerprint, FlaskConical, Swords, type LucideIcon } from 'lucide-react';
-import { EyebrowChip } from '@/components/ui/eyebrow-chip';
-import { PageHeader } from '@/components/ui/page-header';
+import { Martian_Mono } from 'next/font/google';
+import { Activity, ArrowUpRight, Bot, Fingerprint, FlaskConical, Swords, type LucideIcon } from 'lucide-react';
+import ParticleField from '@/components/ParticleField';
+import './landing.css';
+
+// The wordmark's face. Loaded here rather than in lib/fonts-online.ts so only the
+// landing page downloads it.
+const martian = Martian_Mono({ variable: '--font-martian', weight: '800', subsets: ['latin'], display: 'swap' });
 
 const SECTIONS: { href: string; title: string; description: string; icon: LucideIcon }[] = [
   {
     href: '/brand-identity',
     title: 'Brand Identity',
-    description: "Magic Spoon's positioning, proof points and customer voice, distilled from real reviews and posts.",
+    description: 'Positioning, proof points and customer voice, distilled from real reviews and posts.',
     icon: Fingerprint,
   },
   {
@@ -30,29 +35,47 @@ const SECTIONS: { href: string; title: string; description: string; icon: Lucide
   },
 ];
 
+function Frame() {
+  return (
+    <div className="bgframe" aria-hidden="true">
+      <i className="tl" /><i className="tr" /><i className="bl" /><i className="br" />
+    </div>
+  );
+}
+
+// The front door: the constellation background (app/landing-bg.css) with the hero and the
+// section cards on top. Every page behind it renders inside AppShell instead.
 export default function Home() {
   return (
-    <>
-      <PageHeader
-        eyebrow={<EyebrowChip icon={FlaskConical}>Cal Hacks 13.0</EyebrowChip>}
-        title="Ad Lab"
-        description="Magic Spoon ad recipes, tested on simulated shoppers built from real customer voice."
-      />
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-        {SECTIONS.map(({ href, title, description, icon: Icon }) => (
-          <Link
-            key={href}
-            href={href}
-            className="frost-card flex flex-col gap-3 p-5 transition-colors hover:border-brand/40"
-          >
-            <span className="flex size-9 items-center justify-center rounded-lg bg-brand-soft text-brand-text">
-              <Icon className="size-4" />
+    <main className={`lh ${martian.variable}`}>
+      <div className="bgwrap">
+        <ParticleField />
+
+        <section className="bgscreen">
+          <div className="bgscrim" aria-hidden="true" />
+          <Frame />
+          <div className="bgbody">
+            <span className="lh-eyebrow">
+              <FlaskConical className="size-3.5" />
+              Cal Hacks 13.0
             </span>
-            <span className="text-lg font-semibold tracking-tight">{title}</span>
-            <span className="text-sm text-muted-foreground">{description}</span>
-          </Link>
-        ))}
+            <h1 className="lh-mark">Ad Lab</h1>
+            <p className="lh-sub">Ad recipes, tested on simulated shoppers built from real customer voice.</p>
+            <div className="lh-cards">
+              {SECTIONS.map(({ href, title, description, icon: Icon }) => (
+                <Link key={href} href={href} className="lh-card">
+                  <span className="lh-icon">
+                    <Icon className="size-4" />
+                  </span>
+                  <ArrowUpRight className="lh-arrow size-4" aria-hidden="true" />
+                  <span className="lh-title">{title}</span>
+                  <span className="lh-desc">{description}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
       </div>
-    </>
+    </main>
   );
 }

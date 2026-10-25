@@ -3,6 +3,7 @@
 import type { ReactNode } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
+import { AppShell } from '@/components/adlab/AppShell';
 import { PageHeader } from '@/components/ui/page-header';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BRAND_IDENTITY_SECTIONS } from './navigation';
@@ -20,7 +21,7 @@ export default function BrandIdentityLayout({ children }: { children: ReactNode 
     SECTIONS[0];
 
   return (
-    <>
+    <AppShell>
       <PageHeader title={t(active.labelKey)} />
       <Tabs
         value={active.value}
@@ -39,6 +40,6 @@ export default function BrandIdentityLayout({ children }: { children: ReactNode 
         </TabsList>
       </Tabs>
       {children}
-    </>
+    </AppShell>
   );
 }

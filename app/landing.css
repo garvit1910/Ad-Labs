@@ -1,0 +1,90 @@
+/* The landing hero's type and colour, set to the constellation's palette rather than
+   the app's magenta and charcoal, so the text and the field read as one surface.
+   app/landing-bg.css (the kit) stays untouched; everything here is scoped under .lh.
+   Fonts: --font-martian is loaded by app/page.tsx only; Geist is app-wide. */
+
+.lh {
+  --lh-ink: #e9ebe6;
+  --lh-ink-2: #a9ada6;
+  --lh-hair: rgba(255, 255, 255, .11);
+  --lh-line: rgba(255, 255, 255, .18);
+  /* the field's green end (RAMP's last stop) and its tint */
+  --lh-accent: #4fd99a;
+  --lh-tint: rgba(79, 217, 154, .1);
+  --lh-tint-line: rgba(79, 217, 154, .3);
+  /* --bg-ground at alpha: near-opaque so card text stays clear of the lines behind */
+  --lh-card: rgba(10, 11, 10, .92);
+  --lh-card-ink-2: #c4c8c1;
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  color: var(--lh-ink);
+}
+
+.lh-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 12px;
+  border: 1px solid var(--lh-tint-line); border-radius: 999px;
+  background: var(--lh-tint);
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11.5px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--lh-accent);
+}
+
+.lh-mark {
+  margin: 28px 0 0;
+  font-family: var(--font-martian), var(--font-geist-mono), ui-monospace, monospace;
+  font-weight: 800;
+  font-size: clamp(52px, 10vw, 128px);
+  letter-spacing: -.045em;
+  /* a monospace space is a full cell wide, which splits "Ad Lab" into two marks */
+  word-spacing: -.32em;
+  line-height: .95;
+  color: var(--lh-ink);
+  /* softened to sit with the blurred field: a hair of blur on the edges and a faint glow */
+  filter: blur(.4px);
+  text-shadow: 0 0 28px rgba(233, 235, 230, .16);
+}
+
+.lh-sub {
+  max-width: 34em; margin: 24px auto 0;
+  font-size: clamp(17px, 1.7vw, 22px);
+  font-weight: 600;
+  line-height: 1.45; letter-spacing: -.01em;
+  color: var(--lh-ink-2);
+}
+
+.lh-cards {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px;
+  margin-top: 56px;
+}
+@media (max-width: 1100px) { .lh-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .lh-cards { grid-template-columns: 1fr; margin-top: 40px; } }
+
+/* Unlayered, so it outranks globals.css's @layer base `a` colour and hover underline. */
+.lh-card {
+  position: relative;
+  display: flex; flex-direction: column; gap: 10px;
+  padding: 20px;
+  border: 1px solid var(--lh-hair); border-radius: 6px;
+  background: var(--lh-card);
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  text-align: left; text-decoration: none; color: var(--lh-ink);
+  transition: border-color .15s ease, background-color .15s ease;
+}
+.lh-card:hover { border-color: var(--lh-tint-line); background: rgba(10, 11, 10, .97); text-decoration: none; color: var(--lh-ink); }
+.lh-card:focus-visible { outline: 2px solid var(--lh-accent); outline-offset: 2px; }
+
+.lh-icon {
+  display: flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; margin-bottom: 6px;
+  border: 1px solid var(--lh-tint-line); border-radius: 6px;
+  background: var(--lh-tint); color: var(--lh-accent);
+}
+.lh-arrow {
+  position: absolute; top: 20px; right: 20px;
+  color: var(--lh-ink-2); opacity: .5;
+  transition: transform .15s ease, opacity .15s ease, color .15s ease;
+}
+.lh-card:hover .lh-arrow { opacity: 1; color: var(--lh-accent); transform: translate(2px, -2px); }
+
+.lh-title { font-size: 18px; font-weight: 600; letter-spacing: -.01em; color: var(--lh-ink); }
+.lh-desc { font-size: 14.5px; font-weight: 500; line-height: 1.55; color: var(--lh-card-ink-2); }

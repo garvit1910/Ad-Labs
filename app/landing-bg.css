@@ -1,0 +1,62 @@
+/* Constellation background, extracted from ShopSim's landing page
+   (web/app/globals.css, the .landing hero block). Standalone: every value it
+   needs is defined on .bgwrap, so it depends on nothing else in your sheet.
+
+   Structure:
+     .bgwrap                 position:relative; the canvas fills it
+       .bgfield > canvas     the particle field (ParticleField / particle-field.js)
+       section.bgscreen      one full-height screen, content sits above the field
+         .bgscrim            radial darkening behind the text (.wide = 2nd screen)
+         .bgframe > i×4      hairline frame with corner ticks
+         .bgbody             your content
+   The field spans the whole .bgwrap, so two .bgscreen sections inside it read
+   as one continuous canvas. Sections after .bgwrap get no field. */
+
+.bgwrap {
+  --bg-ground: #0a0b0a;
+  /* --bg-ground at alpha; a custom property cannot express that on its own */
+  --bg-veil: rgba(10, 11, 10, .88);
+  --bg-clear: rgba(10, 11, 10, 0);
+  --bg-hair: rgba(255, 255, 255, .11);
+  --bg-line: rgba(255, 255, 255, .18);
+  position: relative;
+  background: var(--bg-ground);
+  overflow-x: clip;
+}
+
+/* pointer-events:none because the buttons sit over it */
+.bgfield { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+.bgfield canvas { display: block; filter: blur(1px); }
+
+.bgscreen {
+  position: relative; z-index: 1;
+  min-height: 100dvh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 96px 24px;
+}
+
+/* Solid ground at the centre, fading to clear by 78%: text stays readable and
+   the web shows only toward the edges. */
+.bgscrim {
+  position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(54% 44% at 50% 48%,
+    var(--bg-ground) 0%, var(--bg-veil) 34%, var(--bg-clear) 78%);
+}
+/* For a screen with a wider block of text (ShopSim's second screen). */
+.bgscrim.wide {
+  background: radial-gradient(66% 58% at 50% 50%,
+    var(--bg-ground) 0%, var(--bg-veil) 52%, var(--bg-clear) 88%);
+}
+
+.bgframe {
+  position: absolute; inset: 20px; pointer-events: none;
+  border: 1px solid var(--bg-hair);
+}
+.bgframe i { position: absolute; width: 15px; height: 15px; }
+.bgframe .tl { top: -1px; left: -1px; border-top: 1px solid var(--bg-line); border-left: 1px solid var(--bg-line); }
+.bgframe .tr { top: -1px; right: -1px; border-top: 1px solid var(--bg-line); border-right: 1px solid var(--bg-line); }
+.bgframe .bl { bottom: -1px; left: -1px; border-bottom: 1px solid var(--bg-line); border-left: 1px solid var(--bg-line); }
+.bgframe .br { bottom: -1px; right: -1px; border-bottom: 1px solid var(--bg-line); border-right: 1px solid var(--bg-line); }
+@media (max-width: 640px) { .bgframe { inset: 12px; } }
+
+.bgbody { position: relative; z-index: 1; text-align: center; max-width: 1000px; }
