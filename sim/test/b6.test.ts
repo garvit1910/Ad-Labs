@@ -18,7 +18,9 @@ import {
   stateLines,
   swapLine,
 } from "../src/pin.js";
+import { mirrorWorld } from "../src/local-seed.js";
 import { compareRuns } from "../src/replay.js";
+import type { Db, SqlRow } from "../src/spacetime.js";
 import { Worker } from "../src/worker.js";
 import { FakeDb } from "./fake-db.js";
 import { fakeJev } from "./fake-jev.js";
@@ -183,5 +185,42 @@ describe("B6 replay: offline, off the task board, identical", () => {
       await new Worker({ db, jev: fakeJev(), source: "fixtures", settings: { seed, population: 40, roundsPlanned: 0 }, queueGeneration: false, log: quiet }).runRoundTask({ run_id, round: 0 });
     }
     assert.notDeepEqual((await compareRuns(db, "run_x", "run_y")).diffs, []);
+  });
+});
+
+describe("B6 bench: copying Maincloud's real rows to a local database", () => {
+  const source = () => {
+    const db = new FakeDb("maincloud-reader");
+    db.tables.set("brand", [{ brand_id: "br_magic_spoon", name: "Magic Spoon", is_client: true }]);
+    db.tables.set("concept", [{ concept_id: "cpt_taste", key: "taste", label: "taste" }]);
+    db.tables.set("segment", [{ segment_id: "seg_a", quotes: '["x"]', prior_weights: "{}" }]);
+    db.tables.set("arm", [{ arm_id: "arm_control", strategy: "control", angle: "", hook: "", evidence: "[]" }]);
+    db.tables.set("creative", [{ creative_id: "cr_1", arm_id: "arm_control", learning_ids: "[]" }]);
+    db.tables.set("product", [{ product_id: "prd_x", brand_id: "br_magic_spoon", subscription_price_usd: 31.2, page_highlights: '["a"]' }]);
+    return db;
+  };
+  const target = (brands: SqlRow[] = []) => {
+    const calls: { reducer: string; args: unknown[] }[] = [];
+    const db: Db = {
+      name: "bench",
+      sql: async (q) => (q.includes("FROM brand") ? brands : []),
+      call: async (reducer, args) => void calls.push({ reducer, args }),
+    };
+    return { db, calls };
+  };
+
+  test("copies A's five tables in reference order, then the product, rows unchanged", async () => {
+    const { db, calls } = target();
+    const counts = await mirrorWorld(source(), db);
+    assert.deepEqual(calls.map((c) => c.reducer), ["upsert_brands", "upsert_concepts", "upsert_segments", "upsert_arms", "upsert_creatives", "upsert_products"]);
+    assert.deepEqual((calls[2]!.args[0] as SqlRow[])[0], { segment_id: "seg_a", quotes: '["x"]', prior_weights: "{}" });
+    assert.equal(JSON.parse(calls[5]!.args[0] as string)[0].subscription_price_usd, 31.2);
+    assert.equal(counts.creative, 1);
+  });
+
+  test("refuses a target that already holds another world's brands", async () => {
+    const { db, calls } = target([{ brand_id: "br_three_wishes" }]);
+    await assert.rejects(mirrorWorld(source(), db), /other brands \(br_three_wishes\)/);
+    assert.equal(calls.length, 0);
   });
 });

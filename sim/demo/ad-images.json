@@ -1,0 +1,319 @@
+{
+  "version": 1,
+  "images": {
+    "cr_g0_taste_indulgence_curiosity_macro_nostalgia_regular_1": {
+      "file": "data/ad-images/cr_g0_taste_indulgence_curiosity_macro_nostalgia_regular_1.png",
+      "run_id": "run_loop_1",
+      "segment_id": "seg_macro_nostalgia_regular",
+      "arm_id": "arm_taste_indulgence_curiosity",
+      "round0": {
+        "rank": 1,
+        "mean_reward": 0.0007612015740607863,
+        "impressions": 14
+      },
+      "prompt": "Photorealistic commercial meta ad photograph. Audience: An adult cereal lover who wants the fun and familiarity of childhood cereal without the sugar load, and uses Magic Spoon as a repeat breakfast or snack that fits a protein-forward, low-sugar routine.. Hero subject: the brand's product. Key claim this image should make visible through the scene (never as written text): \"Customers want fruity and other cereal flavor options beyond the current lineup.\". Mood: Playful, nostalgic, confident, and benefit-led; the brand mixes childhood fun with modern wellness and macro-focused language. Quality: award-grade commercial product photography — tack-sharp focus on the product, physically accurate lighting and shadows, coherent perspective, realistic materials and textures, professional color grading. No warped geometry, no duplicated or extra objects, no surreal artifacts. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. No product reference images were provided, so the product's packaging must be CLEAN and UNBRANDED with NO readable text — never invent a brand name, logo, label text, slogan, or disclaimer. A plain, text-free package is correct; invented text is a failure. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter. This ad's visual: Product in a realistic in-use scene: the exact moment a customer uses.. Leave out any words, logos or text overlays.",
+      "model": "gpt-image-2",
+      "quality": "medium",
+      "size": "1024x1024",
+      "cost_cents": 6,
+      "created_at": "2026-10-25T05:35:03.130Z"
+    },
+    "cr_g0_craving_pov_relatable_diet_restricted_functional_buyer_1": {
+      "file": "data/ad-images/cr_g0_craving_pov_relatable_diet_restricted_functional_buyer_1.png",
+      "run_id": "run_loop_1",
+      "segment_id": "seg_diet_restricted_functional_buyer",
+      "arm_id": "arm_craving_pov_relatable",
+      "round0": {
+        "rank": 2,
+        "mean_reward": 0.000748574587659709,
+        "impressions": 5
+      },
+      "winner": {
+        "mean_reward": 0.0005907311987115946,
+        "impressions": 41,
+        "cpo_usd": 35.49735118741147,
+        "control_cpo_usd": 86.05013017368604
+      },
+      "prompt": "Photorealistic commercial meta ad photograph. Audience: A shopper with specific dietary constraints or macro rules who wants cereal and snack options that fit gluten-free, grain-free, keto-friendly, or low-carb needs, but watches labels closely and is sensitive to tolerance issues.. Hero subject: the brand's product. Key claim this image should make visible through the scene (never as written text): \"Customers praise the new packaging and say they love the brand.\". Mood: Playful, nostalgic, confident, and benefit-led; the brand mixes childhood fun with modern wellness and macro-focused language. Quality: award-grade commercial product photography — tack-sharp focus on the product, physically accurate lighting and shadows, coherent perspective, realistic materials and textures, professional color grading. No warped geometry, no duplicated or extra objects, no surreal artifacts. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. No product reference images were provided, so the product's packaging must be CLEAN and UNBRANDED with NO readable text — never invent a brand name, logo, label text, slogan, or disclaimer. A plain, text-free package is correct; invented text is a failure. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter. This ad's visual: A cozy kitchen setting with natural light streaming in.. Leave out any words, logos or text overlays.",
+      "model": "gpt-image-2",
+      "quality": "medium",
+      "size": "1024x1024",
+      "cost_cents": 6,
+      "created_at": "2026-10-25T05:35:42.983Z"
+    },
+    "cr_g0_convenience_offer_led_macro_nostalgia_regular_1": {
+      "file": "data/ad-images/cr_g0_convenience_offer_led_macro_nostalgia_regular_1.png",
+      "run_id": "run_loop_1",
+      "segment_id": "seg_macro_nostalgia_regular",
+      "arm_id": "arm_convenience_offer_led",
+      "round0": {
+        "rank": 3,
+        "mean_reward": 0.0007442252541741393,
+        "impressions": 15
+      },
+      "prompt": "Photorealistic commercial meta ad photograph. Audience: An adult cereal lover who wants the fun and familiarity of childhood cereal without the sugar load, and uses Magic Spoon as a repeat breakfast or snack that fits a protein-forward, low-sugar routine.. Hero subject: the brand's product. Key claim this image should make visible through the scene (never as written text): \"Customers want fruity and other cereal flavor options beyond the current lineup.\". Mood: Playful, nostalgic, confident, and benefit-led; the brand mixes childhood fun with modern wellness and macro-focused language. Quality: award-grade commercial product photography — tack-sharp focus on the product, physically accurate lighting and shadows, coherent perspective, realistic materials and textures, professional color grading. No warped geometry, no duplicated or extra objects, no surreal artifacts. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. No product reference images were provided, so the product's packaging must be CLEAN and UNBRANDED with NO readable text — never invent a brand name, logo, label text, slogan, or disclaimer. A plain, text-free package is correct; invented text is a failure. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter. This ad's visual: A cheerful adult enjoying a colorful bowl of Magic Spoon fruity cereal.. Leave out any words, logos or text overlays.",
+      "model": "gpt-image-2",
+      "quality": "medium",
+      "size": "1024x1024",
+      "cost_cents": 6,
+      "created_at": "2026-10-25T05:36:15.356Z"
+    },
+    "cr_g0_convenience_pov_relatable_macro_nostalgia_regular_1": {
+      "file": "data/ad-images/cr_g0_convenience_pov_relatable_macro_nostalgia_regular_1.png",
+      "run_id": "run_loop_1",
+      "segment_id": "seg_macro_nostalgia_regular",
+      "arm_id": "arm_convenience_pov_relatable",
+      "round0": {
+        "rank": 4,
+        "mean_reward": 0.0005724497454803502,
+        "impressions": 15
+      },
+      "winner": {
+        "mean_reward": 0.0005636879706416725,
+        "impressions": 107,
+        "cpo_usd": 30.604063731382478,
+        "control_cpo_usd": 71.71833247698304
+      },
+      "prompt": "Photorealistic commercial meta ad photograph. Audience: An adult cereal lover who wants the fun and familiarity of childhood cereal without the sugar load, and uses Magic Spoon as a repeat breakfast or snack that fits a protein-forward, low-sugar routine.. Hero subject: the brand's product. Key claim this image should make visible through the scene (never as written text): \"Customers want fruity and other cereal flavor options beyond the current lineup.\". Mood: Playful, nostalgic, confident, and benefit-led; the brand mixes childhood fun with modern wellness and macro-focused language. Quality: award-grade commercial product photography — tack-sharp focus on the product, physically accurate lighting and shadows, coherent perspective, realistic materials and textures, professional color grading. No warped geometry, no duplicated or extra objects, no surreal artifacts. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. No product reference images were provided, so the product's packaging must be CLEAN and UNBRANDED with NO readable text — never invent a brand name, logo, label text, slogan, or disclaimer. A plain, text-free package is correct; invented text is a failure. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter. This ad's visual: A brightly colored cereal box on a kitchen counter.. Leave out any words, logos or text overlays.",
+      "model": "gpt-image-2",
+      "quality": "medium",
+      "size": "1024x1024",
+      "cost_cents": 6,
+      "created_at": "2026-10-25T05:36:47.637Z"
+    },
+    "cr_g0_trust_safety_social_proof_diet_restricted_functional_buyer_1": {
+      "file": "data/ad-images/cr_g0_trust_safety_social_proof_diet_restricted_functional_buyer_1.png",
+      "run_id": "run_loop_1",
+      "segment_id": "seg_diet_restricted_functional_buyer",
+      "arm_id": "arm_trust_safety_social_proof",
+      "round0": {
+        "rank": 5,
+        "mean_reward": 0.0004145549527576293,
+        "impressions": 6
+      },
+      "prompt": "Photorealistic commercial meta ad photograph. Audience: A shopper with specific dietary constraints or macro rules who wants cereal and snack options that fit gluten-free, grain-free, keto-friendly, or low-carb needs, but watches labels closely and is sensitive to tolerance issues.. Hero subject: the brand's product. Key claim this image should make visible through the scene (never as written text): \"Customers praise the new packaging and say they love the brand.\". Mood: Playful, nostalgic, confident, and benefit-led; the brand mixes childhood fun with modern wellness and macro-focused language. Quality: award-grade commercial product photography — tack-sharp focus on the product, physically accurate lighting and shadows, coherent perspective, realistic materials and textures, professional color grading. No warped geometry, no duplicated or extra objects, no surreal artifacts. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. No product reference images were provided, so the product's packaging must be CLEAN and UNBRANDED with NO readable text — never invent a brand name, logo, label text, slogan, or disclaimer. A plain, text-free package is correct; invented text is a failure. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter. This ad's visual: A cozy kitchen morning scene.. Leave out any words, logos or text overlays.",
+      "model": "gpt-image-2",
+      "quality": "medium",
+      "size": "1024x1024",
+      "cost_cents": 6,
+      "created_at": "2026-10-25T05:37:24.060Z"
+    },
+    "cr_g0_taste_indulgence_story_narrative_macro_nostalgia_regular_1": {
+      "file": "data/ad-images/cr_g0_taste_indulgence_story_narrative_macro_nostalgia_regular_1.png",
+      "run_id": "run_loop_1",
+      "segment_id": "seg_macro_nostalgia_regular",
+      "arm_id": "arm_taste_indulgence_story_narrative",
+      "round0": {
+        "rank": 6,
+        "mean_reward": 0.00040256323515853386,
+        "impressions": 14
+      },
+      "prompt": "Photorealistic commercial meta ad photograph. Audience: An adult cereal lover who wants the fun and familiarity of childhood cereal without the sugar load, and uses Magic Spoon as a repeat breakfast or snack that fits a protein-forward, low-sugar routine.. Hero subject: the brand's product. Key claim this image should make visible through the scene (never as written text): \"Customers want fruity and other cereal flavor options beyond the current lineup.\". Mood: Playful, nostalgic, confident, and benefit-led; the brand mixes childhood fun with modern wellness and macro-focused language. Quality: award-grade commercial product photography — tack-sharp focus on the product, physically accurate lighting and shadows, coherent perspective, realistic materials and textures, professional color grading. No warped geometry, no duplicated or extra objects, no surreal artifacts. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. No product reference images were provided, so the product's packaging must be CLEAN and UNBRANDED with NO readable text — never invent a brand name, logo, label text, slogan, or disclaimer. A plain, text-free package is correct; invented text is a failure. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter. This ad's visual: A bowl of colorful Magic Spoon cereal sits invitingly beside an old-school.. Leave out any words, logos or text overlays.",
+      "model": "gpt-image-2",
+      "quality": "medium",
+      "size": "1024x1024",
+      "cost_cents": 6,
+      "created_at": "2026-10-25T05:37:53.583Z"
+    },
+    "cr_g0_craving_pov_relatable_macro_nostalgia_regular_1": {
+      "file": "data/ad-images/cr_g0_craving_pov_relatable_macro_nostalgia_regular_1.png",
+      "run_id": "run_loop_1",
+      "segment_id": "seg_macro_nostalgia_regular",
+      "arm_id": "arm_craving_pov_relatable",
+      "round0": {
+        "rank": 7,
+        "mean_reward": 0.00040131332470388583,
+        "impressions": 15
+      },
+      "prompt": "Photorealistic commercial meta ad photograph. Audience: An adult cereal lover who wants the fun and familiarity of childhood cereal without the sugar load, and uses Magic Spoon as a repeat breakfast or snack that fits a protein-forward, low-sugar routine.. Hero subject: the brand's product. Key claim this image should make visible through the scene (never as written text): \"Customers want fruity and other cereal flavor options beyond the current lineup.\". Mood: Playful, nostalgic, confident, and benefit-led; the brand mixes childhood fun with modern wellness and macro-focused language. Quality: award-grade commercial product photography — tack-sharp focus on the product, physically accurate lighting and shadows, coherent perspective, realistic materials and textures, professional color grading. No warped geometry, no duplicated or extra objects, no surreal artifacts. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. No product reference images were provided, so the product's packaging must be CLEAN and UNBRANDED with NO readable text — never invent a brand name, logo, label text, slogan, or disclaimer. A plain, text-free package is correct; invented text is a failure. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter. This ad's visual: A person in a cozy kitchen.. Leave out any words, logos or text overlays.",
+      "model": "gpt-image-2",
+      "quality": "medium",
+      "size": "1024x1024",
+      "cost_cents": 6,
+      "created_at": "2026-10-25T05:38:27.486Z"
+    },
+    "cr_g0_taste_indulgence_testimonial_low_carb_skeptical_considerer_1": {
+      "file": "data/ad-images/cr_g0_taste_indulgence_testimonial_low_carb_skeptical_considerer_1.png",
+      "run_id": "run_loop_1",
+      "segment_id": "seg_low_carb_skeptical_considerer",
+      "arm_id": "arm_taste_indulgence_testimonial",
+      "round0": {
+        "rank": 8,
+        "mean_reward": 0.0003968184344507832,
+        "impressions": 13
+      },
+      "prompt": "Photorealistic commercial meta ad photograph. Audience: A health-conscious shopper who is intrigued by low-carb, no-sugar cereal but is still evaluating whether Magic Spoon is worth trying, worth the price, and transparent enough on ingredients and claims.. Hero subject: the brand's product. Key claim this image should make visible through the scene (never as written text): \"Customers praise the brand’s great flavors and steady product innovation.\". Mood: Playful, nostalgic, confident, and benefit-led; the brand mixes childhood fun with modern wellness and macro-focused language. Quality: award-grade commercial product photography — tack-sharp focus on the product, physically accurate lighting and shadows, coherent perspective, realistic materials and textures, professional color grading. No warped geometry, no duplicated or extra objects, no surreal artifacts. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. No product reference images were provided, so the product's packaging must be CLEAN and UNBRANDED with NO readable text — never invent a brand name, logo, label text, slogan, or disclaimer. A plain, text-free package is correct; invented text is a failure. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter. This ad's visual: A brightly colored cereal box of Magic Spoon stands open.. Leave out any words, logos or text overlays.",
+      "model": "gpt-image-2",
+      "quality": "medium",
+      "size": "1024x1024",
+      "cost_cents": 6,
+      "created_at": "2026-10-25T05:38:59.880Z"
+    },
+    "cr_g0_health_nutrition_problem_callout_low_carb_skeptical_considerer_1": {
+      "file": "data/ad-images/cr_g0_health_nutrition_problem_callout_low_carb_skeptical_considerer_1.png",
+      "run_id": "run_loop_1",
+      "segment_id": "seg_low_carb_skeptical_considerer",
+      "arm_id": "arm_health_nutrition_problem_callout",
+      "round0": {
+        "rank": 9,
+        "mean_reward": 0.00037283907725888313,
+        "impressions": 12
+      },
+      "prompt": "Photorealistic commercial meta ad photograph. Audience: A health-conscious shopper who is intrigued by low-carb, no-sugar cereal but is still evaluating whether Magic Spoon is worth trying, worth the price, and transparent enough on ingredients and claims.. Hero subject: the brand's product. Key claim this image should make visible through the scene (never as written text): \"Granola includes crunchy nuts and seeds with 13-14g protein, 0g added sugar, and 8-9g fiber.\". Mood: Playful, nostalgic, confident, and benefit-led; the brand mixes childhood fun with modern wellness and macro-focused language. Quality: award-grade commercial product photography — tack-sharp focus on the product, physically accurate lighting and shadows, coherent perspective, realistic materials and textures, professional color grading. No warped geometry, no duplicated or extra objects, no surreal artifacts. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. No product reference images were provided, so the product's packaging must be CLEAN and UNBRANDED with NO readable text — never invent a brand name, logo, label text, slogan, or disclaimer. A plain, text-free package is correct; invented text is a failure. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter. This ad's visual: A clean studio shot with a bag of granola prominently displayed.. Leave out any words, logos or text overlays.",
+      "model": "gpt-image-2",
+      "quality": "medium",
+      "size": "1024x1024",
+      "cost_cents": 6,
+      "created_at": "2026-10-25T05:39:29.034Z"
+    },
+    "cr_g0_natural_clean_statistic_macro_nostalgia_regular_1": {
+      "file": "data/ad-images/cr_g0_natural_clean_statistic_macro_nostalgia_regular_1.png",
+      "run_id": "run_loop_1",
+      "segment_id": "seg_macro_nostalgia_regular",
+      "arm_id": "arm_natural_clean_statistic",
+      "round0": {
+        "rank": 10,
+        "mean_reward": 0.00035777905987380775,
+        "impressions": 15
+      },
+      "prompt": "Photorealistic commercial meta ad photograph. Audience: An adult cereal lover who wants the fun and familiarity of childhood cereal without the sugar load, and uses Magic Spoon as a repeat breakfast or snack that fits a protein-forward, low-sugar routine.. Hero subject: the brand's product. Key claim this image should make visible through the scene (never as written text): \"Magic Spoon says it uses no artificial colors or sweeteners.\". Mood: Playful, nostalgic, confident, and benefit-led; the brand mixes childhood fun with modern wellness and macro-focused language. Quality: award-grade commercial product photography — tack-sharp focus on the product, physically accurate lighting and shadows, coherent perspective, realistic materials and textures, professional color grading. No warped geometry, no duplicated or extra objects, no surreal artifacts. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. No product reference images were provided, so the product's packaging must be CLEAN and UNBRANDED with NO readable text — never invent a brand name, logo, label text, slogan, or disclaimer. A plain, text-free package is correct; invented text is a failure. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter. This ad's visual: A sunny kitchen table with an open box of Magic Spoon.. Leave out any words, logos or text overlays.",
+      "model": "gpt-image-2",
+      "quality": "medium",
+      "size": "1024x1024",
+      "cost_cents": 6,
+      "created_at": "2026-10-25T05:40:00.437Z"
+    },
+    "cr_g0_price_value_question_diet_restricted_functional_buyer_1": {
+      "file": "data/ad-images/cr_g0_price_value_question_diet_restricted_functional_buyer_1.png",
+      "run_id": "run_loop_1",
+      "segment_id": "seg_diet_restricted_functional_buyer",
+      "arm_id": "arm_price_value_question",
+      "round0": {
+        "rank": 11,
+        "mean_reward": 0.0003510122028342514,
+        "impressions": 5
+      },
+      "prompt": "Photorealistic commercial meta ad photograph. Audience: A shopper with specific dietary constraints or macro rules who wants cereal and snack options that fit gluten-free, grain-free, keto-friendly, or low-carb needs, but watches labels closely and is sensitive to tolerance issues.. Hero subject: the brand's product. Key claim this image should make visible through the scene (never as written text): \"Customers praise the new packaging and say they love the brand.\". Mood: Playful, nostalgic, confident, and benefit-led; the brand mixes childhood fun with modern wellness and macro-focused language. Quality: award-grade commercial product photography — tack-sharp focus on the product, physically accurate lighting and shadows, coherent perspective, realistic materials and textures, professional color grading. No warped geometry, no duplicated or extra objects, no surreal artifacts. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. No product reference images were provided, so the product's packaging must be CLEAN and UNBRANDED with NO readable text — never invent a brand name, logo, label text, slogan, or disclaimer. A plain, text-free package is correct; invented text is a failure. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter. This ad's visual: A candid shot of a breakfast table in warm morning light.. Leave out any words, logos or text overlays.",
+      "model": "gpt-image-2",
+      "quality": "medium",
+      "size": "1024x1024",
+      "cost_cents": 6,
+      "created_at": "2026-10-25T05:40:33.279Z"
+    },
+    "cr_g0_price_value_question_low_carb_skeptical_considerer_1": {
+      "file": "data/ad-images/cr_g0_price_value_question_low_carb_skeptical_considerer_1.png",
+      "run_id": "run_loop_1",
+      "segment_id": "seg_low_carb_skeptical_considerer",
+      "arm_id": "arm_price_value_question",
+      "round0": {
+        "rank": 12,
+        "mean_reward": 0.00034102069412105055,
+        "impressions": 11
+      },
+      "winner": {
+        "mean_reward": 0.00030214719802575894,
+        "impressions": 96,
+        "cpo_usd": 48.07520311843442,
+        "control_cpo_usd": 122.14721696509571
+      },
+      "prompt": "Photorealistic commercial meta ad photograph. Audience: A health-conscious shopper who is intrigued by low-carb, no-sugar cereal but is still evaluating whether Magic Spoon is worth trying, worth the price, and transparent enough on ingredients and claims.. Hero subject: the brand's product. Key claim this image should make visible through the scene (never as written text): \"Customers feel the price is too high.\". Mood: Playful, nostalgic, confident, and benefit-led; the brand mixes childhood fun with modern wellness and macro-focused language. Quality: award-grade commercial product photography — tack-sharp focus on the product, physically accurate lighting and shadows, coherent perspective, realistic materials and textures, professional color grading. No warped geometry, no duplicated or extra objects, no surreal artifacts. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. No product reference images were provided, so the product's packaging must be CLEAN and UNBRANDED with NO readable text — never invent a brand name, logo, label text, slogan, or disclaimer. A plain, text-free package is correct; invented text is a failure. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter. This ad's visual: A bright, sunlit kitchen table with a bowl of Magic Spoon cereal.. Leave out any words, logos or text overlays.",
+      "model": "gpt-image-2",
+      "quality": "medium",
+      "size": "1024x1024",
+      "cost_cents": 6,
+      "created_at": "2026-10-25T05:41:04.750Z"
+    },
+    "cr_g0_taste_indulgence_testimonial_macro_nostalgia_regular_1": {
+      "file": "data/ad-images/cr_g0_taste_indulgence_testimonial_macro_nostalgia_regular_1.png",
+      "run_id": "run_loop_1",
+      "segment_id": "seg_macro_nostalgia_regular",
+      "arm_id": "arm_taste_indulgence_testimonial",
+      "round0": {
+        "rank": 13,
+        "mean_reward": 0.0003241637933697048,
+        "impressions": 14
+      },
+      "prompt": "Photorealistic commercial meta ad photograph. Audience: An adult cereal lover who wants the fun and familiarity of childhood cereal without the sugar load, and uses Magic Spoon as a repeat breakfast or snack that fits a protein-forward, low-sugar routine.. Hero subject: the brand's product. Key claim this image should make visible through the scene (never as written text): \"Customers want fruity and other cereal flavor options beyond the current lineup.\". Mood: Playful, nostalgic, confident, and benefit-led; the brand mixes childhood fun with modern wellness and macro-focused language. Quality: award-grade commercial product photography — tack-sharp focus on the product, physically accurate lighting and shadows, coherent perspective, realistic materials and textures, professional color grading. No warped geometry, no duplicated or extra objects, no surreal artifacts. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. No product reference images were provided, so the product's packaging must be CLEAN and UNBRANDED with NO readable text — never invent a brand name, logo, label text, slogan, or disclaimer. A plain, text-free package is correct; invented text is a failure. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter. This ad's visual: A brightly lit studio shot of a well-used box of Magic Spoon.. Leave out any words, logos or text overlays.",
+      "model": "gpt-image-2",
+      "quality": "medium",
+      "size": "1024x1024",
+      "cost_cents": 6,
+      "created_at": "2026-10-25T05:41:37.623Z"
+    },
+    "cr_g0_health_nutrition_bold_claim_macro_nostalgia_regular_1": {
+      "file": "data/ad-images/cr_g0_health_nutrition_bold_claim_macro_nostalgia_regular_1.png",
+      "run_id": "run_loop_1",
+      "segment_id": "seg_macro_nostalgia_regular",
+      "arm_id": "arm_health_nutrition_bold_claim",
+      "round0": {
+        "rank": 14,
+        "mean_reward": 0.0003185510871019608,
+        "impressions": 15
+      },
+      "prompt": "Photorealistic commercial meta ad photograph. Audience: An adult cereal lover who wants the fun and familiarity of childhood cereal without the sugar load, and uses Magic Spoon as a repeat breakfast or snack that fits a protein-forward, low-sugar routine.. Hero subject: the brand's product. Key claim this image should make visible through the scene (never as written text): \"Magic Spoon cereal combines 12-14g protein with 0g sugar and 4-5g net carbs per serving.\". Mood: Playful, nostalgic, confident, and benefit-led; the brand mixes childhood fun with modern wellness and macro-focused language. Quality: award-grade commercial product photography — tack-sharp focus on the product, physically accurate lighting and shadows, coherent perspective, realistic materials and textures, professional color grading. No warped geometry, no duplicated or extra objects, no surreal artifacts. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. No product reference images were provided, so the product's packaging must be CLEAN and UNBRANDED with NO readable text — never invent a brand name, logo, label text, slogan, or disclaimer. A plain, text-free package is correct; invented text is a failure. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter. This ad's visual: A kitchen table in natural morning light.. Leave out any words, logos or text overlays.",
+      "model": "gpt-image-2",
+      "quality": "medium",
+      "size": "1024x1024",
+      "cost_cents": 6,
+      "created_at": "2026-10-25T05:42:08.738Z"
+    },
+    "cr_g0_taste_indulgence_testimonial_disappointed_ex_buyer_1": {
+      "file": "data/ad-images/cr_g0_taste_indulgence_testimonial_disappointed_ex_buyer_1.png",
+      "run_id": "run_loop_1",
+      "segment_id": "seg_disappointed_ex_buyer",
+      "arm_id": "arm_taste_indulgence_testimonial",
+      "round0": {
+        "rank": 15,
+        "mean_reward": 0.0003180512106759655,
+        "impressions": 27
+      },
+      "prompt": "Photorealistic commercial meta ad photograph. Audience: A former buyer who tried the product hoping for a healthier cereal swap, but now feels burned by the taste, texture, value, or trust experience and is unlikely to repurchase.. Hero subject: the brand's product. Key claim this image should make visible through the scene (never as written text): \"Customers dislike the taste and say it was hard to tolerate.\". Mood: Playful, nostalgic, confident, and benefit-led; the brand mixes childhood fun with modern wellness and macro-focused language. Quality: award-grade commercial product photography — tack-sharp focus on the product, physically accurate lighting and shadows, coherent perspective, realistic materials and textures, professional color grading. No warped geometry, no duplicated or extra objects, no surreal artifacts. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. No product reference images were provided, so the product's packaging must be CLEAN and UNBRANDED with NO readable text — never invent a brand name, logo, label text, slogan, or disclaimer. A plain, text-free package is correct; invented text is a failure. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter. This ad's visual: A box of cereal sits open on a wooden kitchen table.. Leave out any words, logos or text overlays.",
+      "model": "gpt-image-2",
+      "quality": "medium",
+      "size": "1024x1024",
+      "cost_cents": 6,
+      "created_at": "2026-10-25T05:42:38.957Z"
+    },
+    "cr_g1_loop_1_taste_indulgence_testimonial_disappointed_ex_buyer_1": {
+      "file": "data/ad-images/cr_g1_loop_1_taste_indulgence_testimonial_disappointed_ex_buyer_1.png",
+      "run_id": "run_loop_1",
+      "segment_id": "seg_disappointed_ex_buyer",
+      "arm_id": "arm_taste_indulgence_testimonial",
+      "winner": {
+        "mean_reward": 0.00028599894284903104,
+        "impressions": 153,
+        "cpo_usd": 67.78571965257461,
+        "control_cpo_usd": 312.2571099410736
+      },
+      "prompt": "Photorealistic commercial meta ad photograph. Audience: A former buyer who tried the product hoping for a healthier cereal swap, but now feels burned by the taste, texture, value, or trust experience and is unlikely to repurchase.. Hero subject: the brand's product. Key claim this image should make visible through the scene (never as written text): \"Customers dislike the taste and say it was hard to tolerate.\". Mood: Playful, nostalgic, confident, and benefit-led; the brand mixes childhood fun with modern wellness and macro-focused language. Quality: award-grade commercial product photography — tack-sharp focus on the product, physically accurate lighting and shadows, coherent perspective, realistic materials and textures, professional color grading. No warped geometry, no duplicated or extra objects, no surreal artifacts. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. No product reference images were provided, so the product's packaging must be CLEAN and UNBRANDED with NO readable text — never invent a brand name, logo, label text, slogan, or disclaimer. A plain, text-free package is correct; invented text is a failure. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter. This ad's visual: A cozy kitchen setting in the morning light.. Leave out any words, logos or text overlays.",
+      "model": "gpt-image-2",
+      "quality": "medium",
+      "size": "1024x1024",
+      "cost_cents": 6,
+      "created_at": "2026-10-25T05:43:12.447Z"
+    },
+    "cr_g0_convenience_offer_led_unaware_projection_1": {
+      "file": "data/ad-images/cr_g0_convenience_offer_led_unaware_projection_1.png",
+      "run_id": "run_loop_1",
+      "segment_id": "seg_unaware_projection",
+      "arm_id": "arm_convenience_offer_led",
+      "winner": {
+        "mean_reward": 0.00014238630990476024,
+        "impressions": 21,
+        "cpo_usd": 59.4557656534445,
+        "control_cpo_usd": 140.00426131120787
+      },
+      "prompt": "Photorealistic commercial meta ad photograph. Audience: Before recognizing sugar, protein, or macro issues with their breakfast, this person just wants an easy, familiar cereal or snack that tastes good, feels nostalgic, and fits the usual grocery budget.. Hero subject: the brand's product. Key claim this image should make visible through the scene (never as written text): \"The brand offers convenience through flexible subscriptions and home delivery.\". Mood: Playful, nostalgic, confident, and benefit-led; the brand mixes childhood fun with modern wellness and macro-focused language. Quality: award-grade commercial product photography — tack-sharp focus on the product, physically accurate lighting and shadows, coherent perspective, realistic materials and textures, professional color grading. No warped geometry, no duplicated or extra objects, no surreal artifacts. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. No product reference images were provided, so the product's packaging must be CLEAN and UNBRANDED with NO readable text — never invent a brand name, logo, label text, slogan, or disclaimer. A plain, text-free package is correct; invented text is a failure. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter. This ad's visual: A cozy kitchen table bathed in morning sunlight.. Leave out any words, logos or text overlays.",
+      "model": "gpt-image-2",
+      "quality": "medium",
+      "size": "1024x1024",
+      "cost_cents": 6,
+      "created_at": "2026-10-25T05:43:44.000Z"
+    }
+  },
+  "runs": {
+    "run_loop_1": {
+      "signature": "1d764f23b9f9a5ea,3cc7bfe05b42e122,003e3f920282cd35,1042d7a6372e72f6,51112d9633ac50d1,9159489aacd8df0f,0369c42dee1490e2,5491b4b5a6de80b0,bfbd5d8479a58b8e,b275a7ce5f8f81ff,c859713ecb0b40f7,f5981efa5dc0c492"
+    }
+  }
+}

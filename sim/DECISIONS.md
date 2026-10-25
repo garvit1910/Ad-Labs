@@ -869,3 +869,28 @@ lists only `ping` until the merged module is published.
   an optional number or string came back as the tag (an objection read as `0`). The sim never
   read option columns until B6 did; the decoder now takes both forms, with a test using the live
   shape.
+
+## Demo ad images
+
+### D80. Ad images are display-only, rendered by a B tool into a sidecar — `DECIDED` (your choices)
+- **What gets an image:** per run, the top 15 round-0 ads by warm-up reward (every recipe gets
+  equal impressions in round 0), and per segment the winning recipe's best-rewarded ad at the end
+  (at least 30 impressions, else its most-shown ad). Not all 54 round-0 ads.
+- **How:** `npm run sim:images -- round0|winners --run <id>` (root `scripts/sim-images.ts`). It
+  rebuilds each ad's pack the way A5 compiled it, without copy calls, and refuses unless the
+  rebuilt fingerprint equals the creative's `pack_fingerprint`. It renders Adcero's image
+  prompt plus the ad's own visual line with `gpt-image-2`, medium quality, 1024², no text in the
+  image.
+- **Where:**
+  - files in `data/ad-images/` (git-ignored), served by `/api/sim/ad-image/<id>`;
+  - `sim/demo/ad-images.json` maps creative → image and each set's numbers. A's
+    `creative.image_url` is never written; A can copy the entries over later if A7 or the cards
+    want them.
+- **The sim stays text-only:** Jev never sees an image, so no number changes.
+- **First batch** (`run_loop_1` on the local real-data bench): 17 images (15 round-0, 5 winners, 3
+  in both), $1.02, 0 fingerprint mismatches.
+- **Open: branding.** The images show an unbranded pack: A5's packs are compiled without a brand
+  kit, so they carry no logo or product reference. The OpenAI provider accepts up to 4 reference
+  images (`/v1/images/edits`), fetched only from allowlisted hosts (`creative-image-hosts.ts`;
+  extend with `R2_PUBLIC_BUCKET_URL` or similar). With a Magic Spoon packshot and logo, the same
+  run can render the real packaging.
