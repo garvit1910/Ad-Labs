@@ -309,10 +309,108 @@
       "size": "1024x1024",
       "cost_cents": 6,
       "created_at": "2026-10-25T05:43:44.000Z"
+    },
+    "cr_g1_test_1025_0903_craving_pov_relatable_diet_restricted_functional_buyer_1": {
+      "file": "data/ad-images/cr_g1_test_1025_0903_craving_pov_relatable_diet_restricted_functional_buyer_1.png",
+      "run_id": "run_test_1025_0903",
+      "segment_id": "seg_diet_restricted_functional_buyer",
+      "arm_id": "arm_craving_pov_relatable",
+      "winner": {
+        "mean_reward": 0.0002733121224413756,
+        "impressions": 28,
+        "cpo_usd": 34.87580593816962,
+        "control_cpo_usd": 87.92813617300766
+      },
+      "reference_sha": "d582ae2930c45b0ef796423f8e76c8edfcf06ae2989637a67d2363251afa001b",
+      "prompt": "Photorealistic commercial meta ad photograph. Audience: A shopper with specific dietary constraints or macro rules who wants cereal and snack options that fit gluten-free, grain-free, keto-friendly, or low-carb needs, but watches labels closely and is sensitive to tolerance issues.. Hero subject: the brand's product, reproduced exactly as shown in the reference images — including its label and packaging text. Key claim this image should make visible through the scene (never as written text): \"Customers praise the new packaging and say they love the brand.\". Mood: Playful, nostalgic, confident, and benefit-led; the brand mixes childhood fun with modern wellness and macro-focused language. Quality: award-grade commercial product photography — tack-sharp focus on the product, physically accurate lighting and shadows, coherent perspective, realistic materials and textures, professional color grading. No warped geometry, no duplicated or extra objects, no surreal artifacts. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. The product must match the reference images EXACTLY: same packaging shape, label design, printed text, logo, and colors. Do not restyle, redesign, blur, or replace the label or logo. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter. This ad's visual: A bright kitchen setting with natural light streaming in.. No added text overlays, captions or watermarks; the only words are the ones printed on the real packaging.",
+      "model": "gpt-image-2",
+      "quality": "medium",
+      "size": "1024x1024",
+      "cost_cents": 6,
+      "created_at": "2026-10-25T11:51:17.140Z"
+    },
+    "cr_g0_convenience_pov_relatable_disappointed_ex_buyer_1": {
+      "file": "data/ad-images/cr_g0_convenience_pov_relatable_disappointed_ex_buyer_1.png",
+      "run_id": "run_test_1025_0903",
+      "segment_id": "seg_disappointed_ex_buyer",
+      "arm_id": "arm_convenience_pov_relatable",
+      "winner": {
+        "mean_reward": 0.00018387575065093321,
+        "impressions": 149,
+        "cpo_usd": 68.01578567932012,
+        "control_cpo_usd": 296.6096998371783
+      },
+      "reference_sha": "d582ae2930c45b0ef796423f8e76c8edfcf06ae2989637a67d2363251afa001b",
+      "prompt": "Photorealistic commercial meta ad photograph. Audience: A former buyer who tried the product hoping for a healthier cereal swap, but now feels burned by the taste, texture, value, or trust experience and is unlikely to repurchase.. Hero subject: the brand's product, reproduced exactly as shown in the reference images — including its label and packaging text. Key claim this image should make visible through the scene (never as written text): \"Customers report slow delivery or orders that never arrived.\". Mood: Playful, nostalgic, confident, and benefit-led; the brand mixes childhood fun with modern wellness and macro-focused language. Quality: award-grade commercial product photography — tack-sharp focus on the product, physically accurate lighting and shadows, coherent perspective, realistic materials and textures, professional color grading. No warped geometry, no duplicated or extra objects, no surreal artifacts. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. The product must match the reference images EXACTLY: same packaging shape, label design, printed text, logo, and colors. Do not restyle, redesign, blur, or replace the label or logo. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter. This ad's visual: A box of cereal on a clean white table.. No added text overlays, captions or watermarks; the only words are the ones printed on the real packaging.",
+      "model": "gpt-image-2",
+      "quality": "medium",
+      "size": "1024x1024",
+      "cost_cents": 6,
+      "created_at": "2026-10-25T11:55:27.202Z"
+    },
+    "cr_g1_test_1025_0903_taste_indulgence_curiosity_macro_nostalgia_regular_1": {
+      "file": "data/ad-images/cr_g1_test_1025_0903_taste_indulgence_curiosity_macro_nostalgia_regular_1.png",
+      "run_id": "run_test_1025_0903",
+      "segment_id": "seg_macro_nostalgia_regular",
+      "arm_id": "arm_taste_indulgence_curiosity",
+      "winner": {
+        "mean_reward": 0.0005772949641722912,
+        "impressions": 83,
+        "cpo_usd": 27.93073417595433,
+        "control_cpo_usd": 71.62232973006135
+      },
+      "reference_sha": "d582ae2930c45b0ef796423f8e76c8edfcf06ae2989637a67d2363251afa001b",
+      "prompt": "Photorealistic commercial meta ad photograph. Audience: An adult cereal lover who wants the fun and familiarity of childhood cereal without the sugar load, and uses Magic Spoon as a repeat breakfast or snack that fits a protein-forward, low-sugar routine.. Hero subject: the brand's product, reproduced exactly as shown in the reference images — including its label and packaging text. Key claim this image should make visible through the scene (never as written text): \"Customers want fruity and other cereal flavor options beyond the current lineup.\". Mood: Playful, nostalgic, confident, and benefit-led; the brand mixes childhood fun with modern wellness and macro-focused language. Quality: award-grade commercial product photography — tack-sharp focus on the product, physically accurate lighting and shadows, coherent perspective, realistic materials and textures, professional color grading. No warped geometry, no duplicated or extra objects, no surreal artifacts. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. The product must match the reference images EXACTLY: same packaging shape, label design, printed text, logo, and colors. Do not restyle, redesign, blur, or replace the label or logo. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter. This ad's visual: A kitchen table with a bowl of Magic Spoon cereal in vibrant.. No added text overlays, captions or watermarks; the only words are the ones printed on the real packaging.",
+      "model": "gpt-image-2",
+      "quality": "medium",
+      "size": "1024x1024",
+      "cost_cents": 6,
+      "created_at": "2026-10-25T11:55:27.465Z"
+    },
+    "cr_g0_convenience_pov_relatable_low_carb_skeptical_considerer_1": {
+      "file": "data/ad-images/cr_g0_convenience_pov_relatable_low_carb_skeptical_considerer_1.png",
+      "run_id": "run_test_1025_0903",
+      "segment_id": "seg_low_carb_skeptical_considerer",
+      "arm_id": "arm_convenience_pov_relatable",
+      "winner": {
+        "mean_reward": 0.0002767666081628369,
+        "impressions": 58,
+        "cpo_usd": 49.92442141718884,
+        "control_cpo_usd": 112.88112149085615
+      },
+      "reference_sha": "d582ae2930c45b0ef796423f8e76c8edfcf06ae2989637a67d2363251afa001b",
+      "prompt": "Photorealistic commercial meta ad photograph. Audience: A health-conscious shopper who is intrigued by low-carb, no-sugar cereal but is still evaluating whether Magic Spoon is worth trying, worth the price, and transparent enough on ingredients and claims.. Hero subject: the brand's product, reproduced exactly as shown in the reference images — including its label and packaging text. Key claim this image should make visible through the scene (never as written text): \"Customers feel the price is too high.\". Mood: Playful, nostalgic, confident, and benefit-led; the brand mixes childhood fun with modern wellness and macro-focused language. Quality: award-grade commercial product photography — tack-sharp focus on the product, physically accurate lighting and shadows, coherent perspective, realistic materials and textures, professional color grading. No warped geometry, no duplicated or extra objects, no surreal artifacts. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. The product must match the reference images EXACTLY: same packaging shape, label design, printed text, logo, and colors. Do not restyle, redesign, blur, or replace the label or logo. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter. This ad's visual: Magic Spoon cereal box on a sleek kitchen counter.. No added text overlays, captions or watermarks; the only words are the ones printed on the real packaging.",
+      "model": "gpt-image-2",
+      "quality": "medium",
+      "size": "1024x1024",
+      "cost_cents": 6,
+      "created_at": "2026-10-25T11:55:28.565Z"
+    },
+    "cr_g0_taste_indulgence_curiosity_unaware_projection_1": {
+      "file": "data/ad-images/cr_g0_taste_indulgence_curiosity_unaware_projection_1.png",
+      "run_id": "run_test_1025_0903",
+      "segment_id": "seg_unaware_projection",
+      "arm_id": "arm_taste_indulgence_curiosity",
+      "winner": {
+        "mean_reward": 0.00016803330112608958,
+        "impressions": 21,
+        "cpo_usd": 45.68673536670634,
+        "control_cpo_usd": 135.6041860174353
+      },
+      "reference_sha": "d582ae2930c45b0ef796423f8e76c8edfcf06ae2989637a67d2363251afa001b",
+      "prompt": "Photorealistic commercial meta ad photograph. Audience: Before recognizing sugar, protein, or macro issues with their breakfast, this person just wants an easy, familiar cereal or snack that tastes good, feels nostalgic, and fits the usual grocery budget.. Hero subject: the brand's product, reproduced exactly as shown in the reference images — including its label and packaging text. Key claim this image should make visible through the scene (never as written text): \"The brand emphasizes nostalgic taste that matches classic cereals and snacks.\". Mood: Playful, nostalgic, confident, and benefit-led; the brand mixes childhood fun with modern wellness and macro-focused language. Quality: award-grade commercial product photography — tack-sharp focus on the product, physically accurate lighting and shadows, coherent perspective, realistic materials and textures, professional color grading. No warped geometry, no duplicated or extra objects, no surreal artifacts. Constraints: do not ADD any text, headlines, captions, banner bands, buttons, CTA pills, watermarks, or floating logos to the image. Never render invented brand names, slogans, disclaimers, or legal text anywhere in the image. The ONLY text allowed is text that physically exists on the product itself — its real label, packaging, and printed logo — which MUST be reproduced faithfully. The product must match the reference images EXACTLY: same packaging shape, label design, printed text, logo, and colors. Do not restyle, redesign, blur, or replace the label or logo. Stylised, conceptual, graphic, or editorial compositions (a bold colour-blocked still life, a metaphorical staging of the benefit) are welcome, but every element must relate to the product, its ingredients, its benefit, or its customer. No unrelated or unmotivated props, crowds, devices, screens, venues, or decorative clutter. This ad's visual: A sunny kitchen table scene with a bowl of cereal.. No added text overlays, captions or watermarks; the only words are the ones printed on the real packaging.",
+      "model": "gpt-image-2",
+      "quality": "medium",
+      "size": "1024x1024",
+      "cost_cents": 6,
+      "created_at": "2026-10-25T11:55:28.669Z"
     }
   },
   "runs": {
     "run_loop_1": {
+      "signature": "1d764f23b9f9a5ea,3cc7bfe05b42e122,003e3f920282cd35,1042d7a6372e72f6,51112d9633ac50d1,9159489aacd8df0f,0369c42dee1490e2,5491b4b5a6de80b0,bfbd5d8479a58b8e,b275a7ce5f8f81ff,c859713ecb0b40f7,f5981efa5dc0c492"
+    },
+    "run_test_1025_0903": {
       "signature": "1d764f23b9f9a5ea,3cc7bfe05b42e122,003e3f920282cd35,1042d7a6372e72f6,51112d9633ac50d1,9159489aacd8df0f,0369c42dee1490e2,5491b4b5a6de80b0,bfbd5d8479a58b8e,b275a7ce5f8f81ff,c859713ecb0b40f7,f5981efa5dc0c492"
     }
   }
