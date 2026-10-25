@@ -40,15 +40,19 @@ import EnqueueTaskReducer from "./enqueue_task_reducer";
 import FailTaskReducer from "./fail_task_reducer";
 import FinishRoundReducer from "./finish_round_reducer";
 import InsertDecisionsReducer from "./insert_decisions_reducer";
+import LogAgentMessageReducer from "./log_agent_message_reducer";
 import PingReducer from "./ping_reducer";
 import ReplaceArmStatsReducer from "./replace_arm_stats_reducer";
+import ReportIngestJobReducer from "./report_ingest_job_reducer";
 import ResetATablesReducer from "./reset_a_tables_reducer";
 import StartRoundReducer from "./start_round_reducer";
+import UpsertAgentReducer from "./upsert_agent_reducer";
 import UpsertArmsReducer from "./upsert_arms_reducer";
 import UpsertBrandsReducer from "./upsert_brands_reducer";
 import UpsertConceptsReducer from "./upsert_concepts_reducer";
 import UpsertCreativePerceptionsReducer from "./upsert_creative_perceptions_reducer";
 import UpsertCreativesReducer from "./upsert_creatives_reducer";
+import UpsertIngestJobReducer from "./upsert_ingest_job_reducer";
 import UpsertLearningsReducer from "./upsert_learnings_reducer";
 import UpsertProductsReducer from "./upsert_products_reducer";
 import UpsertRunReducer from "./upsert_run_reducer";
@@ -58,6 +62,8 @@ import UpsertShoppersReducer from "./upsert_shoppers_reducer";
 // Import all procedure arg schemas
 
 // Import all table schema definitions
+import AgentRow from "./agent_table";
+import AgentMessageRow from "./agent_message_table";
 import ArmRow from "./arm_table";
 import ArmStatRow from "./arm_stat_table";
 import BrandRow from "./brand_table";
@@ -65,6 +71,7 @@ import ConceptRow from "./concept_table";
 import CreativeRow from "./creative_table";
 import CreativePerceptionRow from "./creative_perception_table";
 import DecisionRow from "./decision_table";
+import IngestJobRow from "./ingest_job_table";
 import LearningRow from "./learning_table";
 import ProductRow from "./product_table";
 import RoundRow from "./round_table";
@@ -77,6 +84,31 @@ import TaskRow from "./task_table";
 
 /** The schema information for all tables in this module. This is defined the same was as the tables would have been defined in the server. */
 const tablesSchema = __schema({
+  agent: __table({
+    name: 'agent',
+    indexes: [
+      { accessor: 'agent_id', name: 'agent_agent_id_idx_btree', algorithm: 'btree', columns: [
+        'agentId',
+      ] },
+    ],
+    constraints: [
+      { name: 'agent_agent_id_key', constraint: 'unique', columns: ['agentId'] },
+    ],
+  }, AgentRow),
+  agentMessage: __table({
+    name: 'agent_message',
+    indexes: [
+      { accessor: 'message_id', name: 'agent_message_message_id_idx_btree', algorithm: 'btree', columns: [
+        'messageId',
+      ] },
+      { accessor: 'run_id', name: 'agent_message_run_id_idx_btree', algorithm: 'btree', columns: [
+        'runId',
+      ] },
+    ],
+    constraints: [
+      { name: 'agent_message_message_id_key', constraint: 'unique', columns: ['messageId'] },
+    ],
+  }, AgentMessageRow),
   arm: __table({
     name: 'arm',
     indexes: [
@@ -162,6 +194,17 @@ const tablesSchema = __schema({
     constraints: [
     ],
   }, DecisionRow),
+  ingestJob: __table({
+    name: 'ingest_job',
+    indexes: [
+      { accessor: 'job_id', name: 'ingest_job_job_id_idx_btree', algorithm: 'btree', columns: [
+        'jobId',
+      ] },
+    ],
+    constraints: [
+      { name: 'ingest_job_job_id_key', constraint: 'unique', columns: ['jobId'] },
+    ],
+  }, IngestJobRow),
   learning: __table({
     name: 'learning',
     indexes: [
@@ -256,15 +299,19 @@ const reducersSchema = __reducers(
   __reducerSchema("fail_task", FailTaskReducer),
   __reducerSchema("finish_round", FinishRoundReducer),
   __reducerSchema("insert_decisions", InsertDecisionsReducer),
+  __reducerSchema("log_agent_message", LogAgentMessageReducer),
   __reducerSchema("ping", PingReducer),
   __reducerSchema("replace_arm_stats", ReplaceArmStatsReducer),
+  __reducerSchema("report_ingest_job", ReportIngestJobReducer),
   __reducerSchema("reset_a_tables", ResetATablesReducer),
   __reducerSchema("start_round", StartRoundReducer),
+  __reducerSchema("upsert_agent", UpsertAgentReducer),
   __reducerSchema("upsert_arms", UpsertArmsReducer),
   __reducerSchema("upsert_brands", UpsertBrandsReducer),
   __reducerSchema("upsert_concepts", UpsertConceptsReducer),
   __reducerSchema("upsert_creative_perceptions", UpsertCreativePerceptionsReducer),
   __reducerSchema("upsert_creatives", UpsertCreativesReducer),
+  __reducerSchema("upsert_ingest_job", UpsertIngestJobReducer),
   __reducerSchema("upsert_learnings", UpsertLearningsReducer),
   __reducerSchema("upsert_products", UpsertProductsReducer),
   __reducerSchema("upsert_run", UpsertRunReducer),
@@ -278,10 +325,14 @@ const proceduresSchema = __procedures(
 
 type __SchemaWithTableAccessorAliases = Omit<typeof tablesSchema.schemaType, "tables"> & {
   tables: typeof tablesSchema.schemaType.tables & {
+    /** @deprecated Use `agentMessage` instead. This alias will be removed in the next major version. */
+    readonly "agent_message": Omit<typeof tablesSchema.schemaType.tables["agentMessage"], "accessorName"> & { readonly accessorName: "agent_message" };
     /** @deprecated Use `armStat` instead. This alias will be removed in the next major version. */
     readonly "arm_stat": Omit<typeof tablesSchema.schemaType.tables["armStat"], "accessorName"> & { readonly accessorName: "arm_stat" };
     /** @deprecated Use `creativePerception` instead. This alias will be removed in the next major version. */
     readonly "creative_perception": Omit<typeof tablesSchema.schemaType.tables["creativePerception"], "accessorName"> & { readonly accessorName: "creative_perception" };
+    /** @deprecated Use `ingestJob` instead. This alias will be removed in the next major version. */
+    readonly "ingest_job": Omit<typeof tablesSchema.schemaType.tables["ingestJob"], "accessorName"> & { readonly accessorName: "ingest_job" };
   };
 };
 
@@ -300,8 +351,10 @@ const REMOTE_MODULE = {
 >;
 
 const tableAccessorAliases = {
+  "agent_message": "agentMessage",
   "arm_stat": "armStat",
   "creative_perception": "creativePerception",
+  "ingest_job": "ingestJob",
 } as const;
 
 function __withTableAccessorAliases<T extends object>(target: T, freeze = false): T {
@@ -322,18 +375,26 @@ function __withTableAccessorAliases<T extends object>(target: T, freeze = false)
 
 type __DbViewBase = __DbConnectionImpl<typeof REMOTE_MODULE>["db"];
 export type DbView = __DbViewBase & {
+  /** @deprecated Use `agentMessage` instead. This alias will be removed in the next major version. */
+  readonly "agent_message": __DbViewBase["agentMessage"];
   /** @deprecated Use `armStat` instead. This alias will be removed in the next major version. */
   readonly "arm_stat": __DbViewBase["armStat"];
   /** @deprecated Use `creativePerception` instead. This alias will be removed in the next major version. */
   readonly "creative_perception": __DbViewBase["creativePerception"];
+  /** @deprecated Use `ingestJob` instead. This alias will be removed in the next major version. */
+  readonly "ingest_job": __DbViewBase["ingestJob"];
 };
 
 type __TablesBase = __QueryBuilder<typeof tablesSchema.schemaType>;
 export type Tables = __TablesBase & {
+  /** @deprecated Use `agentMessage` instead. This alias will be removed in the next major version. */
+  readonly "agent_message": __TablesBase["agentMessage"];
   /** @deprecated Use `armStat` instead. This alias will be removed in the next major version. */
   readonly "arm_stat": __TablesBase["armStat"];
   /** @deprecated Use `creativePerception` instead. This alias will be removed in the next major version. */
   readonly "creative_perception": __TablesBase["creativePerception"];
+  /** @deprecated Use `ingestJob` instead. This alias will be removed in the next major version. */
+  readonly "ingest_job": __TablesBase["ingestJob"];
 };
 
 /** The tables available in this remote SpacetimeDB module. Each table reference doubles as a query builder. */

@@ -1,10 +1,16 @@
 import { SenderError, t, type Infer, type InferSchema, type ReducerCtx } from 'spacetimedb/server';
 import spacetimedb from './schema';
 import { armRow, brandRow, conceptRow, creativeRow, segmentRow } from './tables_a';
+import { agentProblem, ingestJobProblem, ingestReportProblem, isIngestTerminal, messageProblem } from './agent_rules';
 
 // Batch writers for Person A's tables. Each call is one transaction: every row is validated, then
 // upserted by primary key (updated if it exists, inserted if not). Any bad row throws a SenderError
 // naming the row and the rule, and nothing from that call is written.
+//
+// The agent tables (agent, agent_message, ingest_job) are the exception, on purpose: their writers
+// at the end of this file take scalar arguments for one row per call, and the server sets the
+// timestamps from ctx.timestamp. A typed row would make every caller send SATS timestamps. Their
+// rules are in agent_rules.ts, shared with the agent API; nothing from that file is re-exported.
 //
 // The checks mirror what B's reader rejects (sim/src/contract.ts and checkWorld in sim/src/fixtures.ts),
 // so bad data fails here, at write time, instead of inside a sim run. Cross-table checks only look
@@ -248,8 +254,8 @@ export const upsertCreatives = spacetimedb.reducer({ rows: t.array(creativeRow) 
   }
 });
 
-// Empties all five of A's tables, for a clean A4 reload without --delete-data (which would also
-// wipe B's runs). Only between runs: B's decision rows reference these ids.
+// Empties all five of A's data tables, for a clean A4 reload without --delete-data (which would also
+// wipe B's runs). Only between runs: B's decision rows reference these ids. The agent tables are kept.
 export const resetATables = spacetimedb.reducer(ctx => {
   ctx.db.creative.clear();
   ctx.db.arm.clear();
@@ -257,3 +263,119 @@ export const resetATables = spacetimedb.reducer(ctx => {
   ctx.db.concept.clear();
   ctx.db.brand.clear();
 });
+
+// The agent tables. Over HTTP: upsert_agent, log_agent_message, upsert_ingest_job and
+// report_ingest_job, with positional arguments in the order declared below.
+
+// One row per agent, updated whenever its step changes.
+export const upsertAgent = spacetimedb.reducer(
+  {
+    agent_id: t.string(),
+    name: t.string(),
+    role: t.string(),
+    address: t.string(),
+    status: t.string(),
+    current_step: t.string(),
+  },
+  (ctx, a) => {
+    const problem = agentProblem(a);
+    if (problem) fail(`agent ${a.agent_id}`, problem);
+    const row = {
+      agent_id: a.agent_id,
+      name: a.name,
+      role: a.role,
+      address: a.address,
+      status: a.status,
+      current_step: a.current_step,
+      updated_at: ctx.timestamp,
+    };
+    if (ctx.db.agent.agent_id.find(a.agent_id)) ctx.db.agent.agent_id.update(row);
+    else ctx.db.agent.insert(row);
+  }
+);
+
+// One row per message between agents (or with the ASI:One user), written by the sender. The agent
+// API mints the id; a repeat id is rejected, so a message is never logged twice.
+export const logAgentMessage = spacetimedb.reducer(
+  {
+    message_id: t.string(),
+    run_id: t.string(),
+    from_agent: t.string(),
+    to_agent: t.string(),
+    protocol: t.string(),
+    kind: t.string(),
+    summary: t.string(),
+    payload: t.string(),
+  },
+  (ctx, m) => {
+    const where = `message ${m.message_id}`;
+    const problem = messageProblem(m);
+    if (problem) fail(where, problem);
+    if (ctx.db.agent_message.message_id.find(m.message_id)) fail(where, 'already logged');
+    ctx.db.agent_message.insert({
+      message_id: m.message_id,
+      run_id: m.run_id,
+      from_agent: m.from_agent,
+      to_agent: m.to_agent,
+      protocol: m.protocol,
+      kind: m.kind,
+      summary: m.summary,
+      payload: m.payload,
+      created_at: ctx.timestamp,
+    });
+  }
+);
+
+// One row per Supabase job_queue job an agent starts, written by the endpoint that enqueues it.
+export const upsertIngestJob = spacetimedb.reducer(
+  {
+    job_id: t.string(),
+    requested_by: t.string(),
+    job_type: t.string(),
+    target: t.string(),
+    actor: t.string(),
+    status: t.string(),
+    items: t.u32(),
+    error: t.string(),
+  },
+  (ctx, j) => {
+    const problem = ingestJobProblem(j);
+    if (problem) fail(`ingest_job ${j.job_id}`, problem);
+    const old = ctx.db.ingest_job.job_id.find(j.job_id);
+    const row = {
+      job_id: j.job_id,
+      requested_by: j.requested_by,
+      job_type: j.job_type,
+      target: j.target,
+      actor: j.actor,
+      status: j.status,
+      items: j.items,
+      error: j.error,
+      created_at: old ? old.created_at : ctx.timestamp,
+      updated_at: ctx.timestamp,
+    };
+    if (old) ctx.db.ingest_job.job_id.update(row);
+    else ctx.db.ingest_job.insert(row);
+  }
+);
+
+// The worker's progress reports. Only rows an endpoint created are updated: an unknown job id (a
+// child job, A2's bulk jobs) is a silent no-op. A finished job (completed, failed, skipped) never
+// goes back to pending or processing. items keeps its old value unless the report's is > 0.
+export const reportIngestJob = spacetimedb.reducer(
+  { job_id: t.string(), status: t.string(), items: t.u32(), error: t.string() },
+  (ctx, r) => {
+    const problem = ingestReportProblem(r);
+    if (problem) fail(`ingest_job ${r.job_id}`, problem);
+    const old = ctx.db.ingest_job.job_id.find(r.job_id);
+    if (!old) return;
+    if (isIngestTerminal(old.status) && !isIngestTerminal(r.status)) return;
+    ctx.db.ingest_job.job_id.update({
+      ...old,
+      status: r.status,
+      items: r.items > 0 ? r.items : old.items,
+      error: r.error,
+      updated_at: ctx.timestamp,
+    });
+  }
+);

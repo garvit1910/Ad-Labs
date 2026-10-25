@@ -63,10 +63,52 @@ export const creativeRow = t.row('CreativeRow', {
   status: t.string(), // ranked | gated_out
 });
 
+// Written by A's agents, read by anyone (the /agents view). Same conventions as above; the
+// timestamps are set by the server (ctx.timestamp) in the reducers, never sent by the caller.
+// The rules live in agent_rules.ts.
+
+export const agentRow = t.row('AgentRow', {
+  agent_id: t.string().primaryKey(), // agt_ad_lab | agt_scout | agt_strategist | agt_copywriter
+  name: t.string(),
+  role: t.string(),
+  address: t.string(), // agent1q…, or "" until the agent first starts
+  status: t.string(), // idle | working | error
+  current_step: t.string(), // one line, <= 140 chars; "" when idle
+  updated_at: t.timestamp(), // the last upsert_agent
+});
+
+export const agentMessageRow = t.row('AgentMessageRow', {
+  message_id: t.string().primaryKey(), // msg_…, minted by the agent API
+  run_id: t.string().index('btree'), // "" outside a run
+  from_agent: t.string(), // agt_… or "user"
+  to_agent: t.string(), // agt_… or "user"; never the same as from_agent
+  protocol: t.string(),
+  kind: t.string(), // request | reply | progress | result
+  summary: t.string(), // one line, <= 140 chars
+  payload: t.string(), // json object, <= 4096 bytes
+  created_at: t.timestamp(),
+});
+
+export const ingestJobRow = t.row('IngestJobRow', {
+  job_id: t.string().primaryKey(), // the Supabase job_queue id (uuid)
+  requested_by: t.string(), // agt_… or "user"
+  job_type: t.string(),
+  target: t.string(), // readable, e.g. "Catalina Crunch · Meta ads"
+  actor: t.string(), // the Apify actor; "" for steps without Apify
+  status: t.string(), // pending | processing | completed | failed | skipped
+  items: t.u32(), // rows the step added, when it reports them; else 0
+  error: t.string(), // "" when none
+  created_at: t.timestamp(),
+  updated_at: t.timestamp(),
+});
+
 export const tablesA = {
   brand: table({ name: 'brand', public: true }, brandRow),
   concept: table({ name: 'concept', public: true }, conceptRow),
   segment: table({ name: 'segment', public: true }, segmentRow),
   arm: table({ name: 'arm', public: true }, armRow),
   creative: table({ name: 'creative', public: true }, creativeRow),
+  agent: table({ name: 'agent', public: true }, agentRow),
+  agent_message: table({ name: 'agent_message', public: true }, agentMessageRow),
+  ingest_job: table({ name: 'ingest_job', public: true }, ingestJobRow),
 };

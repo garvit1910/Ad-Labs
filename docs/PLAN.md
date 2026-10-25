@@ -118,6 +118,14 @@ These SpacetimeDB tables are the entire interface between A and B. Each side wri
 | arm\_stat | run\_id, round, segment\_id, arm\_id, impressions, mean\_reward, post\_mean, post\_sd, p\_best, est\_cost\_per\_order\_usd | Refreshed at the end of every sim day |
 | learning | learning\_id, run\_id, segment\_id, arm\_id, kind, statement, directive, evidence (json), source, valid\_from\_round, valid\_to\_round | source is always `simulated`. A new version closes the old one; a learning never edits an observed brand fact. directive is the same point with every number removed, and only directives reach the copywriter |
 
+**Written by A's agents, read by anyone (the `/agents` view)**
+
+| Table | Fields | Rules |
+| --- | --- | --- |
+| agent | agent\_id, name, role, address, status (idle / working / error), current\_step, updated\_at | One row per agent: `agt_ad_lab`, `agt_scout`, `agt_strategist`, `agt_copywriter`. address is its `agent1q…` address. Each agent updates its row whenever its step changes |
+| agent\_message | message\_id, run\_id, from\_agent, to\_agent, protocol, kind (request / reply / progress / result), summary, payload (json), created\_at | One row per message between agents, written by the sender as it sends, so nothing happens off the record. `user` stands for the ASI:One user, so the chat shows up too. summary is one readable line of at most 140 characters; payload is at most 4 KB. run\_id is empty outside a run |
+| ingest\_job | job\_id, requested\_by, job\_type, target, actor, status (pending / processing / completed / failed / skipped), items, error, created\_at, updated\_at | One row per Supabase `job_queue` job an agent starts, keyed by that job's id. target is readable ("Catalina Crunch · Meta ads"). actor names the Apify actor, empty for steps that don't call Apify. items is the rows the step added when it reports them, else 0. The endpoint writes the row when it enqueues the job; the worker updates it |
+
 **Shared: the task board**
 
 | Table | Fields | Rules |
@@ -128,14 +136,6 @@ Payloads:
 
 - `run_round`: `{run_id, round}`
 - `generate_creatives`: `{run_id, round, arms: [{arm_id, segment_ids}], n_per_arm, learning_ids}`
-
-**Written by A's agents, read by anyone (the `/agents` view)**
-
-| Table | Fields | Rules |
-| --- | --- | --- |
-| agent | agent\_id, name, role, address, status (idle / working / error), current\_step, updated\_at | One row per agent: `agt_ad_lab`, `agt_scout`, `agt_strategist`, `agt_copywriter`. address is its `agent1q…` address. Each agent updates its row whenever its step changes |
-| agent\_message | message\_id, run\_id, from\_agent, to\_agent, protocol, kind (request / reply / progress / result), summary, payload (json), created\_at | One row per message between agents, written by the sender as it sends, so nothing happens off the record. `user` stands for the ASI:One user, so the chat shows up too. summary is one readable line of at most 140 characters; payload is at most 4 KB. run\_id is empty outside a run |
-| ingest\_job | job\_id, requested\_by, job\_type, target, actor, status (pending / processing / completed / failed / skipped), items, error, created\_at, updated\_at | One row per Supabase `job_queue` job an agent starts, keyed by that job's id. target is readable ("Catalina Crunch · Meta ads"). actor names the Apify actor, empty for steps that don't call Apify. items is the rows the step added when it reports them, else 0. The endpoint writes the row when it enqueues the job; the worker updates it |
 
 Housekeeping:
 
