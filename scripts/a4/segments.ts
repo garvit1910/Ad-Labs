@@ -1,3 +1,4 @@
+import { clipWords } from '@/lib/adlab/sim-text';
 import type { InsightFact } from '@/lib/brand-object/insights';
 import { compareVocRank } from '@/lib/brand-object/voc-rank';
 import { scoreVocVerbatim } from '@/lib/brand-object/voc-verbatim';
@@ -33,7 +34,11 @@ export interface SegmentReport {
 
 const UNAWARE_SHARE = 0.1;
 const QUOTE_TARGET = 12;
-const QUOTE_MAX_CHARS = 300; // two quotes ride every Jev state, which must stay under 450 words
+const QUOTE_MIN = 8; // the contract wants 8-20
+// Two quotes ride every Jev state, which must stay under 450 words (lib/adlab/sim-text.ts).
+const QUOTE_MAX_CHARS = 180;
+const QUOTE_MAX_WORDS = 28;
+const DESCRIPTION_MAX_WORDS = 25;
 const BUDGET_MEAN_USD = 45;
 const BUDGET_SD_USD = 15;
 const IN_MARKET_RATE = 0.12;
@@ -86,54 +91,108 @@ function linkedFacts(persona: InsightFact, byId: Map<string, InsightFact>) {
   return out;
 }
 
-/**
- * The persona's verbatims, then round-robin over its linked VOC facts (best-ranked
- * fact first), each giving its best remaining quote. Every quote must be an exact
- * substring of a brand mention.
- */
-function pickQuotes(persona: InsightFact, voc: InsightFact[], corpus: string[]): { quotes: string[]; dropped: string[] } {
-  const quotes: string[] = [];
-  const dropped: string[] = [];
-  const taken = new Set<string>();
-  const offer = (quote: string, source: string): void => {
-    const key = normalize(quote);
-    if (!key || taken.has(key)) return;
-    if (quote.length > QUOTE_MAX_CHARS) {
-      dropped.push(`${source}: over ${QUOTE_MAX_CHARS} chars: "${quote.slice(0, 60)}…"`);
-      return;
-    }
-    if (!corpus.some((text) => text.includes(quote))) {
-      dropped.push(`${source}: not an exact substring of any mention: "${quote.slice(0, 80)}"`);
-      return;
-    }
-    taken.add(key);
-    quotes.push(quote);
-  };
+interface QuoteCandidate {
+  quote: string;
+  source: string;
+}
 
-  for (const quote of (persona.details.verbatims ?? []) as string[]) {
-    if (quotes.length >= QUOTE_TARGET) break;
-    if (typeof quote === 'string') offer(quote, 'persona verbatim');
-  }
-
-  const pools = [...voc]
+/** Each VOC fact's quotes, best first, as one list per fact (best-ranked fact first). */
+function vocPools(voc: InsightFact[]): QuoteCandidate[][] {
+  return [...voc]
     .sort((a, b) => compareVocRank({ metrics: a.metrics, rankLabel: a.statement }, { metrics: b.metrics, rankLabel: b.statement }))
     .map((fact) => {
       const label = String(fact.details.label ?? fact.statement);
-      const ranked = fact.evidence
+      return fact.evidence
         .filter((ref) => ref.type === 'phrase' && typeof ref.quote === 'string')
         .map((ref) => ({ quote: ref.quote!, score: scoreVocVerbatim(ref.quote!, label) }))
         .filter((entry) => entry.score > 0)
-        .sort((a, b) => b.score - a.score);
-      return { source: `${fact.section} ${fact.fact_key}`, ranked };
+        .sort((a, b) => b.score - a.score)
+        .map((entry) => ({ quote: entry.quote, source: `${fact.section} ${fact.fact_key}` }));
     });
-  for (let round = 0; quotes.length < QUOTE_TARGET && pools.some((pool) => pool.ranked.length > round); round++) {
-    for (const pool of pools) {
-      if (quotes.length >= QUOTE_TARGET) break;
-      const entry = pool.ranked[round];
-      if (entry) offer(entry.quote, pool.source);
+}
+
+/** Round-robin over the pools: every fact's best quote, then every fact's second best, … */
+function interleave(pools: QuoteCandidate[][]): QuoteCandidate[] {
+  const out: QuoteCandidate[] = [];
+  for (let round = 0; pools.some((pool) => pool.length > round); round++) {
+    for (const pool of pools) if (pool[round]) out.push(pool[round]);
+  }
+  return out;
+}
+
+interface QuoteClaim {
+  key: string;
+  verbatims: string[];
+  linked: QuoteCandidate[];
+}
+
+/**
+ * Every segment's quotes. Quotes are exact substrings of a brand mention and short
+ * enough for the state's word budget. None names the client or a competitor: the
+ * state already says the shopper has no opinion of Magic Spoon yet, and a quote
+ * would contradict it. Each quote goes to one segment only, handed out round-robin so
+ * no segment's linked facts are used up by another: first each persona's verbatims,
+ * then one linked VOC quote per segment per round, then, for segments still under 8
+ * (the unaware projection has no verbatims), brand-free quotes from any VOC fact.
+ */
+function allocateQuotes(
+  claims: QuoteClaim[],
+  general: QuoteCandidate[],
+  corpus: string[],
+  brandNames: string[],
+): Map<string, { quotes: string[]; dropped: string[] }> {
+  const brandRe = new RegExp(`\\b(${[...brandNames, 'magicspoon', 'eatmagicspoon'].map((name) => name.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s*')).join('|')})\\b`, 'i');
+  const taken = new Set<string>();
+  const result = new Map(claims.map((claim) => [claim.key, { quotes: [] as string[], dropped: [] as string[] }]));
+  const offer = (key: string, quote: string, source: string): boolean => {
+    const entry = result.get(key)!;
+    const norm = normalize(quote);
+    if (!norm || taken.has(norm)) return false;
+    const reason =
+      quote.length > QUOTE_MAX_CHARS || quote.split(/\s+/).length > QUOTE_MAX_WORDS
+        ? `over ${QUOTE_MAX_WORDS} words or ${QUOTE_MAX_CHARS} chars`
+        : brandRe.test(quote)
+          ? 'names a brand'
+          : !corpus.some((text) => text.includes(quote))
+            ? 'not an exact substring of any mention'
+            : null;
+    if (reason) {
+      entry.dropped.push(`${source}: ${reason}: "${quote.slice(0, 70)}${quote.length > 70 ? '…' : ''}"`);
+      return false;
+    }
+    taken.add(norm);
+    entry.quotes.push(quote);
+    return true;
+  };
+
+  for (const claim of claims) {
+    for (const quote of claim.verbatims) {
+      if (result.get(claim.key)!.quotes.length >= QUOTE_TARGET) break;
+      offer(claim.key, quote, 'persona verbatim');
     }
   }
-  return { quotes, dropped };
+  const takeRoundRobin = (keys: string[], candidatesFor: (key: string) => QuoteCandidate[], goal: number) => {
+    const cursor = new Map(keys.map((key) => [key, 0]));
+    for (let progress = true; progress; ) {
+      progress = false;
+      for (const key of keys) {
+        if (result.get(key)!.quotes.length >= goal) continue;
+        const list = candidatesFor(key);
+        for (let i = cursor.get(key)!; i < list.length; i++) {
+          cursor.set(key, i + 1);
+          if (offer(key, list[i].quote, list[i].source)) {
+            progress = true;
+            break;
+          }
+        }
+      }
+    }
+  };
+  const linked = new Map(claims.map((claim) => [claim.key, claim.linked]));
+  takeRoundRobin(claims.map((claim) => claim.key), (key) => linked.get(key)!, QUOTE_TARGET);
+  const short = claims.map((claim) => claim.key).filter((key) => result.get(key)!.quotes.length < QUOTE_MIN);
+  takeRoundRobin(short, () => general, QUOTE_MIN);
+  return result;
 }
 
 function systemPrompt(): string {
@@ -230,10 +289,44 @@ async function askSegment(llm: Llm, persona: InsightFact, linked: ReturnType<typ
   return retry;
 }
 
+const SHORTEN_SCHEMA = {
+  type: 'object',
+  additionalProperties: false,
+  required: ['description'],
+  properties: { description: { type: 'string' } },
+} as const;
+
+/**
+ * The description within the state's word budget. A longer one is shortened by the
+ * LLM (cached like every A4 call, and checked by the same preference guard); if that
+ * fails, it's cut at a sentence or word boundary. The prior weights are untouched.
+ */
+async function shortDescription(llm: Llm, description: string): Promise<string> {
+  if (description.split(/\s+/).length <= DESCRIPTION_MAX_WORDS) return description;
+  const short = await llm
+    .strictJson(
+      'adlab_segment_short',
+      SHORTEN_SCHEMA,
+      [
+        {
+          role: 'system',
+          content: `Shorten this shopper's life-context description to one sentence of at most ${DESCRIPTION_MAX_WORDS} words. Keep only who they are and their routine. Add nothing, and keep it free of any food preference, goal, diet, brand or opinion.`,
+        },
+        { role: 'user', content: description },
+      ],
+      (value) => String((value as { description?: unknown }).description ?? '').replace(/\s+/g, ' ').trim(),
+    )
+    .catch(() => '');
+  const fits = short && short.split(/\s+/).length <= DESCRIPTION_MAX_WORDS && preferenceWords(short).length === 0;
+  return fits ? short : clipWords(description, DESCRIPTION_MAX_WORDS);
+}
+
 export async function buildSegments(opts: {
   facts: InsightFact[];
   mentions: Map<string, string>;
   llm: Llm;
+  /** Every tracked brand's name: quotes naming one are left out. */
+  brandNames: string[];
 }): Promise<SegmentReport[]> {
   const byId = new Map(opts.facts.map((fact) => [fact.id, fact]));
   const corpus = [...opts.mentions.values()];
@@ -247,20 +340,27 @@ export async function buildSegments(opts: {
       const linked = linkedFacts(persona, byId);
       const voc = linked.map((entry) => entry.fact).filter((fact) => fact.section.startsWith('voc_'));
       const vocFrequency = voc.reduce((sum, fact) => sum + (fact.metrics.frequency ?? 0), 0);
-      const { quotes, dropped } = pickQuotes(persona, voc, corpus);
       const answer = await askSegment(opts.llm, persona, linked);
+      const description = await shortDescription(opts.llm, answer.description);
       const pains = linked.filter((entry) => entry.kind === 'pain').map((entry) => `${entry.fact.statement} ${entry.note}`);
       return {
         persona,
         extrapolated: persona.details.extrapolated === true,
         vocFrequency,
-        quotes,
-        dropped,
+        claim: {
+          key: persona.fact_key,
+          verbatims: ((persona.details.verbatims ?? []) as unknown[]).filter((quote): quote is string => typeof quote === 'string'),
+          linked: interleave(vocPools(voc)),
+        },
         answer,
+        description,
         inMarketRate: pains.some((text) => RESTOCKING_RE.test(text)) ? RESTOCKING_IN_MARKET_RATE : IN_MARKET_RATE,
       };
     }),
   );
+
+  const allVoc = opts.facts.filter((fact) => fact.section.startsWith('voc_'));
+  const quotes = allocateQuotes(drafts.map((draft) => draft.claim), interleave(vocPools(allVoc)), corpus, opts.brandNames);
 
   // Only VOC facts carry a frequency (A3 "For A4"). Grounded personas split what the
   // unaware projection leaves, in proportion; equally if none links a VOC fact.
@@ -278,13 +378,15 @@ export async function buildSegments(opts: {
 
   return drafts.map((draft) => {
     const weights = { ...draft.answer.weights, other: OTHER_PRIOR_WEIGHT };
+    const { quotes: picked, dropped } = quotes.get(draft.claim.key)!;
     const row: SegmentRow = {
       segment_id: segmentIdFor(draft.persona.fact_key),
       name: String(draft.persona.details.name ?? draft.persona.fact_key),
-      description: draft.answer.description,
+      // Two sentences of life context can run 60 words; the state's word budget allows 25.
+      description: draft.description,
       share: shareOf(draft),
       prior_weights: JSON.stringify(weights),
-      quotes: JSON.stringify(draft.quotes),
+      quotes: JSON.stringify(picked),
       budget_mean_usd: BUDGET_MEAN_USD,
       budget_sd_usd: BUDGET_SD_USD,
       in_market_rate: draft.inMarketRate,
@@ -294,8 +396,8 @@ export async function buildSegments(opts: {
       personaFactId: draft.persona.id,
       extrapolated: draft.extrapolated,
       vocFrequency: draft.vocFrequency,
-      quotes: draft.quotes,
-      dropped: draft.dropped,
+      quotes: picked,
+      dropped,
       weights,
     };
   });

@@ -17,6 +17,9 @@ import { type Spacetime, connectSpacetime } from '@/lib/adlab/spacetime-http';
  *
  *   --refresh      ask the LLM again instead of reusing data/a4/llm-cache.json
  *   --force-arms   write an arm set that differs from the one already in SpacetimeDB
+ *   --keep-arms    reuse the recipes already in SpacetimeDB as they are (rewrite only segments and creatives)
+ *   --as-of=<ISO>  compute live-ad longevity at this time instead of the last scrape
+ *   --allow-during-runs   write even though B has a run (a run in progress then reads the new rows)
  *
  * Upserts only, by deterministic ids. reset_a_tables is never called: it would also
  * clear A5's generated creatives.
@@ -24,6 +27,7 @@ import { type Spacetime, connectSpacetime } from '@/lib/adlab/spacetime-http';
 
 const args = process.argv.slice(2);
 const mode = args.includes('check') ? 'check' : args.includes('--dry-run') ? 'dry-run' : 'write';
+const asOf = args.find((arg) => arg.startsWith('--as-of='))?.slice('--as-of='.length);
 const CREATIVE_CHUNK = 50;
 
 const { db, log } = createPhase('a4');
@@ -67,7 +71,9 @@ async function check(): Promise<void> {
 async function build(): Promise<void> {
   const spacetime = await connectSpacetime();
   const llm = createLlm({ refresh: args.includes('--refresh') });
-  const rows = await buildContractRows({ db, spacetime, llm, log });
+  const keepArms = args.includes('--keep-arms') ? await spacetime.sql<ArmRow>('SELECT * FROM arm') : undefined;
+  if (keepArms && keepArms.length === 0) throw new Error('--keep-arms: SpacetimeDB has no arm rows to keep');
+  const rows = await buildContractRows({ db, spacetime, llm, log, ...(keepArms ? { keepArms } : {}), ...(asOf ? { asOf } : {}) });
   const { world } = rows;
 
   console.log('\nsegments');
@@ -134,8 +140,16 @@ async function build(): Promise<void> {
   }
   const runs = await spacetime.sql('SELECT * FROM run');
   const segmentDiff = diff(current.segments, world.segments, 'segment_id');
-  if (runs.length > 0 && !segmentDiff.endsWith(`${world.segments.length} unchanged`)) {
-    log(`WARN: B has ${runs.length} run(s) and the segments change (${segmentDiff}); a run in progress reads the new rows`);
+  const creativeDiff = diff(current.creatives, world.creatives, 'creative_id');
+  const unchanged = (text: string, n: number) => text.endsWith(`${n} unchanged`);
+  if (runs.length > 0 && !(unchanged(segmentDiff, world.segments.length) && unchanged(creativeDiff, world.creatives.length))) {
+    // B's run (and its cached replay) read these rows; rewriting them mid-run changes what it simulates.
+    log(`B has ${runs.length} run(s) and the rows change (segments: ${segmentDiff}; creatives: ${creativeDiff})`);
+    if (!args.includes('--allow-during-runs')) {
+      log('agree the change with B, then rerun with --allow-during-runs. Nothing written');
+      process.exitCode = 1;
+      return;
+    }
   }
 
   const steps: Array<[string, object[], number]> = [
@@ -150,7 +164,7 @@ async function build(): Promise<void> {
     upsert_concepts: diff(current.concepts, world.concepts, 'concept_id'),
     upsert_segments: segmentDiff,
     upsert_arms: diff(current.arms, world.arms, 'arm_id'),
-    upsert_creatives: diff(current.creatives, world.creatives, 'creative_id'),
+    upsert_creatives: creativeDiff,
   };
   for (const [reducer, batch, chunk] of steps) {
     for (let i = 0; i < batch.length; i += chunk) await spacetime.call(reducer, [batch.slice(i, i + chunk)]);

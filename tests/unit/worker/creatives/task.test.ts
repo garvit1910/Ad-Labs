@@ -176,15 +176,15 @@ describe('runGenerateCreatives', () => {
     assert.deepEqual(await runGenerateCreatives(TASK_ID, { spacetime: db, client: client(), log: quiet }), theirs);
   });
 
-  it('gates out a generated ad too long for the sim’s 450-word state', async () => {
-    const chat = mockChat(() => ({ ...CLEAN_COPY, primaryText: Array.from({ length: 90 }, () => 'oats').join(' ') }));
+  it('writes what a feed shows before “… more”, so a long ad still fits the sim’s 450-word state', async () => {
+    const long = Array.from({ length: 90 }, () => 'oats').join(' ');
+    const chat = mockChat(() => ({ ...CLEAN_COPY, primaryText: long }));
     restore = chat.restore;
     const db = board();
     const result = await runGenerateCreatives(TASK_ID, { spacetime: db, client: client(), log: quiet });
-    assert.equal(result.ranked, 0);
-    assert.equal(result.gated_out, 3);
-    // One regeneration try per gated pair, and it's long again.
-    assert.equal(chat.calls.length, 6);
+    assert.equal(result.ranked, 3);
+    const rows = db.tables.creative.filter((creative) => creative.origin === 'generated');
+    assert.ok(rows.every((row) => String(row.primary_text).split(' ').length === 25 && String(row.primary_text).endsWith('…')));
   });
 });
 

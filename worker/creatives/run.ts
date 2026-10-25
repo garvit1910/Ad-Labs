@@ -2,6 +2,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { generatedCreativeId } from '@/lib/adlab/contract';
 import { adWords } from '@/lib/adlab/contract-check';
 import { ADLAB_ORG_ID } from '@/lib/adlab/org';
+import { feedHeadline, feedImage, feedPrimary } from '@/lib/adlab/sim-text';
 import { connectSpacetime, SpacetimeError, sqlString, type Spacetime } from '@/lib/adlab/spacetime-http';
 import { serviceSupabase } from '@/lib/adlab/supabase';
 import type { BrandContextRow } from '@/lib/creative-engine/brand-context/types';
@@ -21,11 +22,10 @@ const BRIEF_CONCURRENCY = 6;
 const BRIEF_ATTEMPTS = 3;
 /**
  * The longest generated ad, in the words B's renderAd prints, that the sim can show
- * next to two competitor ads and still stay under its 450-word state limit.
+ * next to two competitor ads and still stay under its 450-word state limit. The feed
+ * cuts (lib/adlab/sim-text.ts) keep ads well under it; this is the backstop.
  */
-export const MAX_AD_WORDS = 85;
-/** B prints visual_description as the ad's "[Image: …]"; the sim needs a glance, not the art brief. */
-const VISUAL_MAX_WORDS = 15;
+export const MAX_AD_WORDS = 60;
 
 export interface RunDeps {
   spacetime?: Spacetime;
@@ -62,22 +62,8 @@ async function mapLimit<T, R>(items: T[], limit: number, fn: (item: T) => Promis
   return results;
 }
 
-const flat = (text: string) => text.replace(/\s+/g, ' ').trim();
-
-/**
- * The image line the sim shows: the first sentence of the visual concept, cut to
- * VISUAL_MAX_WORDS at a clause boundary when one is long enough to keep.
- */
-export function simVisual(text: string): string {
-  const sentence = flat(text).split(/(?<=[.!?])\s/)[0] ?? '';
-  const words = sentence.split(' ').filter(Boolean);
-  if (words.length <= VISUAL_MAX_WORDS) return sentence;
-  const head = words.slice(0, VISUAL_MAX_WORDS).join(' ');
-  const clauseEnd = Math.max(head.lastIndexOf(','), head.lastIndexOf(';'), head.lastIndexOf(' —'));
-  const clause = clauseEnd > 0 ? head.slice(0, clauseEnd) : '';
-  const cut = clause.split(' ').length >= 6 ? clause : head;
-  return `${cut.replace(/[\s,;:—-]+$/u, '')}.`;
-}
+/** The image line the sim shows (lib/adlab/sim-text.ts); exported for the tests. */
+export const simVisual = feedImage;
 
 export const pairKey = (pair: Pick<Pair, 'segmentId'> & { recipe: Pick<Recipe, 'arm_id'> }) => `${pair.recipe.arm_id}|${pair.segmentId}`;
 
@@ -142,8 +128,9 @@ async function generatePass(params: GenerateParams): Promise<GenerateResult> {
             arm_id: armId,
             brand_id: inputs.brand.brand_id,
             origin: 'generated',
-            headline: flat(creative.headline),
-            primary_text: flat(creative.primaryText),
+            // The sim reads what a feed shows before "… more"; the full copy stays in the run's log.
+            headline: feedHeadline(creative.headline),
+            primary_text: feedPrimary(creative.primaryText),
             cta: creative.cta,
             visual_description: simVisual(creative.visualDescription),
             image_url: '',

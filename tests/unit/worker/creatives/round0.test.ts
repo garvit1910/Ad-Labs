@@ -93,7 +93,7 @@ describe('roundZeroStatusOf', () => {
 });
 
 describe('simVisual', () => {
-  it('keeps a short concept and cuts a long one to its first clause or 15 words', () => {
+  it('keeps a short concept and cuts a long one to its first clause or 12 words', () => {
     assert.equal(simVisual('A bowl of cereal on a table.'), 'A bowl of cereal on a table.');
     assert.equal(
       simVisual('A sunlit kitchen counter with a bowl of colorful cereal, milk pouring in from a glass jug while a cat watches nearby. Second sentence.'),
@@ -101,7 +101,7 @@ describe('simVisual', () => {
     );
     assert.equal(
       simVisual('one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen'),
-      'one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen.',
+      'one two three four five six seven eight nine ten eleven twelve.',
     );
     assert.equal(simVisual('Line one\n\nline   two.'), 'Line one line two.');
   });

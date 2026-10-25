@@ -4,12 +4,12 @@ import type { InsightFact } from '@/lib/brand-object/insights';
 import { loadLiveBrandFacts } from '@/lib/brand-object/live-facts';
 import { loadBrandProfile, loadMentionText } from '@/lib/adlab/brand-profile';
 import type { Spacetime } from '@/lib/adlab/spacetime-http';
-import { type ArmReport, buildArms } from './arms';
+import { type ArmReport, type ArmRow, buildArms } from './arms';
 import type { BrandRow, ConceptRow, PersonaInfo, ProductRow, World } from './check';
 import { type LiveCreatives, buildLiveCreatives, loadAds } from './live-ads';
 import type { Llm } from './llm';
 import { type SegmentReport, buildSegments } from './segments';
-import { CONCEPTS, type FactHints, factHints, segmentIdFor } from './vocabulary';
+import { CONCEPTS, type FactHints, factHints, hookRequirement, segmentIdFor } from './vocabulary';
 
 /*
  * Builds every row A4 writes, in memory. Writes nothing: the CLI
@@ -28,6 +28,8 @@ export interface ContractRows {
   personas: PersonaInfo[];
   facts: InsightFact[];
   landingProductId: string;
+  /** The scrape time live-ad longevity was computed against. */
+  asOf: string;
 }
 
 /** Each live persona's segment id and whether it has verbatims (testimonial needs them). */
@@ -46,20 +48,32 @@ export async function loadFacts(db: SupabaseClient): Promise<{ facts: InsightFac
   return { facts, brandProfileId: profile.id };
 }
 
+/** Arm rows already in SpacetimeDB, reported as they are (no picks, no LLM call). */
+function keptArms(rows: ArmRow[]): ArmReport[] {
+  return rows.map((row) => {
+    const evidence = JSON.parse(row.evidence) as string[];
+    return { row, basis: 'kept from SpacetimeDB (--keep-arms)', requirement: hookRequirement(row.hook) ?? '', evidenceIds: evidence };
+  });
+}
+
 export async function buildContractRows(opts: {
   db: SupabaseClient;
   spacetime: Spacetime;
   llm: Llm;
   log: (message: string) => void;
+  /** Reuse these recipe rows instead of picking them again (a rerun after A5 has written against them). */
+  keepArms?: ArmRow[];
+  /** Compute live-ad longevity at this time (ISO); default the last scrape. */
+  asOf?: string;
 }): Promise<ContractRows> {
   const { db, spacetime, llm, log } = opts;
   const { facts, brandProfileId } = await loadFacts(db);
-  const [mentions, { pages, ads }, products] = await Promise.all([
+  const [mentions, { pages, ads, asOf }, products] = await Promise.all([
     loadMentionText(db, brandProfileId),
-    loadAds(db, brandProfileId),
+    loadAds(db, brandProfileId, opts.asOf ? { asOf: opts.asOf } : {}),
     spacetime.sql<ProductRow>('SELECT * FROM product'),
   ]);
-  log(`${facts.length} live facts, ${mentions.size} mentions, ${pages.length} pages, ${ads.length} labelled ads, ${products.length} products in SpacetimeDB`);
+  log(`${facts.length} live facts, ${mentions.size} mentions, ${pages.length} pages, ${ads.length} labelled ads (longevity as of ${asOf}), ${products.length} products in SpacetimeDB`);
 
   const self = pages.filter((page) => page.isSelf);
   if (self.length !== 1) throw new Error(`expected one is_brand_self page, found ${self.length}`);
@@ -72,8 +86,8 @@ export async function buildContractRows(opts: {
   const hints = factHints(facts);
   const live = buildLiveCreatives(pages, ads, landingProductId);
   const [segments, arms] = await Promise.all([
-    buildSegments({ facts, mentions, llm }),
-    buildArms({ pages, ads, facts, live, hints, llm, log }),
+    buildSegments({ facts, mentions, llm, brandNames: pages.map((page) => page.name) }),
+    opts.keepArms ? keptArms(opts.keepArms) : buildArms({ pages, ads, facts, live, hints, llm, log }),
   ]);
 
   const brands: BrandRow[] = pages.map((page) => ({ brand_id: page.brandId, name: page.name, is_client: page.isSelf }));
@@ -99,5 +113,6 @@ export async function buildContractRows(opts: {
     personas: personaInfo(facts),
     facts,
     landingProductId,
+    asOf,
   };
 }
