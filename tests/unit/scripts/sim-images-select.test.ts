@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { existsSync } from 'node:fs';
 import { readFile } from 'node:fs/promises';
 import { describe, it } from 'node:test';
 import { GET } from '@/app/api/sim/ad-image/[id]/route';
@@ -74,7 +75,8 @@ describe('/api/sim/ad-image', () => {
     assert.equal((await get('cr_does_not_exist')).status, 404);
     const sidecar = JSON.parse(await readFile('sim/demo/ad-images.json', 'utf8')) as { images: Record<string, unknown> };
     const known = Object.keys(sidecar.images)[0];
-    if (!known) return; // no images rendered on this machine
+    // The PNGs are git-ignored (data/ad-images/), so only the machine that ran sim:images has them.
+    if (!known || !existsSync(`data/ad-images/${known}.png`)) return;
     const res = await get(known);
     assert.equal(res.status, 200);
     assert.equal(res.headers.get('Content-Type'), 'image/png');
