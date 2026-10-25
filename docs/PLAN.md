@@ -1020,11 +1020,12 @@ Finish with: the report output, anything skipped and why, and a commit "A3: dist
 
 ```
 Ad Lab, phase A4: write the contract rows into SpacetimeDB. Cal Hacks 13.0; hard deadline Sun Oct 25, 9 AM PT. You are Person A's coding agent.
-Read first: docs/PLAN.md "The contract", "Simulation design" (the concept vocabulary), and "A4" (segment builder table, arm builder rules, live-ads mapping table).
-Also read: docs/reuse-export/contracts.ts (PersonaDetails, EnrichedAd, CompetitorAd) and contracts-creative.ts (HOOK_ARCHETYPES, producibility lists); spacetime/tables_b.ts so nothing collides.
-Goal: spacetime/tables_a.ts (brand, concept, segment, arm, creative) with batch reducers, and scripts/a4-build-rows.ts that writes 4 brands, the concept vocabulary, one segment per persona (segment_id = the persona row id), 10–12 recipes plus the control per the arm rules, and competitor_live / brand_live creative rows. LLM calls use strict JSON schemas.
+Read first: docs/PLAN.md "The contract", "Status" (the shared database), "Simulation design" (the concept vocabulary), and "A4" (segment builder table, arm builder rules, live-ads mapping table).
+Also read: docs/reuse-export/contracts.ts (PersonaDetails, EnrichedAd, CompetitorAd) and contracts-creative.ts (HOOK_ARCHETYPES, producibility lists); spacetime/src/tables_a.ts and spacetime/src/reducers_a.ts (A's published tables, and the checks each upsert reducer enforces).
+Work on a new branch off simulation, and open the PR against simulation.
+Goal: scripts/a4-build-rows.ts that writes, through A's published reducers in order (upsert_brands → upsert_concepts → upsert_segments → upsert_arms → upsert_creatives): 8 brands (Magic Spoon and the seven competitors), the concept vocabulary, one segment per persona (segment_id = the persona row id), 10–12 recipes plus the control per the arm rules, and competitor_live / brand_live creative rows. LLM calls use strict JSON schemas.
 Done when: the rows are in SpacetimeDB and B's warm-up round runs on them.
-Rules: write only spacetime/tables_a.ts and scripts/. Stop and ask if a contract field must change.
+Rules: write only scripts/. A's tables and reducers are already published; stop and ask if a contract field or a reducer must change.
 Finish with: row counts, the recipe list with strategy tags and evidence, and a commit "A4: contract rows".
 ```
 
