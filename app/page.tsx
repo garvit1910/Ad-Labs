@@ -59,7 +59,7 @@ export default function Home() {
               Cal Hacks 13.0
             </span>
             <h1 className="lh-mark">Ad Lab</h1>
-            <p className="lh-sub">Ad recipes, tested on simulated shoppers built from real customer voice.</p>
+            <p className="lh-sub">Ads tested on self-improving shopper agents, built from real customer voice.</p>
             <Link href="/start" className="lh-cta">
               Get started
               <ArrowRight className="size-4" aria-hidden="true" />
