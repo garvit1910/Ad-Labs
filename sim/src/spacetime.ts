@@ -78,7 +78,9 @@ export function decodeValue(type: AlgebraicType, value: unknown): unknown {
   if ("Sum" in type) {
     const variants = ((type.Sum as { variants: unknown[] }).variants ?? []) as { algebraic_type: AlgebraicType }[];
     const isOption = variants.length === 2 && variantName(variants[0]) === "some" && variantName(variants[1]) === "none";
-    const [key, inner] = Object.entries(value as Record<string, unknown>)[0] ?? [];
+    // The HTTP SQL API sends a sum as [tag, value] (e.g. an option: [0, 1] is some(1), [1, []]
+    // is none); other encodings use { "<tag or name>": value }.
+    const [key, inner] = Array.isArray(value) ? [String(value[0]), value[1]] : (Object.entries(value as Record<string, unknown>)[0] ?? []);
     const index = key !== undefined && /^\d+$/.test(key) ? Number(key) : variants.findIndex((v) => variantName(v) === key);
     if (isOption) return index === 0 ? decodeValue(variants[0]!.algebraic_type, inner) : null;
     const variant = variants[index];
@@ -96,6 +98,23 @@ export function decodeRows(result: { schema: AlgebraicType; rows: unknown[] }): 
 
 export const sqlString = (s: string) => `'${s.replaceAll("'", "''")}'`;
 
+// A localhost server is the B5 test bench; anything else (Maincloud) is the shared database.
+export function isLocalUri(uri: string): boolean {
+  try {
+    return ["localhost", "127.0.0.1", "[::1]"].includes(new URL(uri).hostname);
+  } catch {
+    return false;
+  }
+}
+
+// One identity token per server: a token minted by Maincloud isn't valid on the local bench, and the
+// other way round (DECISIONS D75). The Maincloud file keeps its pre-B5 name.
+export function identityPath(uri: string): string {
+  const host = new URL(uri).host;
+  if (host === "maincloud.spacetimedb.com") return config.paths.spacetimeIdentity;
+  return config.paths.spacetimeIdentity.replace(/\.json$/, `.${host.replace(/[^a-z0-9.-]/gi, "_")}.json`);
+}
+
 export class SpacetimeHttp implements Db {
   private token: string | null;
   readonly name: string;
@@ -110,13 +129,13 @@ export class SpacetimeHttp implements Db {
     this.name = opts.name ?? "sim-worker";
   }
 
-  // The worker's identity token is kept in .cache (git-ignored), so it claims tasks as the same
-  // identity across restarts.
+  // The worker's identity token is kept in .cache (git-ignored), one per server, so it claims
+  // tasks as the same identity across restarts.
   static async connect(name = "sim-worker"): Promise<SpacetimeHttp> {
     const uri = process.env.SPACETIMEDB_URI?.trim();
     const db = process.env.SPACETIMEDB_DB_NAME?.trim();
     if (!uri || !db) throw new SpacetimeError("SPACETIMEDB_URI and SPACETIMEDB_DB_NAME must be set in .env.local");
-    const path = config.paths.spacetimeIdentity;
+    const path = identityPath(uri);
     let token: string | null = null;
     let identity = "";
     if (existsSync(path)) ({ token, identity } = JSON.parse(readFileSync(path, "utf8")));
@@ -211,9 +230,27 @@ export const writer = {
   finishRound: (db: Db, run_id: string, round: number, status: string, summary: unknown) =>
     db.call("finish_round", [run_id, round, status, JSON.stringify(summary)]),
 
-  // End of a sim day: decisions, shoppers and the refreshed arm stats, one call each.
-  async day(db: Db, run_id: string, day: DayResult, shoppers: readonly Shopper[], stateText: (id: string) => string, armStats: ArmStat[]) {
-    await db.call("insert_decisions", [JSON.stringify(day.decisions)]);
+  // End of a sim day: decisions, shoppers and the refreshed arm stats, one call each. A paced
+  // replay (B6) spreads the decisions over pace.ms in slices so the views fill as they arrive;
+  // slices hold whole impressions (each feed row with its page row).
+  async day(
+    db: Db,
+    run_id: string,
+    day: DayResult,
+    shoppers: readonly Shopper[],
+    stateText: (id: string) => string,
+    armStats: ArmStat[],
+    pace?: { ms: number; slices: number },
+  ) {
+    if (!pace || pace.ms <= 0) {
+      await db.call("insert_decisions", [JSON.stringify(day.decisions)]);
+    } else {
+      const size = 2 * Math.max(1, Math.ceil(day.decisions.length / 2 / pace.slices));
+      for (let i = 0; i < day.decisions.length; i += size) {
+        await db.call("insert_decisions", [JSON.stringify(day.decisions.slice(i, i + size))]);
+        await new Promise((r) => setTimeout(r, pace.ms / pace.slices));
+      }
+    }
     const rows = shoppers.map((s) => ({
       shopper_id: s.shopper_id,
       segment_id: s.segment_id,

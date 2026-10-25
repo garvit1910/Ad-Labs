@@ -1,0 +1,470 @@
+{
+  "version": 1,
+  "run": {
+    "run_id": "run_local",
+    "seed": 13,
+    "population": 300,
+    "config_hash": "98a475dc29fbb65fdbb3df0ba0f372daa1ae68b63fad6840b9abb79679d21812",
+    "offsets": {
+      "tap": -3.96452676061042,
+      "stay": -0.328363805800704,
+      "buy": -1.8522955541782342
+    }
+  },
+  "shopper": {
+    "shopper_id": "shp_0212",
+    "display_name": "Drew F.",
+    "segment_id": "seg_nostalgic_adult",
+    "segment_name": "Nostalgic adult"
+  },
+  "arm": {
+    "arm_id": "arm_11",
+    "label": "taste indulgence × testimonial"
+  },
+  "reason": {
+    "kind": "need",
+    "before": "Not shopping for cereal right now.",
+    "after": "Shopping for a new cereal right now and wants to buy within a few days.",
+    "explained": 1,
+    "confounders": [
+      "Has also seen Catalina Crunch ads twice this week.",
+      "Has also seen Wonderworks ads twice this week.",
+      "- Wonderworks: Less sugar, more wonder. Crunchy, low-carb cereal in flavors that taste like dessert. [Button: Shop Now] [Image: A bowl of chocolate cereal styled like a dessert.]",
+      "Has also seen Wonderworks ads 4 times this week.",
+      "- Wonderworks: The keto cereal with a cult following. High protein, low sugar, and made for snacking straight from the box. [Button: Shop Now] [Image: A cereal box surrounded by handwritten fan notes.]"
+    ]
+  },
+  "before": {
+    "round": 2,
+    "tick": 8,
+    "arm_id": "arm_11",
+    "creative_id": "cr_gen_11",
+    "headline": "\"I was sure healthy cereal would taste like gravel\"",
+    "feed": {
+      "state_hash": "628dfcad0ff227a6e19f1ac07324a2e9983e697cd3ad52548b949234f70c3b81",
+      "state": "SHOPPER\nDrew F. In their late thirties with a desk job in an open-plan office; usually eats breakfast at their desk.\nIn their own words: \"Tastes like the cereal I ate as a kid, without the sugar crash.\" / \"I still want Saturday-morning cereal, just not the sugar.\"\nCares a lot about: childhood flavors and taste. Cares somewhat about: low sugar and what other customers say. Doesn't think about: crunch and clean ingredients.\nNot shopping for cereal right now.\n\nMEMORY\nHas seen Magic Spoon ads 5 times this week, mostly about childhood flavors.\nHas also seen Three Wishes ads 6 times this week.\nHas also seen Catalina Crunch ads twice this week.\nHas also seen Wonderworks ads twice this week.\nNo opinion of Magic Spoon yet.\n\nRIGHT NOW\nScrolling Instagram on their phone. Three sponsored posts appear one after another:\n- Three Wishes: Cereal with nothing to hide. Grain-free cereal made with simple ingredients the whole family can enjoy. [Button: Shop Now] [Image: A family breakfast table with cereal boxes and fruit.]\n- Magic Spoon: \"I was sure healthy cereal would taste like gravel\" \"My roommate talked me into one bowl. It's crunchy, sweet and honestly better than the cereal I grew up on.\" Rated 4.6 stars across over 25,000 reviews. [Button: Shop Now] [Image: A college student taking a skeptical first bite of cereal at a shared apartment counter, star ratings on screen.]\n- Wonderworks: Less sugar, more wonder. Crunchy, low-carb cereal in flavors that taste like dessert. [Button: Shop Now] [Image: A bowl of chocolate cereal styled like a dessert.]",
+      "questions": {
+        "tap_A": {
+          "type": "noul",
+          "instructions": "Does this shopper tap the Three Wishes post that says \"Cereal with nothing to hide\" to learn more?"
+        },
+        "tap_B": {
+          "type": "noul",
+          "instructions": "Does this shopper tap the Magic Spoon post that says \"I was sure healthy cereal would taste like gravel\" to learn more?"
+        },
+        "tap_C": {
+          "type": "noul",
+          "instructions": "Does this shopper tap the Wonderworks post that says \"Less sugar, more wonder\" to learn more?"
+        },
+        "believes": {
+          "type": "noul",
+          "instructions": "Does this shopper believe the main promise of the Magic Spoon post that says \"I was sure healthy cereal would taste like gravel\"?"
+        }
+      },
+      "answers": {
+        "tap_A": {
+          "type": "noul",
+          "noul": 0.2
+        },
+        "tap_B": {
+          "type": "noul",
+          "noul": 0.49
+        },
+        "tap_C": {
+          "type": "noul",
+          "noul": 0.21
+        },
+        "believes": {
+          "type": "noul",
+          "noul": 0.52
+        }
+      },
+      "our_key": "tap_B",
+      "tap_raw": 0.49,
+      "tap_cal": 0.017906335520639846,
+      "draw": 0.9238193173648556,
+      "action": "scroll"
+    },
+    "page": {
+      "state_hash": "84e35c22b76e8c80d414ac9c5eac2d8c134d4330a61f67488f25169407b2a0ba",
+      "state": "SHOPPER\nDrew F. In their late thirties with a desk job in an open-plan office; usually eats breakfast at their desk.\nIn their own words: \"Tastes like the cereal I ate as a kid, without the sugar crash.\" / \"I still want Saturday-morning cereal, just not the sugar.\"\nCares a lot about: childhood flavors and taste. Cares somewhat about: low sugar and what other customers say. Doesn't think about: crunch and clean ingredients.\nNot shopping for cereal right now.\n\nMEMORY\nHas seen Magic Spoon ads 5 times this week, mostly about childhood flavors.\nHas also seen Three Wishes ads 6 times this week.\nHas also seen Catalina Crunch ads twice this week.\nHas also seen Wonderworks ads twice this week.\nNo opinion of Magic Spoon yet.\n\nTHEY TAPPED\nMagic Spoon: \"I was sure healthy cereal would taste like gravel\" \"My roommate talked me into one bowl. It's crunchy, sweet and honestly better than the cereal I grew up on.\" Rated 4.6 stars across over 25,000 reviews. [Button: Shop Now] [Image: A college student taking a skeptical first bite of cereal at a shared apartment counter, star ratings on screen.]\n\nTHE PAGE\nMagic Spoon Variety 4-Pack — $39 one-time, $31.20 with subscription.\nRated 4.6 from 25,926 reviews. Page highlights: 4-5g net carbs, 0g total sugars, 12-14g complete protein.\nPrice compared with what they expected: first time seeing a price.",
+      "questions": {
+        "stays": {
+          "type": "noul",
+          "instructions": "Does the shopper look through this page instead of leaving within a few seconds?"
+        },
+        "buys": {
+          "type": "noul",
+          "instructions": "If they stay, do they buy on this visit?"
+        },
+        "objection": {
+          "type": "choice",
+          "instructions": "What is the main thing holding them back, if anything?",
+          "criteria": {
+            "price": "The price is more than they want to pay.",
+            "taste_doubt": "They doubt it tastes good.",
+            "trust": "They don't trust the brand or its claims.",
+            "not_now": "They don't need cereal right now.",
+            "other_brand": "They'd rather buy another brand.",
+            "nothing": "Nothing is holding them back."
+          }
+        }
+      },
+      "answers": {
+        "stays": {
+          "type": "noul",
+          "noul": 0.51
+        },
+        "buys": {
+          "type": "noul",
+          "noul": 0.21
+        },
+        "objection": {
+          "type": "choice",
+          "choice": "not_now",
+          "confidence": 0.99,
+          "probabilities": {
+            "price": 0,
+            "taste_doubt": 0.01,
+            "trust": 0,
+            "not_now": 0.99,
+            "other_brand": 0,
+            "nothing": 0
+          }
+        }
+      },
+      "stay_raw": 0.51,
+      "buy_raw": 0.21,
+      "stay_cal": 0.42840578791068834,
+      "buy_cal": 0.0400319941343863,
+      "guard": 1,
+      "draw": {
+        "stay": null,
+        "buy": null
+      },
+      "action": "not_tapped",
+      "objection": "not_now"
+    }
+  },
+  "after": {
+    "round": 3,
+    "tick": 11,
+    "arm_id": "arm_11",
+    "creative_id": "cr_gen_11",
+    "headline": "\"I was sure healthy cereal would taste like gravel\"",
+    "feed": {
+      "state_hash": "42ea3bb901e1086fa0bfc663075dde83ab1c8f926e99980f2a2e9263e0914594",
+      "state": "SHOPPER\nDrew F. In their late thirties with a desk job in an open-plan office; usually eats breakfast at their desk.\nIn their own words: \"Tastes like the cereal I ate as a kid, without the sugar crash.\" / \"I still want Saturday-morning cereal, just not the sugar.\"\nCares a lot about: childhood flavors and taste. Cares somewhat about: low sugar and what other customers say. Doesn't think about: crunch and clean ingredients.\nShopping for a new cereal right now and wants to buy within a few days.\n\nMEMORY\nHas seen Magic Spoon ads 5 times this week, mostly about childhood flavors.\nHas also seen Three Wishes ads 6 times this week.\nHas also seen Wonderworks ads 4 times this week.\nNo opinion of Magic Spoon yet.\n\nRIGHT NOW\nScrolling Instagram on their phone. Three sponsored posts appear one after another:\n- Magic Spoon: \"I was sure healthy cereal would taste like gravel\" \"My roommate talked me into one bowl. It's crunchy, sweet and honestly better than the cereal I grew up on.\" Rated 4.6 stars across over 25,000 reviews. [Button: Shop Now] [Image: A college student taking a skeptical first bite of cereal at a shared apartment counter, star ratings on screen.]\n- Three Wishes: Cereal with nothing to hide. Grain-free cereal made with simple ingredients the whole family can enjoy. [Button: Shop Now] [Image: A family breakfast table with cereal boxes and fruit.]\n- Wonderworks: The keto cereal with a cult following. High protein, low sugar, and made for snacking straight from the box. [Button: Shop Now] [Image: A cereal box surrounded by handwritten fan notes.]",
+      "questions": {
+        "tap_A": {
+          "type": "noul",
+          "instructions": "Does this shopper tap the Magic Spoon post that says \"I was sure healthy cereal would taste like gravel\" to learn more?"
+        },
+        "tap_B": {
+          "type": "noul",
+          "instructions": "Does this shopper tap the Three Wishes post that says \"Cereal with nothing to hide\" to learn more?"
+        },
+        "tap_C": {
+          "type": "noul",
+          "instructions": "Does this shopper tap the Wonderworks post that says \"The keto cereal with a cult following\" to learn more?"
+        },
+        "believes": {
+          "type": "noul",
+          "instructions": "Does this shopper believe the main promise of the Magic Spoon post that says \"I was sure healthy cereal would taste like gravel\"?"
+        }
+      },
+      "answers": {
+        "tap_A": {
+          "type": "noul",
+          "noul": 0.59
+        },
+        "tap_B": {
+          "type": "noul",
+          "noul": 0.2
+        },
+        "tap_C": {
+          "type": "noul",
+          "noul": 0.19
+        },
+        "believes": {
+          "type": "noul",
+          "noul": 0.57
+        }
+      },
+      "our_key": "tap_A",
+      "tap_raw": 0.59,
+      "tap_cal": 0.02658246345052022,
+      "draw": 0.6856408776876363,
+      "action": "scroll"
+    },
+    "page": {
+      "state_hash": "9999c5518709ae333e728d4fe741052f3e62822f207c68d6e23de98341b5c35f",
+      "state": "SHOPPER\nDrew F. In their late thirties with a desk job in an open-plan office; usually eats breakfast at their desk.\nIn their own words: \"Tastes like the cereal I ate as a kid, without the sugar crash.\" / \"I still want Saturday-morning cereal, just not the sugar.\"\nCares a lot about: childhood flavors and taste. Cares somewhat about: low sugar and what other customers say. Doesn't think about: crunch and clean ingredients.\nShopping for a new cereal right now and wants to buy within a few days.\n\nMEMORY\nHas seen Magic Spoon ads 5 times this week, mostly about childhood flavors.\nHas also seen Three Wishes ads 6 times this week.\nHas also seen Wonderworks ads 4 times this week.\nNo opinion of Magic Spoon yet.\n\nTHEY TAPPED\nMagic Spoon: \"I was sure healthy cereal would taste like gravel\" \"My roommate talked me into one bowl. It's crunchy, sweet and honestly better than the cereal I grew up on.\" Rated 4.6 stars across over 25,000 reviews. [Button: Shop Now] [Image: A college student taking a skeptical first bite of cereal at a shared apartment counter, star ratings on screen.]\n\nTHE PAGE\nMagic Spoon Variety 4-Pack — $39 one-time, $31.20 with subscription.\nRated 4.6 from 25,926 reviews. Page highlights: 4-5g net carbs, 0g total sugars, 12-14g complete protein.\nPrice compared with what they expected: first time seeing a price.",
+      "questions": {
+        "stays": {
+          "type": "noul",
+          "instructions": "Does the shopper look through this page instead of leaving within a few seconds?"
+        },
+        "buys": {
+          "type": "noul",
+          "instructions": "If they stay, do they buy on this visit?"
+        },
+        "objection": {
+          "type": "choice",
+          "instructions": "What is the main thing holding them back, if anything?",
+          "criteria": {
+            "price": "The price is more than they want to pay.",
+            "taste_doubt": "They doubt it tastes good.",
+            "trust": "They don't trust the brand or its claims.",
+            "not_now": "They don't need cereal right now.",
+            "other_brand": "They'd rather buy another brand.",
+            "nothing": "Nothing is holding them back."
+          }
+        }
+      },
+      "answers": {
+        "stays": {
+          "type": "noul",
+          "noul": 0.67
+        },
+        "buys": {
+          "type": "noul",
+          "noul": 0.4
+        },
+        "objection": {
+          "type": "choice",
+          "choice": "nothing",
+          "confidence": 0.32,
+          "probabilities": {
+            "price": 0.26,
+            "taste_doubt": 0.17,
+            "trust": 0.08,
+            "not_now": 0,
+            "other_brand": 0.06,
+            "nothing": 0.43
+          }
+        }
+      },
+      "stay_raw": 0.67,
+      "buy_raw": 0.4,
+      "stay_cal": 0.5938299903965785,
+      "buy_cal": 0.09468214509389215,
+      "guard": 1,
+      "draw": {
+        "stay": null,
+        "buy": null
+      },
+      "action": "not_tapped",
+      "objection": "nothing"
+    }
+  },
+  "counterfactuals": {
+    "reverted": {
+      "tap_cal": 0.017906335520639846,
+      "stay_cal": 0.40893515343955905,
+      "buy_cal": 0.0400319941343863
+    },
+    "removed": {
+      "tap_cal": 0.024538303032149676,
+      "stay_cal": 0.5614380449278201,
+      "buy_cal": 0.10201175315256612
+    }
+  },
+  "history": [
+    {
+      "round": 0,
+      "tick": 0,
+      "arm_id": "arm_08",
+      "creative_id": "cr_gen_08",
+      "tap_cal": 0.004148405299444115,
+      "stay_cal": 0.36134623677419925,
+      "buy_cal": 0.03328995040002419,
+      "action": "scroll",
+      "page_action": "not_tapped",
+      "in_market": false,
+      "seen_client": 0
+    },
+    {
+      "round": 0,
+      "tick": 1,
+      "arm_id": "arm_02",
+      "creative_id": "cr_gen_02",
+      "tap_cal": 0.0038718093513174347,
+      "stay_cal": 0.27058471144149143,
+      "buy_cal": 0.02490210529670619,
+      "action": "scroll",
+      "page_action": "not_tapped",
+      "in_market": false,
+      "seen_client": 1
+    },
+    {
+      "round": 0,
+      "tick": 2,
+      "arm_id": "arm_04",
+      "creative_id": "cr_gen_04",
+      "tap_cal": 0.03130081629438706,
+      "stay_cal": 0.5507874963723366,
+      "buy_cal": 0.05484084183525233,
+      "action": "scroll",
+      "page_action": "not_tapped",
+      "in_market": false,
+      "seen_client": 2
+    },
+    {
+      "round": 1,
+      "tick": 3,
+      "arm_id": "arm_06",
+      "creative_id": "cr_gen_06",
+      "tap_cal": 0.040527322596960395,
+      "stay_cal": 0.5938299903965785,
+      "buy_cal": 0.09468214509389215,
+      "action": "scroll",
+      "page_action": "not_tapped",
+      "in_market": true,
+      "seen_client": 3
+    },
+    {
+      "round": 1,
+      "tick": 4,
+      "arm_id": "arm_08",
+      "creative_id": "cr_gen_08",
+      "tap_cal": 0.0073258856671289015,
+      "stay_cal": 0.39929427080452873,
+      "buy_cal": 0.04969362190675423,
+      "action": "scroll",
+      "page_action": "not_tapped",
+      "in_market": true,
+      "seen_client": 4
+    },
+    {
+      "round": 2,
+      "tick": 6,
+      "arm_id": "arm_01",
+      "creative_id": "cr_gen_01",
+      "tap_cal": 0.02882637370043049,
+      "stay_cal": 0.5829585361168278,
+      "buy_cal": 0.09115545035959519,
+      "action": "scroll",
+      "page_action": "not_tapped",
+      "in_market": true,
+      "seen_client": 5
+    },
+    {
+      "round": 2,
+      "tick": 7,
+      "arm_id": "arm_04",
+      "creative_id": "cr_gen_04",
+      "tap_cal": 0.02767766357637215,
+      "stay_cal": 0.5402090884770793,
+      "buy_cal": 0.05484084183525233,
+      "action": "scroll",
+      "page_action": "not_tapped",
+      "in_market": false,
+      "seen_client": 5
+    },
+    {
+      "round": 2,
+      "tick": 8,
+      "arm_id": "arm_11",
+      "creative_id": "cr_gen_11",
+      "tap_cal": 0.017906335520639846,
+      "stay_cal": 0.42840578791068834,
+      "buy_cal": 0.0400319941343863,
+      "action": "scroll",
+      "page_action": "not_tapped",
+      "in_market": false,
+      "seen_client": 5
+    },
+    {
+      "round": 3,
+      "tick": 9,
+      "arm_id": "arm_01",
+      "creative_id": "cr_gen_01",
+      "tap_cal": 0.01862359491580217,
+      "stay_cal": 0.4681200289676031,
+      "buy_cal": 0.05223944108905987,
+      "action": "scroll",
+      "page_action": "not_tapped",
+      "in_market": false,
+      "seen_client": 5
+    },
+    {
+      "round": 3,
+      "tick": 10,
+      "arm_id": "arm_07",
+      "creative_id": "cr_gen_07",
+      "tap_cal": 0.003079767269319308,
+      "stay_cal": 0.27058471144149143,
+      "buy_cal": 0.02490210529670619,
+      "action": "scroll",
+      "page_action": "not_tapped",
+      "in_market": false,
+      "seen_client": 5
+    },
+    {
+      "round": 3,
+      "tick": 11,
+      "arm_id": "arm_11",
+      "creative_id": "cr_gen_11",
+      "tap_cal": 0.02658246345052022,
+      "stay_cal": 0.5938299903965785,
+      "buy_cal": 0.09468214509389215,
+      "action": "scroll",
+      "page_action": "not_tapped",
+      "in_market": true,
+      "seen_client": 5
+    },
+    {
+      "round": 4,
+      "tick": 12,
+      "arm_id": "arm_control",
+      "creative_id": "cr_ms_live_1",
+      "tap_cal": 0.02767766357637215,
+      "stay_cal": 0.572161474625632,
+      "buy_cal": 0.08108767793667888,
+      "action": "scroll",
+      "page_action": "not_tapped",
+      "in_market": true,
+      "seen_client": 6
+    },
+    {
+      "round": 5,
+      "tick": 15,
+      "arm_id": "arm_control",
+      "creative_id": "cr_ms_live_1",
+      "tap_cal": 0.016550156632456563,
+      "stay_cal": 0.42840578791068834,
+      "buy_cal": 0.0423723935680621,
+      "action": "scroll",
+      "page_action": "not_tapped",
+      "in_market": false,
+      "seen_client": 4
+    },
+    {
+      "round": 5,
+      "tick": 16,
+      "arm_id": "arm_11",
+      "creative_id": "cr_gen_11",
+      "tap_cal": 0.024538303032149676,
+      "stay_cal": 0.5938299903965785,
+      "buy_cal": 0.09468214509389215,
+      "action": "scroll",
+      "page_action": "not_tapped",
+      "in_market": true,
+      "seen_client": 4
+    },
+    {
+      "round": 5,
+      "tick": 17,
+      "arm_id": "arm_control",
+      "creative_id": "cr_ms_live_2",
+      "tap_cal": 0.03130081629438706,
+      "stay_cal": 0.572161474625632,
+      "buy_cal": 0.08108767793667888,
+      "action": "scroll",
+      "page_action": "not_tapped",
+      "in_market": true,
+      "seen_client": 4
+    }
+  ]
+}
