@@ -19,4 +19,7 @@ __pycache__/
 .DS_Store
 
 # local R2 stub (services/r2-service.ts)
-data/
+data/*
+# except the demo's ad images and brand-kit photo, which the deployed app serves from disk
+!data/ad-images/
+!data/brand-kit/
