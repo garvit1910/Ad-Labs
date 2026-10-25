@@ -120,6 +120,21 @@ function interleave(pools: QuoteCandidate[][]): QuoteCandidate[] {
   return out;
 }
 
+/** Distinctive short names a review uses for a tracked brand, beyond its full page name. */
+const BRAND_ALIASES = ['quest', 'catalina'];
+
+/**
+ * Any mention of a tracked brand: its words joined by space, hyphen or nothing,
+ * with any suffix ("Magic Spoons", "magic-spoon", "#magicspooncereal", "Quest bars").
+ */
+function brandPattern(brandNames: string[]): RegExp {
+  const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const names = [...brandNames, ...BRAND_ALIASES, 'eatmagicspoon'].map((name) =>
+    name.toLowerCase().split(/\s+/).filter(Boolean).map(escape).join('[\\s-]*'),
+  );
+  return new RegExp(`\\b(${names.join('|')})`, 'i');
+}
+
 interface QuoteClaim {
   key: string;
   verbatims: string[];
@@ -141,7 +156,7 @@ function allocateQuotes(
   corpus: string[],
   brandNames: string[],
 ): Map<string, { quotes: string[]; dropped: string[] }> {
-  const brandRe = new RegExp(`\\b(${[...brandNames, 'magicspoon', 'eatmagicspoon'].map((name) => name.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/\s+/g, '\\s*')).join('|')})\\b`, 'i');
+  const brandRe = brandPattern(brandNames);
   const taken = new Set<string>();
   const result = new Map(claims.map((claim) => [claim.key, { quotes: [] as string[], dropped: [] as string[] }]));
   const offer = (key: string, quote: string, source: string): boolean => {
@@ -303,20 +318,20 @@ const SHORTEN_SCHEMA = {
  */
 async function shortDescription(llm: Llm, description: string): Promise<string> {
   if (description.split(/\s+/).length <= DESCRIPTION_MAX_WORDS) return description;
-  const short = await llm
-    .strictJson(
-      'adlab_segment_short',
-      SHORTEN_SCHEMA,
-      [
-        {
-          role: 'system',
-          content: `Shorten this shopper's life-context description to one sentence of at most ${DESCRIPTION_MAX_WORDS} words. Keep only who they are and their routine. Add nothing, and keep it free of any food preference, goal, diet, brand or opinion.`,
-        },
-        { role: 'user', content: description },
-      ],
-      (value) => String((value as { description?: unknown }).description ?? '').replace(/\s+/g, ' ').trim(),
-    )
-    .catch(() => '');
+  // A failed call throws (the build stops) rather than falling back: a fallback that differs from the
+  // next run's answer would make reruns rewrite the segment.
+  const short = await llm.strictJson(
+    'adlab_segment_short',
+    SHORTEN_SCHEMA,
+    [
+      {
+        role: 'system',
+        content: `Shorten this shopper's life-context description to one sentence of at most ${DESCRIPTION_MAX_WORDS} words. Keep only who they are and their routine. Add nothing, and keep it free of any food preference, goal, diet, brand or opinion.`,
+      },
+      { role: 'user', content: description },
+    ],
+    (value) => String((value as { description?: unknown }).description ?? '').replace(/\s+/g, ' ').trim(),
+  );
   const fits = short && short.split(/\s+/).length <= DESCRIPTION_MAX_WORDS && preferenceWords(short).length === 0;
   return fits ? short : clipWords(description, DESCRIPTION_MAX_WORDS);
 }

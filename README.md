@@ -19,7 +19,8 @@ Cal Hacks 13.0. Ad Lab tests Magic Spoon ad recipes on simulated shoppers built 
 | `lib/spacetime/` | the web app's SpacetimeDB client (generated bindings and config) | shared |
 | `spacetime/` | the SpacetimeDB module: `tables_a.ts` and `reducers_a.ts` (A), `tables_b.ts` and `reducers_b.ts` (B) | shared |
 | `sim/` | the simulation engine and its worker ([sim/DECISIONS.md](sim/DECISIONS.md)) | B |
-| `worker/`, `supabase/`, `scripts/` | the job worker, the Supabase migrations, phase scripts | A |
+| `worker/`, `supabase/`, `scripts/` | the job worker and A5's creative worker (`worker/creatives/`), the Supabase migrations, phase scripts | A |
+| `lib/adlab/` | A's shared glue: the org id, Supabase client, SpacetimeDB HTTP client, contract vocabulary and the contract check | A |
 | `agents/` | Python uAgents for Fetch.ai | A |
 | `docs/` | the plan and the Adcero and ShopSim exports | both |
 
@@ -45,6 +46,9 @@ Publishing the SpacetimeDB module also needs the `spacetime` CLI 2.13, logged in
 | `npm run check:connections` | one tiny call per external service, as a pass/fail table |
 | `npm run db:migrate` | applies new files in `supabase/migrations/`; reruns are no-ops |
 | `npm run worker` | drains Supabase's `job_queue` through the copied Adcero processors; add `-- --watch` to keep polling, `-- --concurrency=N` for parallel jobs |
+| `npm run a2:ingest`, `a3:distill`, `a3:report` | A2's scrape and A3's distillation, run through the same job worker in-process |
+| `npm run a4:rows -- check` | A's contract rows in SpacetimeDB: `check` is read-only; with no argument it rebuilds and upserts them (`--keep-arms` keeps the recipes, `--dry-run` writes nothing) |
+| `npm run a5:creatives -- check \| round0 \| round0-status \| worker` | A5's creative worker: whether A4's rows are usable, round 0, whether round 0 is complete (B queues round 0 only then), and the task-board loop that answers each `generate_creatives` task |
 | `npm run spacetime:publish` | publishes `spacetime/` to Maincloud (Person A only). Stops instead of breaking clients |
 | `npm run spacetime:publish:clear` | publishes and wipes every table, both sides'. Agree first |
 | `npm run spacetime:generate` | regenerates `lib/spacetime/bindings/` after a module change |

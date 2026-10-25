@@ -145,6 +145,32 @@ describe('runGenerateCreatives', () => {
     assert.equal(db.tables.task.find((task) => task.task_id === TASK_ID)?.status, 'done');
   });
 
+  it('leaves the task claimed for a retry when the copywriter is unreachable, instead of completing it empty', async () => {
+    const realFetch = globalThis.fetch;
+    const hadKey = 'OPENAI_API_KEY' in process.env;
+    process.env.OPENAI_API_KEY ??= 'test';
+    globalThis.fetch = (async () => new Response('{"error":"bad request"}', { status: 400 })) as typeof fetch;
+    restore = () => {
+      globalThis.fetch = realFetch;
+      if (!hadKey) delete process.env.OPENAI_API_KEY;
+    };
+    const db = board();
+    await assert.rejects(runGenerateCreatives(TASK_ID, { spacetime: db, client: client(), log: quiet }), /copywriter unavailable/);
+    assert.deepEqual(reducers(db), ['claim_task']);
+    assert.equal(db.tables.task.find((task) => task.task_id === TASK_ID)?.status, 'claimed');
+  });
+
+  it('regenerates a gated-out creative on resume rather than keeping it', async () => {
+    const chat = mockChat(() => CLEAN_COPY);
+    restore = chat.restore;
+    const gated = { ...a4Tables().creative[0], creative_id: STATISTIC_TRACKER, arm_id: 'arm_health_nutrition_statistic', origin: 'generated', round_created: 1, segment_id: SEG_TRACKER, status: 'gated_out' };
+    const db = board([taskRow({ status: 'claimed', claimed_by: 'creative_worker' })], 5, [gated]);
+    const result = await runGenerateCreatives(TASK_ID, { spacetime: db, client: client(), log: quiet });
+    assert.equal(result.reused, 0);
+    assert.equal(result.written, 3);
+    assert.equal(db.tables.creative.find((creative) => creative.creative_id === STATISTIC_TRACKER)?.status, 'ranked');
+  });
+
   it('queues no run_round past the run’s rounds_planned, or when told to skip it', async () => {
     const chat = mockChat(() => CLEAN_COPY);
     restore = chat.restore;
@@ -220,6 +246,17 @@ describe('runCreativeTaskLoop', () => {
     assert.equal(status[TASK_ID], 'done');
     assert.equal(status[`tsk_gen_${RUN_ID}_r9`], 'queued');
     assert.equal(db.tables.task.find((task) => task.task_id === TASK_ID)?.claimed_by, 'creative_worker');
+  });
+
+  it('leaves a fresh creative_worker claim to the live process holding it', async () => {
+    const chat = mockChat(() => CLEAN_COPY);
+    restore = chat.restore;
+    const db = board([taskRow({ status: 'claimed', claimed_by: 'creative_worker', updated_at: new Date().toISOString() })]);
+    const stop = new AbortController();
+    setTimeout(() => stop.abort(), 50);
+    await runCreativeTaskLoop({ signal: stop.signal, spacetime: db, client: client(), pollMs: 5, log: quiet });
+    assert.equal(chat.calls.length, 0);
+    assert.equal(db.tables.task[0].status, 'claimed');
   });
 
   it('takes over a claim left untouched for 15 minutes, but not a fresh one', async () => {

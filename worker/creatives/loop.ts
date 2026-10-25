@@ -9,9 +9,12 @@ export interface CreativeLoopOptions extends RunDeps {
   minAgeMs?: number;
   /** A task claimed by anyone and untouched this long is abandoned and taken over. */
   staleClaimMs?: number;
+  /** A task claimed as creative_worker by another process is resumed only once it's this quiet. */
+  resumeAfterMs?: number;
   pollMs?: number;
-  /** Tries per task (resumed on the next poll) before it's failed. */
+  /** Tries per task before it's failed; the wait doubles from `retryMs` between tries. */
   maxAttempts?: number;
+  retryMs?: number;
 }
 
 interface TaskHead {
@@ -24,17 +27,22 @@ interface TaskHead {
 
 /**
  * The creative worker's task-board loop. Each poll it resumes generate_creatives
- * tasks it already claimed, takes over tasks someone else claimed and left
- * untouched for 15 minutes (a stopped Copywriter; no reducer requeues a claim),
- * then claims queued ones that have waited at least a minute, oldest first. A task
- * that keeps failing is failed after `maxAttempts` tries.
+ * tasks claimed as creative_worker (its own retries at once, another process's once
+ * that claim is three minutes quiet, so two live workers never run one task), takes
+ * over tasks someone else claimed and left untouched for 15 minutes (a stopped
+ * Copywriter; no reducer requeues a claim), then claims queued ones that have waited
+ * at least a minute, oldest first. A failing task is retried with a doubling wait,
+ * so a short OpenAI or network outage doesn't end the run, and failed after
+ * `maxAttempts` tries.
  */
 export async function runCreativeTaskLoop(opts: CreativeLoopOptions): Promise<void> {
   const { signal } = opts;
   const minAgeMs = opts.minAgeMs ?? 60_000;
   const staleClaimMs = opts.staleClaimMs ?? 15 * 60_000;
+  const resumeAfterMs = opts.resumeAfterMs ?? 3 * 60_000;
   const pollMs = opts.pollMs ?? 10_000;
-  const maxAttempts = opts.maxAttempts ?? 3;
+  const maxAttempts = opts.maxAttempts ?? 6;
+  const retryMs = opts.retryMs ?? 30_000;
   const log = opts.log ?? ((line: string) => console.log(`[creatives] ${line}`));
   const spacetime = opts.spacetime ?? (await connectSpacetime());
   // Live facts are re-read for every task unless the caller pinned rows (tests do).
@@ -43,7 +51,7 @@ export async function runCreativeTaskLoop(opts: CreativeLoopOptions): Promise<vo
     ...(opts.client ? { client: opts.client } : { db: opts.db ?? serviceSupabase() }),
     ...(opts.log ? { log: opts.log } : {}),
   };
-  const attempts = new Map<string, number>();
+  const attempts = new Map<string, { tries: number; nextAt: number }>();
 
   log(`watching generate_creatives tasks on ${spacetime.label} as ${CREATIVE_WORKER} (claims after ${minAgeMs / 1000}s unclaimed)`);
   while (!signal.aborted) {
@@ -55,10 +63,12 @@ export async function runCreativeTaskLoop(opts: CreativeLoopOptions): Promise<vo
     }
     const now = Date.now();
     const age = (iso: string) => now - Date.parse(iso);
+    const ours = (task: TaskHead) => task.claimed_by === CREATIVE_WORKER && (attempts.has(task.task_id) || age(task.updated_at) >= resumeAfterMs);
     const due = tasks
+      .filter((task) => (attempts.get(task.task_id)?.nextAt ?? 0) <= now)
       .filter(
         (task) =>
-          (task.status === 'claimed' && (task.claimed_by === CREATIVE_WORKER || age(task.updated_at) >= staleClaimMs)) ||
+          (task.status === 'claimed' && (ours(task) || (task.claimed_by !== CREATIVE_WORKER && age(task.updated_at) >= staleClaimMs))) ||
           (task.status === 'queued' && age(task.created_at) >= minAgeMs),
       )
       .sort((a, b) => a.created_at.localeCompare(b.created_at) || a.task_id.localeCompare(b.task_id));
@@ -74,11 +84,12 @@ export async function runCreativeTaskLoop(opts: CreativeLoopOptions): Promise<vo
           log(error.message);
           continue;
         }
-        const tries = (attempts.get(task.task_id) ?? 0) + 1;
-        attempts.set(task.task_id, tries);
+        const tries = (attempts.get(task.task_id)?.tries ?? 0) + 1;
+        const wait = retryMs * 2 ** (tries - 1);
+        attempts.set(task.task_id, { tries, nextAt: Date.now() + wait });
         const message = error instanceof Error ? error.message : String(error);
         if (tries < maxAttempts) {
-          log(`${task.task_id} failed (try ${tries}/${maxAttempts}), retrying next poll: ${message}`);
+          log(`${task.task_id} failed (try ${tries}/${maxAttempts}), retrying in ${Math.round(wait / 1000)}s: ${message}`);
           continue;
         }
         log(`${task.task_id} failed ${tries} times, failing the task: ${message}`);

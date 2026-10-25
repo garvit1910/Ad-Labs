@@ -27,7 +27,7 @@ export interface ContractWorld {
     landing_product_id: string;
     status: string;
   }>;
-  products: Array<{ product_id: string; brand_id: string; name: string }>;
+  products: Array<{ product_id: string; brand_id: string; name: string; page_highlights?: string; shipping_note?: string }>;
 }
 
 /** One live persona fact, as the segment it should become. */
@@ -88,12 +88,13 @@ export function worstStateWords(world: ContractWorld): number {
   const longestLabel = Math.max(0, ...labels);
   const competitors = [...new Set(world.creatives.filter((c) => c.origin === 'competitor_live').map((c) => c.brand_id))];
   const clientProducts = world.products.filter((product) => product.brand_id === client.brand_id);
+  // B prints three or more exposures as "3 times" (two words) and a good opinion as "likes it".
   const memory =
     1 +
-    (8 + words(client.name) + longestLabel) + // "Has seen <client> ads three times this week, mostly about <label>."
-    sum(competitors.map((id) => 7 + words(brandName.get(id) ?? id))) + // "Has also seen <brand> ads twice this week."
-    (6 + words(client.name)) + // "Opinion of <client>: skeptical, from three page visits."
-    (12 + words(client.name)) + // "Tapped a <client> ad two days ago, looked at the page, didn't buy."
+    (9 + words(client.name) + longestLabel) + // "Has seen <client> ads 3 times this week, mostly about <label>."
+    sum(competitors.map((id) => 8 + words(brandName.get(id) ?? id))) + // "Has also seen <brand> ads 3 times this week."
+    (8 + words(client.name)) + // "Opinion of <client>: likes it, from three page visits."
+    (12 + words(client.name)) + // "Tapped a <client> ad 2 days ago, looked at the page, didn't buy."
     sum(clientProducts.map((product) => 5 + words(product.name))); // "Thinks the <product> costs about $39."
   const ours = world.creatives
     .filter((c) => c.brand_id === client.brand_id && c.arm_id && c.status === 'ranked')
@@ -102,8 +103,15 @@ export function worstStateWords(world: ContractWorld): number {
     .filter((c) => c.origin === 'competitor_live' && c.status === 'ranked')
     .map((c) => adWords(c, brandName.get(c.brand_id) ?? c.brand_id));
   const ourAd = Math.max(0, ...ours);
-  const feed = 2 + 11 + 3 + ourAd + sum(longest(theirs, 2)); // "RIGHT NOW", the scrolling line, three "- " posts
-  const page = 2 + ourAd + 2 + 9 + 14 + 9; // THEY TAPPED, THE PAGE, price, rating + highlights, comparison
+  // "RIGHT NOW", "Scrolling Instagram on their phone. Three sponsored posts appear one after another:", three "- " posts.
+  const feed = 2 + 12 + 3 + ourAd + sum(longest(theirs, 2));
+  // THEY TAPPED, THE PAGE, "<name> — $39 one-time, $31.20 with subscription.", "Rated 4.6 from 25,926
+  // reviews. Page highlights: …", "Price compared with what they expected: about 30% more than expected."
+  const productWords = (product: ContractWorld['products'][number]) => {
+    const highlights = json<string[]>(product.page_highlights ?? '[]', []);
+    return words(product.name) + 6 + 5 + (highlights.length ? 2 + sum(highlights.map(words)) : 0) + words(product.shipping_note ?? '');
+  };
+  const page = 2 + ourAd + 2 + Math.max(0, ...clientProducts.map(productWords)) + 11;
   let worst = 0;
   for (const segment of world.segments) {
     const quotes = json<string[]>(segment.quotes, []).map(words);

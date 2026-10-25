@@ -279,7 +279,9 @@ export async function runRound0(opts: RoundZeroOptions = {}): Promise<RoundZeroR
   const client = opts.client ?? (await loadClientRows(opts.db ?? serviceSupabase()));
   const inputs = await spacetimeInputs(spacetime, client.rows);
   for (const warning of inputs.warnings) log(`warning: ${warning}`);
-  if (!opts.force) {
+  // Checked before generating and again before writing: generation takes minutes, and B may queue round 0 meanwhile.
+  const refuseOnceStarted = async () => {
+    if (opts.force) return;
     const [runs, runTasks] = await Promise.all([
       spacetime.sql<{ run_id: string }>('SELECT * FROM run'),
       spacetime.sql<{ task_id: string }>("SELECT * FROM task WHERE kind = 'run_round'"),
@@ -288,7 +290,8 @@ export async function runRound0(opts: RoundZeroOptions = {}): Promise<RoundZeroR
       const started = [...runs.map((run) => run.run_id), ...runTasks.map((task) => task.task_id)].join(', ');
       throw new Error(`B has started (${started}): round 0 is what it simulated, so it isn't rewritten. Pass --force to rewrite it anyway`);
     }
-  }
+  };
+  await refuseOnceStarted();
 
   const segmentIds = inputs.segments.map((segment) => segment.segment_id);
   const { pairs, skips } = planPairs(inputs.recipes, segmentIds, client.rows);
@@ -314,9 +317,12 @@ export async function runRound0(opts: RoundZeroOptions = {}): Promise<RoundZeroR
     runId: '',
     variants: 1,
   });
-  await writeCreatives(spacetime, creatives.map((creative) => creative.row));
+  // --regenerate never replaces a ranked creative with one that gated out: B would drop the pair.
+  const rows = creatives.map((creative) => creative.row).filter((row) => row.status === 'ranked' || existing.get(row.creative_id) !== 'ranked');
+  await refuseOnceStarted();
+  await writeCreatives(spacetime, rows);
   const status = roundZeroStatusOf(await readA4Tables(spacetime), client.rows);
-  return { expected: pairs.length, kept, written: creatives.length, ...counts(creatives), skips, errors, creatives, status };
+  return { expected: pairs.length, kept, written: rows.length, ...counts(creatives), skips, errors, creatives, status };
 }
 
 // ── The task board ──────────────────────────────────────────────────────────
@@ -487,12 +493,13 @@ export async function runGenerateCreatives(taskId: string, opts: TaskOptions = {
   }
   for (const skip of skips) log(skipLine(skip));
 
-  // A resumed task keeps whatever it already wrote.
+  // A resumed task keeps the ranked creatives it already wrote (B may have read them); a gated-out one
+  // was never shown, so it is regenerated.
   const ids = (pair: Pair) =>
     Array.from({ length: payload.n_per_arm }, (_, i) => generatedCreativeId(roundCreated, payload.run_id, pair.recipe.arm_id, pair.segmentId, i + 1));
   const written = new Map(
     (await spacetime.sql<CreativeRow>("SELECT * FROM creative WHERE origin = 'generated'"))
-      .filter((row) => row.round_created === roundCreated)
+      .filter((row) => row.round_created === roundCreated && row.status === 'ranked')
       .map((row) => [row.creative_id, row]),
   );
   const reused = pairs.flatMap(ids).flatMap((id) => (written.has(id) ? [written.get(id)!] : []));
@@ -509,6 +516,12 @@ export async function runGenerateCreatives(taskId: string, opts: TaskOptions = {
     notesFor,
   });
   for (const error of errors) log(`error: ${error}`);
+  // The copywriter itself was unreachable (every call failed, or every brief threw): don't complete the task
+  // with nothing to show; throw so the loop retries it once the API is back.
+  const unreachable = creatives.filter((c) => c.copyError?.code === 'BRAND_COPY_GENERATION_FAILED').length;
+  if (todo.length > 0 && !creatives.some((c) => c.status === 'ranked') && (creatives.length === 0 || unreachable === creatives.length)) {
+    throw new Error(`copywriter unavailable: ${errors[0] ?? creatives[0]?.copyError?.reason ?? 'no creative generated'}`);
+  }
   const fresh = creatives.map((creative) => creative.row).filter((row) => !written.has(row.creative_id));
   await writeCreatives(spacetime, fresh);
 

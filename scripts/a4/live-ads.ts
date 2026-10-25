@@ -113,6 +113,7 @@ export async function loadAds(
   const lastScrape = ads.map((ad) => ad.last_seen_at ?? '').filter(Boolean).sort().at(-1);
   const asOf = opts.asOf ?? lastScrape ?? new Date().toISOString();
   const asOfMs = Date.parse(asOf);
+  if (!Number.isFinite(asOfMs)) throw new Error(`--as-of "${asOf}" is not a date`);
   return { pages, ads: ads.map((ad) => ({ ...ad, ...pinLongevity(ad, asOfMs) })), asOf };
 }
 

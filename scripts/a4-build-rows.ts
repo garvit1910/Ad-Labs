@@ -142,7 +142,13 @@ async function build(): Promise<void> {
   const segmentDiff = diff(current.segments, world.segments, 'segment_id');
   const creativeDiff = diff(current.creatives, world.creatives, 'creative_id');
   const unchanged = (text: string, n: number) => text.endsWith(`${n} unchanged`);
-  if (runs.length > 0 && !(unchanged(segmentDiff, world.segments.length) && unchanged(creativeDiff, world.creatives.length))) {
+  const sameAsStored =
+    unchanged(segmentDiff, world.segments.length) &&
+    unchanged(creativeDiff, world.creatives.length) &&
+    unchanged(diff(current.arms, world.arms, 'arm_id'), world.arms.length) &&
+    unchanged(diff(current.brands, world.brands, 'brand_id'), world.brands.length) &&
+    unchanged(diff(current.concepts, world.concepts, 'concept_id'), world.concepts.length);
+  if (runs.length > 0 && !sameAsStored) {
     // B's run (and its cached replay) read these rows; rewriting them mid-run changes what it simulates.
     log(`B has ${runs.length} run(s) and the rows change (segments: ${segmentDiff}; creatives: ${creativeDiff})`);
     if (!args.includes('--allow-during-runs')) {
