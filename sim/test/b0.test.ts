@@ -201,7 +201,7 @@ describe("rendering rules", () => {
   test("rule 1 is enforced by the renderer", () => {
     const s = shopper(0);
     const big = { ...world, segments: world.segments.map((g) => ({ ...g, description: "word ".repeat(500) })) };
-    assert.throws(() => renderFeedState(s, big, 0, feedAds(s)), /limit 450/);
+    assert.throws(() => renderFeedState(s, big, 0, feedAds(s)), /limit under 450/);
   });
 });
 

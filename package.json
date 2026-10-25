@@ -16,8 +16,9 @@
     "db:migrate": "tsx supabase/migrate.mts",
     "worker": "node --env-file-if-exists=.env.local --import tsx worker/index.ts",
     "a2:ingest": "node --env-file-if-exists=.env.local --import tsx scripts/a2-ingest.ts",
-    "spacetime:publish": "spacetime publish adlab-calhacks13 --server maincloud --module-path spacetime --yes",
+    "spacetime:publish": "spacetime publish adlab-calhacks13 --server maincloud --module-path spacetime --yes=remote",
     "spacetime:publish:clear": "spacetime publish adlab-calhacks13 --server maincloud --module-path spacetime --delete-data --yes",
+    "spacetime:generate": "spacetime generate --lang typescript --out-dir lib/spacetime/bindings --module-path spacetime --yes",
     "agent": "uv run --project agents python agents/hello_agent.py",
     "sim:smoke": "npm --prefix sim run sim:smoke",
     "test": "tsx --test \"tests/**/*.test.ts\""
@@ -46,6 +47,7 @@
     "recharts": "2.15.4",
     "sharp": "0.35.5",
     "sonner": "2.0.7",
+    "spacetimedb": "2.13.0",
     "tailwind-merge": "3.3.1",
     "undici": "6.29.1",
     "zod": "3.25.76",

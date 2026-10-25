@@ -68,6 +68,26 @@ export function weightedSample<T>(
   return out;
 }
 
+// A fast seeded generator (sfc32) for Monte Carlo estimates such as p_best, where thousands of
+// draws share one purpose. Its seed is still a keyed hash, so the stream is reproducible and
+// independent of every other key.
+export function keyedStream(seed: number, stream: Stream, ...key: KeyPart[]): () => number {
+  const h = createHash("sha256").update(JSON.stringify([seed, stream, ...key])).digest();
+  let a = h.readUInt32BE(0);
+  let b = h.readUInt32BE(4);
+  let c = h.readUInt32BE(8);
+  let d = h.readUInt32BE(12);
+  return () => {
+    const t = (((a + b) >>> 0) + d) >>> 0;
+    d = (d + 1) >>> 0;
+    a = b ^ (b >>> 9);
+    b = (c + (c << 3)) >>> 0;
+    c = ((c << 21) | (c >>> 11)) >>> 0;
+    c = (c + t) >>> 0;
+    return t / 4294967296;
+  };
+}
+
 // Fisher-Yates with one keyed draw per step.
 export function shuffle<T>(items: readonly T[], seed: number, stream: Stream, ...key: KeyPart[]): T[] {
   const out = [...items];

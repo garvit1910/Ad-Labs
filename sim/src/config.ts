@@ -21,6 +21,8 @@ export const config = {
     concurrency: 32,
     timeoutMs: 30_000,
     maxAttempts: 5,
+    // Billed on input only.
+    usdPerMillionInputTokens: 0.042,
   },
   run: {
     seed: 13,
@@ -30,6 +32,10 @@ export const config = {
     // ticks 3-5, ...), so a tick never repeats and draw keys never collide across rounds.
     ticksPerRound: 3,
     reach: 0.8,
+  },
+  reward: {
+    // ShopSim's CPM assumption; swap in a real Meta CPM for cereal if A finds one.
+    cpmUsd: 13.88,
   },
   shopper: {
     preferenceSd: 0.08,
@@ -49,5 +55,7 @@ export const config = {
     fixtures: join(SIM_ROOT, "fixtures", "magicspoon"),
     cacheDb: join(SIM_ROOT, ".cache", "jev-cache.sqlite"),
     lastCall: join(SIM_ROOT, ".cache", "last-jev-call.json"),
+    // The worker's SpacetimeDB identity token (git-ignored with the rest of .cache).
+    spacetimeIdentity: join(SIM_ROOT, ".cache", "spacetime-identity.json"),
   },
 } as const;
