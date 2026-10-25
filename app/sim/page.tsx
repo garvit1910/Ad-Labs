@@ -22,6 +22,8 @@ import {
 import { parseJson } from './_lib/format';
 import { type PinnedCapture, pinnedFor } from './_lib/pinned';
 import pinnedCapture from '@/sim/demo/pinned-shopper.json';
+import adImages from '@/sim/demo/ad-images.json';
+import { type AdImages, AdGallery } from './_components/AdGallery';
 import { databaseLabel, isLocalDatabase } from './_components/SimProvider';
 import { HeaderStrip } from './_components/HeaderStrip';
 import AllocationRiver from './_components/AllocationRiver';
@@ -123,6 +125,9 @@ function SimPage() {
               <LearningsFeed items={learnings} segments={data.segments} />
             </Section>
           </div>
+          <Section title="Ads" hint="the run's top round-0 ads and each segment's winner, rendered for display (the sim reads text only)">
+            <AdGallery images={adImages as AdImages} runId={run.runId} creatives={data.creatives} arms={data.arms} segments={data.segments} />
+          </Section>
           <Section
             title="Shopper inspector"
             hint={
