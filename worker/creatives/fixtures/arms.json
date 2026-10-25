@@ -1,0 +1,50 @@
+[
+  {
+    "arm_id": "arm_health_nutrition_statistic",
+    "angle": "health_nutrition",
+    "hook": "statistic",
+    "strategy": "steal",
+    "rationale": "Stand-in recipe until A4 lands: lead with a protein or sugar number. Conditional hook (numeric_fact).",
+    "evidence": []
+  },
+  {
+    "arm_id": "arm_health_nutrition_social_proof",
+    "angle": "health_nutrition",
+    "hook": "social_proof",
+    "strategy": "steal",
+    "rationale": "Stand-in recipe until A4 lands: shares an angle with the statistic recipe, so one brief carries both hooks. Conditional hook (social_proof_fact).",
+    "evidence": []
+  },
+  {
+    "arm_id": "arm_taste_indulgence_bold_claim",
+    "angle": "taste_indulgence",
+    "hook": "bold_claim",
+    "strategy": "double_down",
+    "rationale": "Stand-in recipe until A4 lands: the taste promise stated plainly.",
+    "evidence": []
+  },
+  {
+    "arm_id": "arm_taste_indulgence_testimonial",
+    "angle": "taste_indulgence",
+    "hook": "testimonial",
+    "strategy": "gap",
+    "rationale": "Stand-in recipe until A4 lands: built on a persona verbatim. Conditional hook (customer_verbatim), so the unaware segment is a logged skip.",
+    "evidence": []
+  },
+  {
+    "arm_id": "arm_dietary_fit_problem_callout",
+    "angle": "dietary_fit",
+    "hook": "problem_callout",
+    "strategy": "gap",
+    "rationale": "Stand-in recipe until A4 lands: name the low-carb breakfast problem, then resolve it.",
+    "evidence": []
+  },
+  {
+    "arm_id": "arm_craving_pov_relatable",
+    "angle": "craving",
+    "hook": "pov_relatable",
+    "strategy": "steal",
+    "rationale": "Stand-in recipe until A4 lands: the late-night cereal craving, first person.",
+    "evidence": []
+  }
+]

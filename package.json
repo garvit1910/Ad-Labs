@@ -19,6 +19,7 @@
     "a3:distill": "node --env-file-if-exists=.env.local --import tsx scripts/a3-distill.ts",
     "a3:report": "node --env-file-if-exists=.env.local --import tsx scripts/a3-report.ts",
     "a4:rows": "node --env-file-if-exists=.env.local --import tsx scripts/a4-build-rows.ts",
+    "a5:creatives": "NODE_ENV=production CREATIVE_JUDGE_GATE_MODE=off node --env-file-if-exists=.env.local --import tsx scripts/a5-creatives.ts",
     "spacetime:publish": "spacetime publish adlab-calhacks13 --server maincloud --module-path spacetime --yes=remote",
     "spacetime:publish:clear": "spacetime publish adlab-calhacks13 --server maincloud --module-path spacetime --delete-data --yes",
     "spacetime:generate": "spacetime generate --lang typescript --out-dir lib/spacetime/bindings --module-path spacetime --yes",
