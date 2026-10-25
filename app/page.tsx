@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Activity, Fingerprint, FlaskConical, Swords, type LucideIcon } from 'lucide-react';
+import { Activity, Bot, Fingerprint, FlaskConical, Swords, type LucideIcon } from 'lucide-react';
 import { EyebrowChip } from '@/components/ui/eyebrow-chip';
 import { PageHeader } from '@/components/ui/page-header';
 
@@ -22,6 +22,12 @@ const SECTIONS: { href: string; title: string; description: string; icon: Lucide
     description: 'Ad recipes tested on Jev-driven shoppers, round by round.',
     icon: Activity,
   },
+  {
+    href: '/agents',
+    title: 'Agents',
+    description: 'Ad Lab, Scout, Strategist and Copywriter at work: every message, status and Apify job, live from SpacetimeDB.',
+    icon: Bot,
+  },
 ];
 
 export default function Home() {
@@ -32,7 +38,7 @@ export default function Home() {
         title="Ad Lab"
         description="Magic Spoon ad recipes, tested on simulated shoppers built from real customer voice."
       />
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         {SECTIONS.map(({ href, title, description, icon: Icon }) => (
           <Link
             key={href}
