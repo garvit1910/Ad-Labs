@@ -5,9 +5,9 @@ import { serviceSupabase } from '@/lib/adlab/supabase';
 import { resetStaleJobs, runWorker } from '@/worker/loop';
 
 /*
- * Shared by the phase scripts (scripts/a2-ingest.ts, scripts/a3-*.ts): the
- * Supabase client, Ctrl-C handling, and draining job_queue with the worker
- * loop (worker/loop.ts) running in-process.
+ * Shared by the phase scripts (scripts/a2-ingest.ts, scripts/a3-*.ts, scripts/a4-*.ts):
+ * the Supabase client, Ctrl-C handling, brand mention text, and draining
+ * job_queue with the worker loop (worker/loop.ts) running in-process.
  */
 
 const IDLE_POLL_MS = 10_000;
@@ -66,6 +66,23 @@ export async function loadBrandProfile(db: SupabaseClient): Promise<BrandProfile
   if (error) throw error;
   if (!data) throw new Error(`No brand_presence_profiles row for ${MAGIC_SPOON_URL}: run npm run a2:ingest -- discover first`);
   return data as BrandProfile;
+}
+
+/** Every mention's title + body for the brand, by mention id. */
+export async function loadMentionText(db: SupabaseClient, brandProfileId: string): Promise<Map<string, string>> {
+  const texts = new Map<string, string>();
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await db
+      .from('brand_mentions')
+      .select('id, title, body')
+      .eq('organization_id', ADLAB_ORG_ID)
+      .eq('brand_profile_id', brandProfileId)
+      .order('id')
+      .range(from, from + 999);
+    if (error) throw error;
+    for (const row of data ?? []) texts.set(String(row.id), [row.title, row.body].filter(Boolean).join('\n'));
+    if ((data ?? []).length < 1000) return texts;
+  }
 }
 
 /** A phase script's context; `tag` prefixes its log lines. */

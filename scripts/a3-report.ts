@@ -5,7 +5,7 @@ import { loadLiveBrandFacts } from '@/lib/brand-object/live-facts';
 import { retrieveBrandSlice } from '@/lib/brand-object/retrieval/service';
 import { EMBEDDING_MODEL } from '@/services/ad-library/embeddings';
 import { getBrandObjectState, monthKey } from '@/services/job-processor/brand-object/state';
-import { createPhase, errorMessage, loadBrandProfile, table } from './phase';
+import { createPhase, errorMessage, loadBrandProfile, loadMentionText, table } from './phase';
 
 /*
  * Ad Lab A3 report: what the distillation wrote, read-only.
@@ -43,23 +43,6 @@ async function selectIn<T>(tableName: string, columns: string, ids: string[]): P
     rows.push(...((data ?? []) as T[]));
   }
   return rows;
-}
-
-/** Every mention's title + body for the brand, by mention id. */
-async function loadMentionText(brandProfileId: string): Promise<Map<string, string>> {
-  const texts = new Map<string, string>();
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await db
-      .from('brand_mentions')
-      .select('id, title, body')
-      .eq('organization_id', ADLAB_ORG_ID)
-      .eq('brand_profile_id', brandProfileId)
-      .order('id')
-      .range(from, from + 999);
-    if (error) throw error;
-    for (const row of data ?? []) texts.set(String(row.id), [row.title, row.body].filter(Boolean).join('\n'));
-    if ((data ?? []).length < 1000) return texts;
-  }
 }
 
 function sample<T>(items: T[], n: number): T[] {
@@ -225,7 +208,7 @@ async function report(): Promise<void> {
     for (const fact of section(name)) console.log(`  [${name}] ${clip(fact.statement, 200)}`);
   }
 
-  const mentions = await loadMentionText(profile.id);
+  const mentions = await loadMentionText(db, profile.id);
   const voc = facts.filter((fact) => fact.section.startsWith('voc_'));
   await printVoc(voc, mentions);
   await printMarket(section('market_prior'));
