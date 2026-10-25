@@ -37,7 +37,10 @@ describe('generateBrandCopy strategy notes', () => {
     await generateBrandCopy(input(['Address taste doubts early for  The Macro Tracker.', '  ']));
     const user = mock.calls[0].messages[1].content;
     assert.ok(
-      user.includes('\nNotes from testing:\n- Address taste doubts early for The Macro Tracker.\n\n## Output format'),
+      user.includes(
+        '\nNotes from testing:\n- Address taste doubts early for The Macro Tracker.\n' +
+          'Apply every note above in the headline or primary text, using only the brand facts given.\n\n## Output format',
+      ),
       user.slice(user.indexOf('## Strategy')),
     );
   });

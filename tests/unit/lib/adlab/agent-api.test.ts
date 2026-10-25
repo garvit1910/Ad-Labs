@@ -6,6 +6,7 @@ import {
   clampLine,
   logAgentMessage,
   newMessageId,
+  learningTopic,
   readLearnings,
   readTasks,
   reportIngestJob,
@@ -190,5 +191,12 @@ describe('readers', () => {
     assert.equal(rows[0].arm_id, null);
     assert.equal(rows[1].arm_id, 'arm_02');
     assert.deepEqual((await readLearnings(db, { run_id: 'run_a', ids: ['lrn_b'] })).map((r) => r.learning_id), ['lrn_b']);
+  });
+
+  it('learningTopic names the objection or the doubted concept', () => {
+    assert.equal(learningTopic('objection', '{"objection":"not_now","share":0.6}'), 'not_now');
+    assert.equal(learningTopic('claim_doubt', { concept: 'low_sugar', mean_believes: 0.3 }), 'low_sugar');
+    assert.equal(learningTopic('winner', '{"p_best":0.9}'), '');
+    assert.equal(learningTopic('objection', 'not json'), '');
   });
 });

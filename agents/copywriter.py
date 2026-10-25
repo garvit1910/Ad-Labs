@@ -27,6 +27,13 @@ from protocols import (
 
 SPEC = AGENT_SPECS["copywriter"]
 KIND_RANK = {"claim_doubt": 0, "objection": 1, "winner": 2}
+# Objections about timing ("not needing cereal yet"): whether a shopper is in the market right now,
+# which no headline changes. The Copywriter leaves them out and says so.
+TIMING_TOPICS = {"not_now"}
+
+
+def is_timing(learning: dict) -> bool:
+    return learning.get("kind") == "objection" and learning.get("topic") in TIMING_TOPICS
 _DIGIT = re.compile(r"\d")
 
 
@@ -39,8 +46,8 @@ def choose_learnings(payload: dict, learnings: list[dict] | None,
 
     For each (arm a, segment s) in the payload, the candidates are live learnings
     (valid_to_round null) among payload.learning_ids with segment_id == s and arm_id in
-    (None, '', a). Drop any whose directive is empty or contains a digit (A5 drops those too)
-    and duplicate directives. Rank: this arm's own learning first, then claim_doubt, objection,
+    (None, '', a). Drop timing objections (TIMING_TOPICS: copy can't change when someone shops),
+    any whose directive is empty or contains a digit (A5 drops those too), and duplicate directives. Rank: this arm's own learning first, then claim_doubt, objection,
     winner, then the newest valid_from_round. Keep at most `cap` per segment.
     Returns (learning ids in rank order, one reason line per segment). With learnings=None
     (GET /learnings unavailable) it applies every offered id.
@@ -58,8 +65,11 @@ def choose_learnings(payload: dict, learnings: list[dict] | None,
                      if l.get("learning_id") in offered_set and l.get("segment_id") == seg
                      and (l.get("arm_id") in (None, "", arm_id))
                      and l.get("valid_to_round") in (None, "")]
-            kept, seen, skipped = [], set(), 0
+            kept, seen, skipped, timing = [], set(), 0, 0
             for l in cands:
+                if is_timing(l):
+                    timing += 1
+                    continue
                 directive = str(l.get("directive") or "").strip()
                 if not directive or _DIGIT.search(directive) or directive.lower() in seen:
                     skipped += 1
@@ -77,6 +87,8 @@ def choose_learnings(payload: dict, learnings: list[dict] | None,
             name = (kept[0].get("segment_name") if kept else None) or seg
             kinds = " + ".join(str(l.get("kind", "")).replace("_", " ") for l in kept) or "none"
             extra = []
+            if timing:
+                extra.append(f"left out {timing} timing objection{'s' if timing > 1 else ''}")
             if skipped:
                 extra.append(f"dropped {skipped}")
             if over:
@@ -190,11 +202,14 @@ class Copywriter:
         kinds = Counter(str(l.get("kind")) for l in (learnings or [])
                         if l.get("learning_id") in set(chosen))
         kind_txt = ", ".join(f"{n} {k.replace('_', ' ')}" for k, n in kinds.items()) or "none"
+        timing = sum(1 for l in learnings or [] if l.get("learning_id") in set(offered) and is_timing(l))
+        why = (f" Left out {timing} timing objection{'s' if timing > 1 else ''} (\"not needing "
+               "cereal yet\" is about when they shop, not what the ad says).") if timing else ""
         r = st["round"]
         await self._progress(ctx, run, run_id, "creatives_writing",
                              f"Copywriter is writing round {r + 1}'s ads: {len(arms)} recipes for "
                              f"{segs} segments, applying {len(chosen)} of {len(offered)} learnings "
-                             f"({kind_txt}).")
+                             f"({kind_txt}).{why}")
         await self._generate(ctx, run_id, run, task_id, st, tasks)
 
     async def _generate(self, ctx, run_id: str, run: dict, task_id: str, st: dict,

@@ -81,7 +81,7 @@ The HTTP API the four Fetch.ai agents call (`app/api/agent/**`). The agents neve
 
 ### Copywriter
 
-- **GET `/learnings?run_id=&ids=a,b`** → `{learnings: [{learning_id, segment_id, segment_name, arm_id|null, kind, statement, directive, valid_from_round, valid_to_round|null}]}`.
+- **GET `/learnings?run_id=&ids=a,b`** → `{learnings: [{learning_id, segment_id, segment_name, arm_id|null, kind, statement, directive, topic, valid_from_round, valid_to_round|null}]}`. `topic` is the objection key (`price`, `taste_doubt`, `trust`, `not_now`) or the doubted concept, else `""`. The Copywriter leaves out `not_now` objections: they're about when a shopper buys, not what the ad says.
 - **GET `/tasks?kind=&status=&run_id=&task_id=`** → `{tasks: [Task]}`.
 - **POST `/creatives/generate`** `{task_id, learning_ids? (≤ 50), next_round?: queue|skip}` → A5's `TaskResult` plus `learning_ids_applied`.
   - It is synchronous, with one in-flight call per task: a repeat call joins it.

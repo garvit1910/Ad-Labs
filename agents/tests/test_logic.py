@@ -135,6 +135,15 @@ class ChooseLearnings(unittest.TestCase):
                 per_seg[seg_of[lid]] = per_seg.get(seg_of[lid], 0) + 1
             self.assertTrue(all(n <= cap for n in per_seg.values()))
 
+    def test_timing_objections_are_left_out(self):
+        timing = dict(learning("ob1", "seg_keto", "objection", "Address not needing cereal yet.", frm=2),
+                      topic="not_now")
+        rows = [timing if l["learning_id"] == "ob1" else l for l in self.LEARNINGS]
+        chosen, reasons = choose_learnings(self.PAYLOAD, rows)
+        self.assertNotIn("ob1", chosen)
+        self.assertIn("ob_old", chosen)  # the price objection takes its place
+        self.assertTrue(any("left out 1 timing objection" in r for r in reasons))
+
     def test_without_learnings_endpoint_applies_all_offered(self):
         chosen, reasons = choose_learnings(self.PAYLOAD, None)
         self.assertEqual(chosen, self.PAYLOAD["learning_ids"])

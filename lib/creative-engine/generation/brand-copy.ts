@@ -340,7 +340,12 @@ function buildStrategyBlock(
         ]
       : []),
     ...(notes.length > 0
-      ? ['Notes from testing:', ...notes.map((note) => `- ${note}`)]
+      ? [
+          'Notes from testing:',
+          ...notes.map((note) => `- ${note}`),
+          // Ad Lab: without this the model treated the notes as background and the copy barely moved.
+          'Apply every note above in the headline or primary text, using only the brand facts given.',
+        ]
       : []),
   ];
   return lines.length > 0

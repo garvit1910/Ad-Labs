@@ -422,6 +422,8 @@ class FakeApi:
         return {"learning_id": lid, "segment_id": seg, "segment_name": seg_name(seg) if seg else "",
                 "arm_id": f"arm_{m.group(1)}" if m else None, "kind": l["kind"],
                 "statement": l["statement"], "directive": l["directive"],
+                "topic": "not_now" if l["kind"] == "objection"
+                and "not needing cereal" in l["statement"].lower() else "",
                 "valid_from_round": 1, "valid_to_round": None}
 
     def _learnings(self) -> list[dict]:

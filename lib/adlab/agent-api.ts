@@ -186,8 +186,26 @@ export interface Learning {
   kind: string;
   statement: string;
   directive: string;
+  /** What the learning is about: the objection key (e.g. not_now), the doubted concept, else "". */
+  topic: string;
   valid_from_round: number;
   valid_to_round: number | null;
+}
+
+/** evidence.objection for an objection, evidence.concept for a claim doubt (sim/src/learnings.ts). */
+export function learningTopic(kind: string, evidence: unknown): string {
+  let value: unknown = evidence;
+  if (typeof evidence === 'string') {
+    try {
+      value = JSON.parse(evidence);
+    } catch {
+      return '';
+    }
+  }
+  if (!value || typeof value !== 'object') return '';
+  const e = value as Record<string, unknown>;
+  const topic = kind === 'objection' ? e.objection : kind === 'claim_doubt' ? e.concept : undefined;
+  return typeof topic === 'string' ? topic : '';
 }
 
 export interface ArmRow {
@@ -315,6 +333,7 @@ export async function readLearnings(spacetime: Spacetime, filter: { run_id?: str
       kind: row.kind,
       statement: row.statement,
       directive: row.directive,
+      topic: learningTopic(row.kind, row.evidence),
       valid_from_round: row.valid_from_round,
       valid_to_round: row.valid_to_round ?? null,
     }));
