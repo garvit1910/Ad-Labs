@@ -13,10 +13,26 @@ import { SPACETIMEDB_DB_NAME, SPACETIMEDB_URI } from '@/lib/spacetime/config';
 
 export type SqlRow = Record<string, unknown>;
 
+/** Which database a client talks to. */
+export interface SpacetimeTarget {
+  uri: string;
+  dbName: string;
+  isLocal: boolean;
+  /** "<uri> / <database> (LOCAL|MAINCLOUD)". */
+  label: string;
+}
+
+export interface SpacetimeTargetInput {
+  uri?: string;
+  dbName?: string;
+}
+
 /** What A's code needs from the database; tests pass a fake. */
 export interface Spacetime {
   /** "<uri> / <database> (LOCAL|MAINCLOUD)", for log lines. */
   readonly label: string;
+  /** Set by connectSpacetime; a fake may leave it out. */
+  readonly target?: SpacetimeTarget;
   /** Calls a reducer with positional args; a reducer error throws with SpacetimeDB's message. */
   call(reducer: string, args: unknown[]): Promise<void>;
   sql<T = SqlRow>(query: string): Promise<T[]>;
@@ -86,14 +102,27 @@ export function decodeSqlResults(results: Array<{ schema: AlgebraicType; rows: u
 }
 
 /**
- * Connects with a fresh anonymous identity: every table is public and no reducer
- * checks the sender. SPACETIMEDB_URI / SPACETIMEDB_DB_NAME win (shell over
- * .env.local), then lib/spacetime/config's defaults (the shared Maincloud database).
+ * The database a client will talk to. An explicit pair wins; give both or neither, so a local uri
+ * is never paired with .env.local's shared database name. Otherwise SPACETIMEDB_URI /
+ * SPACETIMEDB_DB_NAME (shell over .env.local), then lib/spacetime/config's defaults (Maincloud).
  */
-export async function connectSpacetime(): Promise<Spacetime> {
-  const uri = (process.env.SPACETIMEDB_URI?.trim() || SPACETIMEDB_URI).replace(/\/$/, '');
-  const database = process.env.SPACETIMEDB_DB_NAME?.trim() || SPACETIMEDB_DB_NAME;
-  const label = `${uri} / ${database} (${isLocalUri(uri) ? 'LOCAL' : 'MAINCLOUD'})`;
+export function resolveSpacetimeTarget(input: SpacetimeTargetInput = {}): SpacetimeTarget {
+  const givenUri = input.uri?.trim();
+  const givenDb = input.dbName?.trim();
+  if (Boolean(givenUri) !== Boolean(givenDb)) throw new Error('give both uri and dbName, or neither');
+  const uri = (givenUri || process.env.SPACETIMEDB_URI?.trim() || SPACETIMEDB_URI).replace(/\/$/, '');
+  const dbName = givenDb || process.env.SPACETIMEDB_DB_NAME?.trim() || SPACETIMEDB_DB_NAME;
+  const isLocal = isLocalUri(uri);
+  return { uri, dbName, isLocal, label: `${uri} / ${dbName} (${isLocal ? 'LOCAL' : 'MAINCLOUD'})` };
+}
+
+/**
+ * Connects with a fresh anonymous identity: every table is public and no reducer
+ * checks the sender. With no argument the target comes from the env (resolveSpacetimeTarget).
+ */
+export async function connectSpacetime(input: SpacetimeTargetInput = {}): Promise<Spacetime> {
+  const target = resolveSpacetimeTarget(input);
+  const { uri, dbName: database, label } = target;
   const identity = await fetch(`${uri}/v1/identity`, { method: 'POST', signal: AbortSignal.timeout(TIMEOUT_MS) });
   if (!identity.ok) throw new SpacetimeError(`POST /v1/identity on ${uri}: HTTP ${identity.status}`, identity.status);
   const { token } = (await identity.json()) as { token: string };
@@ -112,6 +141,7 @@ export async function connectSpacetime(): Promise<Spacetime> {
 
   return {
     label,
+    target,
     async call(reducer, args) {
       await post(`call/${reducer}`, JSON.stringify(args), 'application/json', reducer);
     },

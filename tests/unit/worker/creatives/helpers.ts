@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import type { UpstreamFact } from '@/lib/creative-engine/brand-context/ingest';
 import { toRows } from '@/worker/creatives/facts';
 import { CONCEPTS } from '@/lib/adlab/contract';
-import { SpacetimeError, type SqlRow, type Spacetime } from '@/lib/adlab/spacetime-http';
+import { SpacetimeError, type SqlRow, type Spacetime, type SpacetimeTarget } from '@/lib/adlab/spacetime-http';
 
 const FIXTURES = join(import.meta.dirname, '../../../../docs/reuse-export/fixtures');
 export const briefFixture = JSON.parse(readFileSync(join(FIXTURES, 'creative-brief.json'), 'utf8'));
@@ -75,25 +75,52 @@ export const CLEAN_COPY = {
   visualConcept: 'A bowl of oat clusters with milk on a sunny kitchen counter.',
 };
 
+/** Upserts rows into a fake table by their key column. */
+function upsertBy(table: SqlRow[], key: string, rows: SqlRow[]): void {
+  for (const row of rows) {
+    const existing = table.findIndex((old) => old[key] === row[key]);
+    if (existing >= 0) table[existing] = { ...row };
+    else table.push({ ...row });
+  }
+}
+
+// One condition of `WHERE a = 'x' AND b = 1`: a quoted string, a number or a boolean.
+const CONDITION = /^(\w+) = ('(?:[^']|'')*'|-?\d+(?:\.\d+)?|true|false)$/;
+
+function literal(text: string): unknown {
+  if (text.startsWith("'")) return text.slice(1, -1).replaceAll("''", "'");
+  if (text === 'true' || text === 'false') return text === 'true';
+  return Number(text);
+}
+
 /**
- * An in-memory SpacetimeDB for A's and B's tables: `SELECT * FROM t [WHERE col = 'v']`,
- * plus the task reducers and upsert_creatives with the published rules that matter here.
+ * An in-memory SpacetimeDB for A's and B's tables: `SELECT * FROM t [WHERE a = 'x' AND b = 1]`,
+ * plus the task reducers, A's upserts, upsert_products and upsert_run, with the published rules
+ * that matter here.
  */
 export class FakeStdb implements Spacetime {
-  readonly label = 'fake / adlab-test (LOCAL)';
+  readonly label: string;
+  readonly target?: SpacetimeTarget;
   tables: Record<string, SqlRow[]> = {};
   reducerCalls: Array<{ reducer: string; args: unknown[] }> = [];
 
-  constructor(tables: Record<string, SqlRow[]>) {
+  constructor(tables: Record<string, SqlRow[]>, opts: { target?: SpacetimeTarget } = {}) {
     for (const [name, rows] of Object.entries(tables)) this.tables[name] = rows.map((row) => ({ ...row }));
+    this.target = opts.target;
+    this.label = opts.target?.label ?? 'fake / adlab-test (LOCAL)';
   }
 
   async sql<T = SqlRow>(query: string): Promise<T[]> {
-    const match = /^SELECT \* FROM (\w+)(?: WHERE (\w+) = '((?:[^']|'')*)')?$/.exec(query.trim());
+    const match = /^SELECT \* FROM (\w+)(?: WHERE (.+))?$/.exec(query.trim());
     if (!match) throw new Error(`FakeStdb can't run: ${query}`);
-    const [, table, column, value] = match;
+    const [, table, where] = match;
+    const conditions = (where ? where.split(/ AND /) : []).map((part) => {
+      const condition = CONDITION.exec(part.trim());
+      if (!condition) throw new Error(`FakeStdb can't run: ${query}`);
+      return [condition[1], literal(condition[2])] as const;
+    });
     const rows = this.tables[table] ?? [];
-    return rows.filter((row) => !column || row[column] === value.replaceAll("''", "'")).map((row) => ({ ...row }) as T);
+    return rows.filter((row) => conditions.every(([column, value]) => row[column] === value)).map((row) => ({ ...row }) as T);
   }
 
   private task(taskId: string): SqlRow {
@@ -137,17 +164,37 @@ export class FakeStdb implements Spacetime {
         const [rows] = args as [SqlRow[]];
         this.tables.creative ??= [];
         for (const row of rows) {
+          // Like checkCreative (spacetime/src/reducers_a.ts): "" means no segment or no arm.
           for (const [field, ok] of [
             ['brand', this.tables.brand?.some((brand) => brand.brand_id === row.brand_id)],
-            ['segment', this.tables.segment?.some((segment) => segment.segment_id === row.segment_id)],
-            ['arm', this.tables.arm?.some((arm) => arm.arm_id === row.arm_id)],
+            ['segment', row.segment_id === '' || this.tables.segment?.some((segment) => segment.segment_id === row.segment_id)],
+            ['arm', row.arm_id === '' || this.tables.arm?.some((arm) => arm.arm_id === row.arm_id)],
           ] as const) {
             if (!ok) throw new SpacetimeError(`creative ${String(row.creative_id)}: unknown ${field}`, 530);
           }
-          const existing = this.tables.creative.findIndex((creative) => creative.creative_id === row.creative_id);
-          if (existing >= 0) this.tables.creative[existing] = { ...row };
-          else this.tables.creative.push({ ...row });
+          upsertBy(this.tables.creative, 'creative_id', [row]);
         }
+        return;
+      }
+      case 'upsert_brands':
+      case 'upsert_concepts':
+      case 'upsert_segments':
+      case 'upsert_arms': {
+        const table = reducer.slice('upsert_'.length, -1);
+        const [rows] = args as [SqlRow[]];
+        upsertBy((this.tables[table] ??= []), `${table}_id`, rows);
+        return;
+      }
+      case 'upsert_products': {
+        const [rowsJson] = args as [string];
+        upsertBy((this.tables.product ??= []), 'product_id', JSON.parse(rowsJson) as SqlRow[]);
+        return;
+      }
+      case 'upsert_run': {
+        const [rowJson] = args as [string];
+        const row = JSON.parse(rowJson) as SqlRow;
+        const old = (this.tables.run ??= []).find((run) => run.run_id === row.run_id);
+        upsertBy(this.tables.run, 'run_id', [{ ...row, created_at: old?.created_at ?? now }]);
         return;
       }
       default:
