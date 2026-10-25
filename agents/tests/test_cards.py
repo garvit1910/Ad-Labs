@@ -139,6 +139,24 @@ class CardPayloads(unittest.TestCase):
         self.assertEqual(again, card)
 
 
+class RoundLines(unittest.TestCase):
+    def test_round_line_counts_taps_not_dice_rolled_orders(self):
+        rr = round_result()
+        rr.taps = 5
+        self.assertEqual(cards.round_line(rr), "Round 1 of 2 done: 705 impressions, 5 taps")
+
+    def test_best_vs_control_picks_the_widest_margin(self):
+        rr = round_result(n_segments=2)
+        self.assertEqual(cards.best_vs_control(rr), "")  # no control cost yet
+        rr.leaderboard[0].control = LeaderEntry(arm_id="arm_control", cpo_usd=20.18)  # 2x
+        rr.leaderboard[1].control = LeaderEntry(arm_id="arm_control", cpo_usd=40.36)  # 4x
+        self.assertEqual(cards.best_vs_control(rr),
+                         "Segment 1: Health nutrition × Testimonial at $10.09/order vs $40.36 for current ads")
+        card = cards.leaderboard_card(rr)
+        self.assertIn("Best vs current ads: Segment 1", card.text)
+        self.assertNotIn("orders ·", card.text)
+
+
 class ParseUserInput(unittest.TestCase):
     TABLE = [
         ('{"action":"start_run","plan_id":"p1"}', "go", {"plan_id": "p1"}, "json"),

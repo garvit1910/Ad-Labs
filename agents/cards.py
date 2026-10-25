@@ -288,8 +288,11 @@ def recipes_card(plan: Any) -> CardOut:
 
 def leaderboard_card(rr: Any) -> CardOut:
     title = f"{TITLE_ROUND_PREFIX}{rr.round} of {rr.rounds_planned}: leaderboard"
-    rows = [_row("Shoppers", f"{rr.impressions} impressions · {rr.buys} orders · "
+    rows = [_row("Shoppers", f"{rr.impressions} impressions · {rr.taps} taps · "
                              f"Jev {money(rr.jev_cost_usd)} · cache {pct(rr.cache_hit_rate)}")]
+    best = best_vs_control(rr)
+    if best:
+        rows.append(_row("Best vs current ads", best))
     if rr.creatives_used:
         rows.append(_row("New ads", f"Built on {rr.creatives_used} new ads from the Copywriter"))
     for row in rr.leaderboard:
@@ -308,6 +311,31 @@ def leaderboard_card(rr: Any) -> CardOut:
                "ctas": [{"label": "Status", "selection": {"action": "status"}}]}
     lines = [f"**{title}**"] + [f"- {r['label']}: {r['value']}" for r in rows]
     return _finish("detail", payload["title"], payload, True, "\n".join(lines))
+
+
+def round_line(rr: Any) -> str:
+    """"Round 1 of 3 done: 705 impressions, 5 taps". Taps, not dice-rolled orders: a few hundred
+    impressions at real conversion rates roll about zero orders, while the ranking uses each
+    impression's expected value, so cost per order (best_vs_control) is the number that matters."""
+    return f"Round {rr.round} of {rr.rounds_planned} done: {rr.impressions} impressions, {rr.taps} taps"
+
+
+def best_vs_control(rr: Any) -> str:
+    """The segment whose leading recipe beats Magic Spoon's current ads by the widest margin:
+    "Macro-Nostalgia Regular: taste indulgence × curiosity at $28/order vs $72 for current ads".
+    "" when no segment has both costs yet."""
+    best, ratio = None, 0.0
+    for row in rr.leaderboard:
+        top = row.top[0] if row.top else None
+        if not top or top.cpo_usd is None or row.control is None or row.control.cpo_usd is None:
+            continue
+        if top.cpo_usd > 0 and row.control.cpo_usd / top.cpo_usd > ratio:
+            best, ratio = (row, top), row.control.cpo_usd / top.cpo_usd
+    if not best:
+        return ""
+    row, top = best
+    return (f"{row.segment_name or row.segment_id}: {top.recipe or top.arm_id} at "
+            f"{money(top.cpo_usd)}/order vs {money(row.control.cpo_usd)} for current ads")
 
 
 # --- 5. winning ads per segment (carousel, terminal) ----------------------------------------

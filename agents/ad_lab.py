@@ -392,8 +392,7 @@ class AdLab:
         sess = self._sess(st, rr.request_id, rr.run_id)
         if not sess:
             return self._drop(ctx, "RoundResult", rr.run_id)
-        sess["last_line"] = (f"Round {rr.round} of {rr.rounds_planned} done: {rr.impressions} "
-                             f"impressions, {rr.buys} orders")
+        sess["last_line"] = cards.round_line(rr)
         await self.post_card(ctx, sess, f"round:{rr.run_id}:{rr.round}", cards.leaderboard_card(rr))
         for w in rr.winners:
             if w.segment_id in rr.new_winners:

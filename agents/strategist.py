@@ -14,6 +14,7 @@ import uuid
 from datetime import datetime
 from typing import Any
 
+import cards
 import common
 from common import AGENT_SPECS, ApiError, Hub, StatusReporter, clip, parse_ts, utcnow
 from protocols import (
@@ -176,6 +177,7 @@ def round_result(summary: dict, *, request_id: str, run_id: str, round_: int, ro
         request_id=request_id, run_id=run_id, round=round_,
         rounds_planned=int(summary.get("rounds_planned") or rounds_planned),
         impressions=int(totals.get("impressions") or 0), buys=int(totals.get("buys") or 0),
+        taps=int(totals.get("taps") or 0),
         jev_cost_usd=float(totals.get("jev_cost_usd") or 0),
         cache_hit_rate=float(totals.get("cache_hit_rate") or 0),
         leaderboard=board, learnings_opened=notes, winners=winners, new_winners=new,
@@ -488,12 +490,9 @@ class Strategist:
             result = round_result(summary, request_id=rs["request_id"], run_id=run_id, round_=r,
                                   rounds_planned=R, declared=rs.get("declared", []),
                                   creatives_used=int(prev.get("ranked") or 0))
-            lead = "; ".join(f"{row.segment_name}: {row.top[0].recipe or row.top[0].arm_id}"
-                             for row in result.leaderboard[:2] if row.top)
             await common.send_logged(self.hub, ctx, self.hub.peers.address("agt_ad_lab"), result,
                                      protocol=P_RUN, kind="result",
-                                     summary=f"Round {r} of {R} done: {result.impressions} "
-                                             f"impressions, {result.buys} orders. {lead}",
+                                     summary=f"{cards.round_line(result)}. {cards.best_vs_control(result)}",
                                      run_id=run_id)
             emitted.append(key)
             rs.setdefault("declared", []).extend(result.new_winners)

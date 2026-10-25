@@ -222,6 +222,7 @@ class RoundResult(Model):
     rounds_planned: int
     impressions: int = 0
     buys: int = 0
+    taps: int = 0
     jev_cost_usd: float = 0.0
     cache_hit_rate: float = 0.0
     leaderboard: list[LeaderRow] = []
