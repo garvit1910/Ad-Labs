@@ -24,6 +24,7 @@ import { type PinnedCapture, pinnedFor } from './_lib/pinned';
 import pinnedCapture from '@/sim/demo/pinned-shopper.json';
 import adImages from '@/sim/demo/ad-images.json';
 import { type AdImages, AdGallery } from './_components/AdGallery';
+import { imageRunFor, runSignature } from './_lib/adImages';
 import { databaseLabel, isLocalDatabase } from './_components/SimProvider';
 import { HeaderStrip } from './_components/HeaderStrip';
 import AllocationRiver from './_components/AllocationRiver';
@@ -53,6 +54,13 @@ function SimPage() {
   const learnings = useMemo(() => learningsFeed(data.learnings, data.creatives), [data.learnings, data.creatives]);
   // The pinned shopper (sim:pin) belongs to this run when its captured states are this run's.
   const pinned = useMemo(() => pinnedFor(pinnedCapture as unknown as PinnedCapture, data.decisions), [data.decisions]);
+  // The run whose ad images apply here: this run, or the run it replays (same signature).
+  const imageRun = useMemo(() => {
+    const sidecar = adImages as AdImages;
+    const has = (id: string) => Object.values(sidecar.images).some((e) => e.run_id === id);
+    const feed = data.decisions.filter((d) => d.kind === 'feed').map((d) => ({ tick: d.tick, shopper: d.shopperId, options: d.options }));
+    return run ? imageRunFor(run.runId, feed.length ? runSignature(feed) : '', sidecar.runs ?? {}, has) : null;
+  }, [run, data.decisions]);
   // The inspector opens on the pinned shopper, else follows the newest impression, until someone
   // picks a shopper.
   const [picked, setPicked] = useState<string | null>(null);
@@ -126,7 +134,7 @@ function SimPage() {
             </Section>
           </div>
           <Section title="Ads" hint="the run's top round-0 ads and each segment's winner, rendered for display (the sim reads text only)">
-            <AdGallery images={adImages as AdImages} runId={run.runId} creatives={data.creatives} arms={data.arms} segments={data.segments} />
+            <AdGallery images={adImages as AdImages} runId={run.runId} sourceRun={imageRun} creatives={data.creatives} arms={data.arms} segments={data.segments} />
           </Section>
           <Section
             title="Shopper inspector"

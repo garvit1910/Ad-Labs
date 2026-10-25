@@ -12,6 +12,7 @@ import { createOpenAIImageProvider } from '@/lib/creative-engine/generation/prov
 import { keyMessageFor, loadClientRows, personaAudience, personaRefFor, valuePropositions } from '@/worker/creatives/facts';
 import { derivePackHints, segmentRows } from '@/worker/creatives/pack-hints';
 import { strategyFromArms } from '@/worker/creatives/strategy-from-arms';
+import { runSignature } from '@/app/sim/_lib/adImages';
 import { type Ad, type ArmStat, type Decision, topRound0, winners } from './sim-images-select';
 
 /*
@@ -37,7 +38,8 @@ const QUALITY = 'medium' as const;
 const IMAGE_DIR = path.resolve('data/ad-images');
 const SIDECAR = path.resolve('sim/demo/ad-images.json');
 
-type Sidecar = { version: 1; images: Record<string, SidecarEntry> };
+// runs: each source run's signature, so its replays show the same images (app/sim/_lib/adImages.ts).
+type Sidecar = { version: 1; runs?: Record<string, { signature: string }>; images: Record<string, SidecarEntry> };
 // One image per creative; each set it was picked for keeps its own numbers.
 type SidecarEntry = {
   file: string;
@@ -100,6 +102,8 @@ async function main(): Promise<number> {
   const maxCents = Math.round(Number(flag('max-usd') ?? 2) * 100);
   const sidecar: Sidecar = existsSync(SIDECAR) ? JSON.parse(readFileSync(SIDECAR, 'utf8')) : { version: 1, images: {} };
   mkdirSync(IMAGE_DIR, { recursive: true });
+  const feed = decisions.filter((d) => d.kind === 'feed').map((d) => ({ tick: d.tick, shopper: d.shopper_id, options: String((d as Record<string, unknown>).options) }));
+  sidecar.runs = { ...sidecar.runs, [runId]: { signature: runSignature(feed) } };
   let spent = 0;
   let mismatches = 0;
 

@@ -12,6 +12,7 @@ import { usd } from '../_lib/format';
 
 export type AdImages = {
   version: 1;
+  runs?: Record<string, { signature: string }>;
   images: Record<
     string,
     {
@@ -24,7 +25,8 @@ export type AdImages = {
   >;
 };
 
-type Props = { images: AdImages; runId: string; creatives: readonly CreativeRow[]; arms: readonly ArmRow[]; segments: readonly SegmentRow[] };
+// sourceRun: the run the images were rendered for (this run, or the run it replays); see imageRunFor.
+type Props = { images: AdImages; runId: string; sourceRun: string | null; creatives: readonly CreativeRow[]; arms: readonly ArmRow[]; segments: readonly SegmentRow[] };
 
 function AdCard({ id, creative, children }: { id: string; creative: CreativeRow | undefined; children: React.ReactNode }) {
   return (
@@ -40,11 +42,11 @@ function AdCard({ id, creative, children }: { id: string; creative: CreativeRow 
   );
 }
 
-export function AdGallery({ images, runId, creatives, arms, segments }: Props) {
+export function AdGallery({ images, runId, sourceRun, creatives, arms, segments }: Props) {
   const creative = new Map(creatives.map((c) => [c.creativeId, c]));
   const arm = new Map(arms.map((a) => [a.armId, a]));
   const segment = new Map(segments.map((s) => [s.segmentId, s.name]));
-  const entries = Object.entries(images.images).filter(([, e]) => e.run_id === runId);
+  const entries = Object.entries(images.images).filter(([, e]) => e.run_id === sourceRun);
   const winners = entries.filter(([, e]) => e.winner).sort(([, a], [, b]) => (segment.get(a.segment_id) ?? '').localeCompare(segment.get(b.segment_id) ?? ''));
   const round0 = entries.filter(([, e]) => e.round0).sort(([, a], [, b]) => a.round0!.rank - b.round0!.rank);
 
@@ -58,6 +60,11 @@ export function AdGallery({ images, runId, creatives, arms, segments }: Props) {
   }
   return (
     <Tabs defaultValue={winners.length ? 'winners' : 'round0'} className="gap-3">
+      {sourceRun !== runId && (
+        <p className="text-xs text-muted-foreground">
+          This run replays <span className="font-mono">{sourceRun}</span> exactly, so it shows that run's images.
+        </p>
+      )}
       <TabsList>
         <TabsTrigger value="winners" className="text-xs" disabled={!winners.length}>
           Winners by segment ({winners.length})

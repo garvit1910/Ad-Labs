@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { describe, it } from 'node:test';
 import { GET } from '@/app/api/sim/ad-image/[id]/route';
+import { imageRunFor, runSignature } from '@/app/sim/_lib/adImages';
 import { type Ad, type ArmStat, type Decision, scoreAds, topRound0, winners } from '@/scripts/sim-images-select';
 
 // One impression of `creative` shown to `shopper` on `tick`: a feed row with our tap chance and
@@ -77,5 +78,24 @@ describe('/api/sim/ad-image', () => {
     const res = await get(known);
     assert.equal(res.status, 200);
     assert.equal(res.headers.get('Content-Type'), 'image/png');
+  });
+});
+
+describe('ad images on replays', () => {
+  const feed = (run: string) =>
+    [3, 1, 2].flatMap((n) => [
+      { tick: 0, shopper: `shp_${n}`, options: JSON.stringify({ state_hash: `${run}_${n}`.padEnd(20, 'x') }) },
+      { tick: 1, shopper: `shp_${n}`, options: JSON.stringify({ state_hash: `late_${n}` }) },
+    ]);
+  it("a replay reproduces its source run's signature; another run doesn't", () => {
+    assert.equal(runSignature(feed('a')), runSignature([...feed('a')].reverse()));
+    assert.notEqual(runSignature(feed('a')), runSignature(feed('b')));
+  });
+  it('picks the run itself, else the run whose signature matches, else nothing', () => {
+    const runs = { run_src: { signature: runSignature(feed('a')) } };
+    const has = (id: string) => id === 'run_src';
+    assert.equal(imageRunFor('run_src', '', runs, has), 'run_src');
+    assert.equal(imageRunFor('run_src_replay', runSignature(feed('a')), runs, has), 'run_src');
+    assert.equal(imageRunFor('run_other', runSignature(feed('b')), runs, has), null);
   });
 });
