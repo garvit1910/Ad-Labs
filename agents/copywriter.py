@@ -22,8 +22,8 @@ from typing import Any
 import common
 from common import AGENT_SPECS, ApiError, Hub, StatusReporter, clip, utcnow
 from protocols import (
-    P_CREATIVES, P_PROGRESS, RUN_SPEC, CreativesWritten, Progress, RunFailed, RunFinished,
-    RunStarted)
+    CREATIVES_SPEC, P_CREATIVES, P_PROGRESS, RUN_SPEC, CreativesWritten, Progress, RenderedAd,
+    RenderWinners, RunFailed, RunFinished, RunStarted, WinnersRendered)
 
 SPEC = AGENT_SPECS["copywriter"]
 KIND_RANK = {"claim_doubt": 0, "objection": 1, "winner": 2}
@@ -131,6 +131,38 @@ class Copywriter:
         last = common.model_payload(cw)
         ctx.storage.set("cw:last", last)
 
+    async def render_winners(self, ctx, req: RenderWinners) -> None:
+        """After the last round: render each segment's winning ad with the brand kit's product
+        photo (POST /creatives/images), then tell the Strategist, which reports the run finished."""
+        run = {"request_id": req.request_id}
+        await self.status.set("working", f"rendering {req.run_id}'s winning ads")
+        await self._progress(ctx, run, req.run_id, "images_rendering",
+                             "Copywriter is rendering each segment's winning ad with your product photo.")
+        try:
+            res = await self.api.creatives_images(req.run_id) or {}
+            rendered = [RenderedAd(creative_id=str(r.get("creative_id", "")),
+                                   segment_id=str(r.get("segment_id", "")),
+                                   image_url=str(r.get("image_url") or ""))
+                        for r in res.get("rendered") or []]
+            msg = WinnersRendered(request_id=req.request_id, run_id=req.run_id, rendered=rendered,
+                                  failed=len(res.get("failed") or []),
+                                  cost_usd=float(res.get("cost_usd") or 0))
+            text = (f"Copywriter rendered {len(rendered)} winning ads with your product photo "
+                    f"(${msg.cost_usd:.2f}); they're on the live sim page.")
+            level = "info"
+        except ApiError as ex:
+            msg = WinnersRendered(request_id=req.request_id, run_id=req.run_id,
+                                  error=f"{ex.code}: {clip(ex.message, 200)}")
+            text = f"Copywriter couldn't render the winning ads ({ex.code}); the winners stand as text."
+            level = "warn"
+        await self._progress(ctx, run, req.run_id, "images_rendered", text, level)
+        await common.send_logged(self.hub, ctx, self.hub.peers.address("agt_strategist"), msg,
+                                 protocol=P_CREATIVES, kind="result",
+                                 summary=f"{req.run_id}: {len(msg.rendered)} winning ads rendered"
+                                         + (f" ({msg.error})" if msg.error else ""),
+                                 run_id=req.run_id)
+        await self.status.set("idle", f"{req.run_id} winners rendered")
+
     async def tick(self, ctx) -> None:
         runs = self._runs(ctx)
         for item in common.inbox_take(ctx.storage):
@@ -147,6 +179,8 @@ class Copywriter:
                     if m.run_id in runs:
                         runs[m.run_id]["active"] = False
                     await self.status.set("idle", f"{m.run_id} {'done' if t == 'RunFinished' else 'stopped'}")
+                elif t == "RenderWinners":
+                    await self.render_winners(ctx, RenderWinners.parse_obj(item["data"]))
                 elif t == "chat":
                     await common.answer_direct_chat(self.hub, ctx, SPEC, item, self.answer)
             except Exception as ex:
@@ -369,6 +403,9 @@ def build(hub: Hub, *, offline: bool, port: int | None = None) -> Any:
     for model in (RunStarted, RunFinished, RunFailed):
         run.on_message(model)(common.typed_to_inbox(model))
     agent.include(run, publish_manifest=not offline)
+    creatives = Protocol(spec=CREATIVES_SPEC, role="copywriter")
+    creatives.on_message(RenderWinners)(common.typed_to_inbox(RenderWinners))
+    agent.include(creatives, publish_manifest=not offline)
 
     @agent.on_event("startup")
     async def _startup(ctx):

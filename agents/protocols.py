@@ -247,6 +247,10 @@ class WinningAd(Model):
     primary_text: str = ""
     cta: str = ""
     visual_description: str = ""
+    # The ad's image, rendered with the brand kit's product photo: true once it is on /sim;
+    # image_url only when the app has a public URL (ADLAB_PUBLIC_BASE_URL), since ASI:One can't load localhost.
+    image_rendered: bool = False
+    image_url: str = ""
 
 
 class RunFinished(Model):
@@ -254,6 +258,7 @@ class RunFinished(Model):
     run_id: str
     rounds_completed: int
     winners: list[WinningAd] = []
+    images_rendered: int = 0
 
 
 class RunFailed(Model):
@@ -283,6 +288,29 @@ class CreativesWritten(Model):
     next_task: str | None = None
     claimed_by: str = "copywriter"
     handed_off: bool = False
+
+
+class RenderWinners(Model):
+    """Strategist -> Copywriter after the last round: render each segment's winning ad with the
+    brand kit's product photo (POST /creatives/images)."""
+    request_id: str
+    run_id: str
+
+
+class RenderedAd(Model):
+    creative_id: str
+    segment_id: str = ""
+    image_url: str = ""
+
+
+class WinnersRendered(Model):
+    """Copywriter -> Strategist: what it rendered. error is "" when the render ran."""
+    request_id: str
+    run_id: str
+    rendered: list[RenderedAd] = []
+    failed: int = 0
+    cost_usd: float = 0.0
+    error: str = ""
 
 
 # --- the five specs -------------------------------------------------------------------------
@@ -328,8 +356,8 @@ RUN_SPEC = ProtocolSpecification(
 CREATIVES_SPEC = ProtocolSpecification(
     name="AdLabCreatives",
     version=PROTO_VERSION,
-    interactions={CreativesWritten: set()},
-    roles={"strategist": {CreativesWritten}},
+    interactions={CreativesWritten: set(), RenderWinners: {WinnersRendered}, WinnersRendered: set()},
+    roles={"strategist": {CreativesWritten, WinnersRendered}, "copywriter": {RenderWinners}},
 )
 
 # Protocol names as logged to agent_message (W2's hop table is canonical).

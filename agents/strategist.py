@@ -18,9 +18,10 @@ import cards
 import common
 from common import AGENT_SPECS, ApiError, Hub, StatusReporter, clip, parse_ts, utcnow
 from protocols import (
-    CREATIVES_SPEC, P_PLAN, P_PROGRESS, P_RUN, PLAN_SPEC, RUN_SPEC, CreativesWritten,
+    CREATIVES_SPEC, P_CREATIVES, P_PLAN, P_PROGRESS, P_RUN, PLAN_SPEC, RUN_SPEC, CreativesWritten,
     LeaderEntry, LeaderRow, LearningNote, Persona, PlanRequest, Progress, RecipeItem, RecipePlan,
-    RoundResult, RunFailed, RunFinished, RunStarted, StartRun, WinnerNote, WinningAd)
+    RenderWinners, RoundResult, RunFailed, RunFinished, RunStarted, StartRun, WinnerNote, WinningAd,
+    WinnersRendered)
 
 SPEC = AGENT_SPECS["strategist"]
 RESET_HINT = "Reset the database first (npm run bench:reset:local), then ask again."
@@ -31,6 +32,9 @@ WORKER_MISSING_REPEAT_S = 300
 COPYWRITER_LATE_S = 30
 ROUND_STUCK_S = 600
 START_REFUSALS = {"runs_not_allowed", "db_has_run", "round0_incomplete", "bad_request"}
+# After the last round the Copywriter renders the winning ads with the product photo; the run is
+# reported finished when it answers, or after this long either way.
+RENDER_WAIT_S = 240
 START_CHECK_TRIES = 6  # after a rounds/start timeout or drop: look for r0 for about 30 s
 START_CHECK_GAP_S = 5.0
 
@@ -244,6 +248,8 @@ class Strategist:
                     await self.start_run(ctx, item)
                 elif t == "CreativesWritten":
                     self.record_creatives(ctx, item)
+                elif t == "WinnersRendered":
+                    self.record_render(ctx, item)
                 elif t == "chat":
                     await common.answer_direct_chat(self.hub, ctx, SPEC, item, self.answer)
             except Exception as ex:
@@ -436,6 +442,14 @@ class Strategist:
         rs.setdefault("creatives", {})[str(cw.get("round"))] = cw
         self._save_run(ctx, rs)
 
+    def record_render(self, ctx, item: dict) -> None:
+        wr = item["data"]
+        rs = ctx.storage.get(f"strat:run:{wr.get('run_id')}")
+        if rs is None:
+            return
+        rs.setdefault("render", {}).update(done=True, result=wr)
+        self._save_run(ctx, rs)
+
     # -- watch --
     async def _warn_once(self, ctx, rs: dict, key: str, text: str, level: str = "warn",
                          every_s: float | None = None) -> None:
@@ -445,6 +459,22 @@ class Strategist:
             return
         rs["last_warn"][key] = now
         await self._progress(ctx, rs, key.split(":")[0], text, level)
+
+    def _render_pending(self, rs: dict, now: float) -> bool:
+        """After the last round the Copywriter renders the winning ads with the product photo
+        (RenderWinners). True while that is still going: asked, no reply, under RENDER_WAIT_S."""
+        render = rs.get("render") or {}
+        return bool(render.get("asked_at")) and not render.get("done") \
+            and now - float(render["asked_at"]) < RENDER_WAIT_S
+
+    async def ask_render(self, ctx, rs: dict) -> None:
+        rs["render"] = {"asked_at": utcnow().timestamp()}
+        self._save_run(ctx, rs)
+        await common.send_logged(self.hub, ctx, self.hub.peers.address("agt_copywriter"),
+                                 RenderWinners(request_id=rs["request_id"], run_id=rs["run_id"]),
+                                 protocol=P_CREATIVES, kind="request",
+                                 summary=f"Render {rs['run_id']}'s winning ads with the product photo",
+                                 run_id=rs["run_id"])
 
     async def _emit_run_end(self, ctx, rs: dict, msg: Any, summary: str) -> None:
         for agent_id in ("agt_ad_lab", "agt_copywriter"):
@@ -570,13 +600,27 @@ class Strategist:
             rs["state"] = "lost"
             ctx.storage.set("strat:active", None)
             await self.status.set("error", f"run {run_id} lost")
-        elif name == "done" and all(f"round_done:{r}" in emitted for r in range(R + 1)):
+        elif name == "done" and all(f"round_done:{r}" in emitted for r in range(R + 1)) \
+                and not rs.get("render"):
+            await self.status.set("working", f"{run_id}: waiting for the winning ads' images")
+            await self.ask_render(ctx, rs)
+        elif name == "done" and all(f"round_done:{r}" in emitted for r in range(R + 1)) \
+                and not self._render_pending(rs, now):
             try:
                 rows = (await self.api.rounds_winners(run_id) or {}).get("winners") or []
             except ApiError:
                 rows = []
+            # One rendered ad per segment: the segment's best-scoring ad of the winning recipe,
+            # which can be an earlier round's copy than the one the winners table names.
+            rendered = {r.get("segment_id"): r for r in
+                        ((rs.get("render") or {}).get("result") or {}).get("rendered") or []}
+            winners = winning_ads(rows)
+            for w in winners:
+                if w.segment_id in rendered:
+                    w.image_rendered = True
+                    w.image_url = str(rendered[w.segment_id].get("image_url") or "")
             msg = RunFinished(request_id=rs["request_id"], run_id=run_id, rounds_completed=R,
-                              winners=winning_ads(rows))
+                              winners=winners, images_rendered=len(rendered))
             declared = sum(1 for w in msg.winners if w.declared)
             await self._emit_run_end(ctx, rs, msg, f"Run {run_id} done: {declared} winners, "
                                      f"{len(msg.winners) - declared} leaders")
@@ -620,6 +664,7 @@ def build(hub: Hub, *, offline: bool, port: int | None = None) -> Any:
     run.on_message(StartRun)(common.typed_to_inbox(StartRun))
     creatives = Protocol(spec=CREATIVES_SPEC, role="strategist")
     creatives.on_message(CreativesWritten)(common.typed_to_inbox(CreativesWritten))
+    creatives.on_message(WinnersRendered)(common.typed_to_inbox(WinnersRendered))
     for proto in (plan, run, creatives):
         agent.include(proto, publish_manifest=not offline)
 

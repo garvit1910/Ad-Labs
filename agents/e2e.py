@@ -217,7 +217,8 @@ async def evaluate(fu: FakeUser, timed_out: bool) -> list[dict]:
             ("agt_strategist", "agt_ad_lab", "AdLabPlan"): 1,
             ("agt_ad_lab", "agt_strategist", "AdLabRun"): 1,
             ("agt_strategist", "agt_copywriter", "AdLabRun"): 2,  # RunStarted + RunFinished
-            ("agt_copywriter", "agt_strategist", "AdLabCreatives"): R,
+            ("agt_copywriter", "agt_strategist", "AdLabCreatives"): R + 1,  # R rounds + WinnersRendered
+            ("agt_strategist", "agt_copywriter", "AdLabCreatives"): 1,  # RenderWinners
             ("agt_strategist", "agt_ad_lab", "AdLabRun"): (R + 1) + 2,  # RunStarted, R+1 results, finish
             ("agt_ad_lab", "user", "AgentChatProtocol"): 5}
     short = {k: (logged.get(k, 0), v) for k, v in need.items() if logged.get(k, 0) < v}
@@ -263,6 +264,16 @@ async def evaluate(fu: FakeUser, timed_out: bool) -> list[dict]:
     out.append(_check("A10 approval parsed", src == expected_src,
                       f"approved via {fu.approved_via}, Ad Lab parsed source={src}"))
     out.append(_check("A11 no timeout", not timed_out, f"finished in {fu.now():.1f}s"))
+
+    # RenderWinners: Strategist -> Copywriter; WinnersRendered: the Copywriter's reply carrying `rendered`.
+    renders = [r["body"] for r in good if r["body"]["protocol"] == "AdLabCreatives"
+               and (r["body"]["from_agent"] == "agt_strategist" or "rendered" in r["body"]["payload"])]
+    kinds = ["RenderWinners" if b["from_agent"] == "agt_strategist" else "WinnersRendered" for b in renders]
+    rendered = next((len(b["payload"].get("rendered") or []) for b in renders
+                     if b["from_agent"] == "agt_copywriter"), 0)
+    out.append(_check("A12 winners rendered with the product photo",
+                      kinds == ["RenderWinners", "WinnersRendered"] and rendered >= 1,
+                      f"hops={kinds}, rendered={rendered}"))
     return out
 
 

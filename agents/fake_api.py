@@ -62,6 +62,7 @@ class FakeApi:
         self.ingest_jobs: list[dict] = []
         self.generate_calls: list[dict] = []
         self.fail_calls: list[dict] = []
+        self.image_calls: list[dict] = []
         self.runs: dict[str, dict] = {}
         self.board: dict[str, dict] = {}
         self.rounds: dict[tuple[str, int], dict] = {}
@@ -508,6 +509,19 @@ class FakeApi:
         except ApiError:
             self.calls.append(("POST", "/creatives/generate", keys, False))
             raise
+
+    async def creatives_images(self, run_id: str, timeout: float = 330.0) -> dict:
+        body = {"run_id": run_id}
+
+        def fn():
+            self._write_guard()
+            if not self.brand_kit_ready:
+                raise ApiError("not_ready", "no brand kit photo: set it at /start", 409)
+            rendered = [{"creative_id": f"cr_fx_{run_id}_{s}", "segment_id": s} for s in self.segments]
+            self.image_calls.append(body)
+            return {"run_id": run_id, "rendered": rendered, "failed": [],
+                    "cost_usd": round(0.06 * len(rendered), 2), "with_reference": True}
+        return await self._call("POST", "/creatives/images", body, fn)
 
     async def creatives_fail(self, task_id: str, error: str) -> dict:
         def fn():

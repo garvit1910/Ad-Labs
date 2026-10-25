@@ -360,12 +360,17 @@ def winners_card(rf: Any) -> CardOut | None:
         }
         if not item["secondary_text"]:
             del item["secondary_text"]
+        if getattr(w, "image_url", ""):
+            item["image"] = w.image_url
         items.append(item)
         lines.append(f"- {w.segment_name or w.segment_id}: '{cut(w.headline, 80)}': "
                      f"{cut(w.primary_text, 160)} ({w.recipe}"
                      f"{', winner' if w.declared else ', leading'}{'; ' + cpo if cpo else ''})")
     if not items:
         return None
+    if getattr(rf, "images_rendered", 0):
+        subtitle += f" · {rf.images_rendered} rendered with your product photo"
+        lines[0] = f"**{TITLE_WINNERS}** ({subtitle})"
     payload = {"title": TITLE_WINNERS, "subtitle": cut(subtitle, 200), "items": items}
     return _finish("carousel", TITLE_WINNERS, payload, True, "\n".join(lines))
 

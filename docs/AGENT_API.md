@@ -27,7 +27,7 @@ The HTTP API the four Fetch.ai agents call (`app/api/agent/**`). The agents neve
 - **Database:** the target is `SPACETIMEDB_URI` / `SPACETIMEDB_DB_NAME`, set by `npm run dev:local` (`adlab-local`) or `dev:live` (the stage database). One memoized connection serves each process.
 - **Mode:** `ADLAB_AGENT_MODE` is `test` (the default) or `live`.
 - **Routes:** every route is `runtime = 'nodejs'` and `dynamic = 'force-dynamic'`. `creatives/generate` sets `maxDuration = 600`.
-- **Write guard:** writing endpoints return 403 `runs_not_allowed` when `runs_allowed` is false. These are `log/*`, `ingest/refresh` (execute), `rounds/start`, `creatives/generate` and `creatives/fail`.
+- **Write guard:** writing endpoints return 403 `runs_not_allowed` when `runs_allowed` is false. These are `log/*`, `ingest/refresh` (execute), `rounds/start`, `creatives/generate`, `creatives/fail` and `creatives/images`.
 - **Parties:** `agt_ad_lab`, `agt_scout`, `agt_strategist`, `agt_copywriter`, and `user` (the ASI:One user).
 
 ## Endpoints
@@ -90,6 +90,12 @@ The HTTP API the four Fetch.ai agents call (`app/api/agent/**`). The agents neve
   - Any other throw returns 502 `generate_failed`, and the task stays claimed by `copywriter`.
   - An empty body returns a fast 400, which the agents use to warm the route.
 - **POST `/creatives/fail`** `{task_id, error}` → `{failed}`. It calls `failTask(…, 'copywriter')`, which fails the task only if the Copywriter still holds it.
+
+- **POST `/creatives/images`** `{run_id}` → `{run_id, rendered: [{creative_id, segment_id, image_url}], failed: [{creative_id, error}], cost_usd, with_reference}`.
+  - After the last round the Strategist asks the Copywriter (`RenderWinners`), which calls this, then replies `WinnersRendered`. The Strategist reports `RunFinished` on that reply, or after 240 seconds either way.
+  - It renders each segment's winning ad (its best-scoring ad of the leading recipe) with the brand kit's product photo through OpenAI's image edits, five at a time, capped at $1 a call. Images already rendered from the same photo are kept.
+  - Files land in `data/ad-images/` and `sim/demo/ad-images.json`, which `/sim` shows. `image_url` is absolute only with `ADLAB_PUBLIC_BASE_URL`.
+  - A repeat call for the same run joins the one in flight. 409 `not_ready` without a brand kit photo; it is a write endpoint (`runs_not_allowed`).
 
 ### The Task shape
 

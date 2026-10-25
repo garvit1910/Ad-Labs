@@ -385,6 +385,10 @@ class Api:
         return await self.request("POST", "/creatives/fail",
                                   body={"task_id": task_id, "error": clip(error, 500)})
 
+    async def creatives_images(self, run_id: str, timeout: float = 330.0) -> dict:
+        return await self.request("POST", "/creatives/images", body={"run_id": run_id},
+                                  timeout=timeout)
+
     async def warm_generate(self) -> None:
         """POST /creatives/generate {} is a fast 400; it compiles the route on a cold next dev."""
         try:
