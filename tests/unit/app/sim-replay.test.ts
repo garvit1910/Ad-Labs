@@ -1,12 +1,32 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { nextReplayId, replayProgress } from '@/app/sim/_lib/replay';
+import { nextReplayId, replayProgress, replaySource } from '@/app/sim/_lib/replay';
 
 describe('nextReplayId', () => {
   it('names a replay the way sim:replay does', () => {
     assert.equal(nextReplayId('run_a', ['run_a']), 'run_a_replay');
     assert.equal(nextReplayId('run_a', ['run_a', 'run_a_replay']), 'run_a_replay_2');
     assert.equal(nextReplayId('run_a', ['run_a', 'run_a_replay', 'run_a_replay_2']), 'run_a_replay_3');
+  });
+});
+
+describe('replaySource', () => {
+  const runs = [
+    { runId: 'run_a', status: 'done' },
+    { runId: 'run_a_replay_2', status: 'stopped' },
+    { runId: 'run_b', status: 'running' },
+    { runId: 'run_b_replay', status: 'failed' },
+  ];
+  it('replays a finished run itself', () => {
+    assert.equal(replaySource('run_a', 'done', runs), 'run_a');
+  });
+  it('replays the source of a stopped or failed replay when that source is finished', () => {
+    assert.equal(replaySource('run_a_replay_2', 'stopped', runs), 'run_a');
+    assert.equal(replaySource('run_b_replay', 'failed', runs), null);
+  });
+  it('has nothing to replay for an unfinished run', () => {
+    assert.equal(replaySource('run_b', 'running', runs), null);
+    assert.equal(replaySource(null, null, runs), null);
   });
 });
 

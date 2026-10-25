@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Play, Square } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { DEFAULT_DAY_MS, REPLAY_SPEEDS, type ReplayInfo, type ReplayState } from '../_lib/replay';
+import { DEFAULT_DAY_MS, REPLAY_SPEEDS, replaySource, type ReplayInfo, type ReplayState } from '../_lib/replay';
 
 // Replays the selected (finished) run from the Jev cache at a chosen pace, through
 // /api/sim/replay. The replay is a new run, so the page switches to it and fills live.
@@ -29,18 +29,21 @@ function progress(replay: ReplayState): string {
 export function ReplayButton({
   runId,
   runStatus,
+  runs,
   viewing,
   onWatch,
 }: {
   /** The run the page shows, once its row exists. */
   runId: string | null;
   runStatus: string | null;
+  runs: readonly { runId: string; status: string }[];
   /** The run the page is on (?run=), even before its row exists. */
   viewing: string | null;
   onWatch: (runId: string) => void;
 }) {
   const client = useQueryClient();
   const [dayMs, setDayMs] = useState<number>(DEFAULT_DAY_MS);
+  const source = replaySource(runId, runStatus, runs);
   const info = useQuery({
     queryKey: ['sim-replay'],
     queryFn: () => call<ReplayInfo>('GET'),
@@ -48,7 +51,7 @@ export function ReplayButton({
     retry: 1,
   });
   const start = useMutation({
-    mutationFn: () => call<{ replay: ReplayState }>('POST', { from: runId, day_ms: dayMs }),
+    mutationFn: () => call<{ replay: ReplayState }>('POST', { from: source, day_ms: dayMs }),
     onSuccess: ({ replay }) => {
       client.setQueryData<ReplayInfo>(['sim-replay'], (old) => (old ? { ...old, replay } : old));
       onWatch(replay.as);
@@ -72,16 +75,16 @@ export function ReplayButton({
     if (replay.status === 'stopped' || (replay.status === 'failed' && !runId)) onWatch(replay.from);
   }, [replay, viewing, runId, onWatch]);
   const allowed = info.data?.allowed ?? false;
-  const canStart = allowed && !running && runStatus === 'done' && !!runId && !start.isPending;
+  const canStart = allowed && !running && !!source && !start.isPending;
   const why = !info.data
     ? 'checking whether this server can replay…'
     : !allowed
       ? info.data.reason
       : running
         ? 'a replay is already running'
-        : runStatus !== 'done'
-          ? 'only a finished run can be replayed'
-          : `replay ${runId} from the Jev cache as a new run (identical numbers, no Jev calls)`;
+        : !source
+          ? `only a finished run can be replayed${runId ? ` (${runId} is ${runStatus})` : ''}`
+          : `replay ${source} from the Jev cache as a new run (identical numbers, no Jev calls)`;
   const error = start.error ?? stop.error;
 
   return (
@@ -117,10 +120,12 @@ export function ReplayButton({
           <span title={why} className="inline-flex">
             <Button size="sm" onClick={() => start.mutate()} disabled={!canStart}>
               <Play />
-              {start.isPending ? 'Starting…' : 'Replay run'}
+              {start.isPending ? 'Starting…' : source && source !== runId ? `Replay ${source}` : 'Replay run'}
             </Button>
           </span>
           {info.data && !allowed && <span className="font-mono text-xs text-muted-foreground">replay: local database only</span>}
+          {/* The tooltip alone reads as a broken button, so say why it is off. */}
+          {info.data && allowed && !source && <span className="font-mono text-xs text-muted-foreground">{why}</span>}
         </>
       )}
       {!running && replay && (

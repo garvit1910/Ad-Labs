@@ -47,6 +47,21 @@ export function nextReplayId(from: string, taken: Iterable<string>): string {
   return `${base}_${n}`;
 }
 
+/**
+ * The run "Replay run" replays from the one on screen: that run once it is done, else (a replay that
+ * was stopped or failed) the finished run it replays, so the button still works there.
+ */
+export function replaySource(
+  runId: string | null,
+  runStatus: string | null,
+  runs: readonly { runId: string; status: string }[],
+): string | null {
+  if (!runId) return null;
+  if (runStatus === 'done') return runId;
+  const base = /^(.+)_replay(?:_\d+)?$/.exec(runId)?.[1];
+  return base && runs.some((r) => r.runId === base && r.status === 'done') ? base : null;
+}
+
 /** What sim:replay's output says so far: rounds finished, rounds planned, and its last word. */
 export function replayProgress(lines: string[]): { roundsDone: number; roundsTotal: number | null; outcome: string | null } {
   let roundsTotal: number | null = null;

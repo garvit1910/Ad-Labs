@@ -82,6 +82,7 @@ function SimPage() {
             <ReplayButton
               runId={run?.runId ?? null}
               runStatus={run?.status ?? null}
+              runs={runs}
               viewing={params.get('run') ?? run?.runId ?? null}
               onWatch={watchRun}
             />
