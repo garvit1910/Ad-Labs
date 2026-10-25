@@ -207,6 +207,15 @@ function computeVocMetrics(
   };
 }
 
+const foldForMatch = (text: string) => text.toLowerCase().replace(/\s+/g, ' ').trim();
+
+/** Ad Lab: the quote and the phrase overlap (one contains the other), ignoring case and spacing. */
+function quoteSaysPhrase(quote: string, phrase: string): boolean {
+  const q = foldForMatch(quote);
+  const p = foldForMatch(phrase);
+  return q.length > 0 && p.length > 0 && (q.includes(p) || p.includes(q));
+}
+
 function buildVocEvidence(
   theme: ThemeForPromotion,
   orderedMembers: PhraseForPromotion[],
@@ -233,14 +242,24 @@ function buildVocEvidence(
   // A mention in another language still COUNTS toward the theme — it is only
   // never quoted, because every reader of the quote is in the merchant's
   // language (see `quote-language.ts`).
+  // Ad Lab: a mention's quotes can be about different things (one review
+  // complains about taste, billing and support), so quote the one that says
+  // this member's phrase, not the mention's first. A mention with no such
+  // quote is skipped; a later member from it may still have one.
   let verbatims = 0;
   const seenMentions = new Set<string>();
   for (const member of orderedMembers) {
     if (verbatims >= cfg.verbatimCap) break;
     if (seenMentions.has(member.mentionId)) continue;
+    const quote = quotesByMention
+      .get(member.mentionId)
+      ?.find(
+        (candidate) =>
+          quoteSaysPhrase(candidate.phrase, member.phrase) &&
+          isQuoteInMerchantLanguage(candidate.phrase),
+      );
+    if (!quote) continue;
     seenMentions.add(member.mentionId);
-    const quote = quotesByMention.get(member.mentionId)?.[0];
-    if (!quote || !isQuoteInMerchantLanguage(quote.phrase)) continue;
     const mention = mentionById.get(member.mentionId);
     evidence.push({
       type: 'phrase',

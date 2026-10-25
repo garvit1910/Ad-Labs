@@ -3,7 +3,6 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { setTimeout as sleep } from 'node:timers/promises';
 import { ADLAB_ORG_ID } from '@/lib/adlab/org';
-import { serviceSupabase } from '@/lib/adlab/supabase';
 import { BRAND_PRESENCE_CONFIG } from '@/lib/brand-presence/config';
 import { trustpilotUrlFromDomain } from '@/lib/brand-presence/trustpilot';
 import type { SourceMeta } from '@/lib/brand-presence/types';
@@ -48,7 +47,8 @@ import {
 } from '@/services/job-processor/brand-presence/queue';
 import { awaitRunCompletion } from '@/services/job-processor/brand-presence/run-lifecycle';
 import { BRAND_PRESENCE_DISCOVER_JOB_TYPE, BRAND_PRESENCE_JOB_TYPES } from '@/services/job-processor/brand-presence/types';
-import { isApifyCapacityError, resetStaleJobs, runWorker } from '@/worker/loop';
+import { isApifyCapacityError } from '@/worker/loop';
+import { createPhase, errorMessage, nowIso, table } from './phase';
 
 /*
  * Ad Lab A2: ingest Magic Spoon and its seven competitors through the copied
@@ -110,8 +110,6 @@ const LISTENING_POOLS = [{ types: BRAND_PRESENCE_JOB_TYPES, concurrency: 8 }];
 const MENTION_PLATFORMS = ['reddit', 'x', 'trustpilot', 'google_maps', 'tiktok', 'instagram'];
 const RELEVANCE_VALUES = ['pending', 'relevant', 'irrelevant', 'not_required'];
 const UPSERT_CHUNK_SIZE = 100;
-const IDLE_POLL_MS = 10_000;
-const PROGRESS_EVERY_MS = 30_000;
 
 const [step, ...rest] = process.argv.slice(2);
 const flags = new Map<string, string>();
@@ -120,149 +118,7 @@ for (const arg of rest) {
   if (match) flags.set(match[1], match[2] ?? 'true');
 }
 
-const db = serviceSupabase();
-const shutdown = new AbortController();
-process.once('SIGINT', () => {
-  console.log('[a2] stopping: in-flight jobs go back to pending (Ctrl-C again to force)');
-  shutdown.abort();
-  process.once('SIGINT', () => process.exit(130));
-});
-
-const nowIso = () => new Date().toISOString();
-const log = (message: string) => console.log(`[a2] ${message}`);
-// PostgREST errors are plain objects ({ message, code, details }), not Error instances.
-const errorMessage = (error: unknown) =>
-  error instanceof Error
-    ? error.message
-    : error && typeof error === 'object' && 'message' in error
-      ? JSON.stringify(error)
-      : String(error);
-
-function table(rows: Array<Record<string, unknown>>): void {
-  if (rows.length === 0) return;
-  const keys = Object.keys(rows[0]);
-  const cell = (value: unknown) => (value === null || value === undefined ? '' : String(value));
-  const widths = keys.map((key) => Math.max(key.length, ...rows.map((row) => cell(row[key]).length)));
-  const line = (values: string[]) => values.map((value, i) => value.padEnd(widths[i])).join('  ');
-  console.log(line(keys));
-  console.log(line(widths.map((width) => '-'.repeat(width))));
-  for (const row of rows) console.log(line(keys.map((key) => cell(row[key]))));
-}
-
-// ---------------------------------------------------------------- queue
-
-interface JobRow {
-  id: string;
-  type: string;
-  status: string;
-  error_message: string | null;
-}
-
-/** A read-only query, retried through Supabase network blips (about a minute) before giving up. */
-async function retryRead<T>(read: () => Promise<T>): Promise<T> {
-  for (let attempt = 1; ; attempt++) {
-    try {
-      return await read();
-    } catch (error) {
-      if (attempt >= 12 || shutdown.signal.aborted) throw error;
-      log(`read failed (${attempt}/12), retrying: ${errorMessage(error)}`);
-      await sleep(5_000, undefined, { signal: shutdown.signal });
-    }
-  }
-}
-
-async function getJob(jobId: string): Promise<JobRow> {
-  const { data, error } = await db.from('job_queue').select('id, type, status, error_message').eq('id', jobId).single();
-  if (error) throw error;
-  return data as JobRow;
-}
-
-/** Polls one job until it leaves pending/processing (the in-process lanes run it). */
-async function waitForJob(jobId: string): Promise<JobRow> {
-  for (;;) {
-    const job = await retryRead(() => getJob(jobId));
-    if (job.status !== 'pending' && job.status !== 'processing') return job;
-    await sleep(IDLE_POLL_MS, undefined, { signal: shutdown.signal });
-  }
-}
-
-/** One in-process worker: the job types it claims and how many it runs at a time. */
-interface Pool {
-  types: readonly string[];
-  concurrency: number;
-}
-
-/**
- * Runs the worker pools in-process while `during` does the step's own work, then
- * until no job of their types is pending or processing. One query reads both
- * statuses, so a parent finishing after it enqueued children never reads as idle.
- */
-async function drainUntilIdle(label: string, pools: Pool[], during?: () => Promise<void>): Promise<JobRow[]> {
-  const startedAt = nowIso();
-  const types = pools.flatMap((pool) => pool.types);
-  const stale = await resetStaleJobs(db);
-  if (stale > 0) log(`reset ${stale} stale processing job(s) to pending`);
-  log(`${label}: draining ${pools.map((pool) => `${pool.types.length} job type(s) on ${pool.concurrency} lane(s)`).join(' + ')}`);
-
-  const stop = new AbortController();
-  let workerError: unknown = null;
-  const workers = Promise.all(
-    pools.map((pool) =>
-      runWorker(db, { concurrency: pool.concurrency, watch: true, types: pool.types, signal: shutdown.signal, stop: stop.signal }),
-    ),
-  ).catch((error: unknown) => {
-    workerError = error;
-    return null;
-  });
-  try {
-    if (during) await during();
-    let lastProgress = 0;
-    for (;;) {
-      if (workerError) throw workerError;
-      if (shutdown.signal.aborted) throw new Error('stopped');
-      const data = await retryRead(async () => {
-        const { data: rows, error } = await db
-          .from('job_queue')
-          .select('type, status')
-          .in('type', types)
-          .in('status', ['pending', 'processing']);
-        if (error) throw error;
-        return rows ?? [];
-      });
-      if (data.length === 0) break;
-      if (Date.now() - lastProgress >= PROGRESS_EVERY_MS) {
-        const byType = new Map<string, string>();
-        for (const row of data) {
-          const key = String(row.type);
-          byType.set(key, `${byType.get(key) ?? ''}${row.status === 'processing' ? 'P' : '.'}`);
-        }
-        log(`${label}: waiting on ${[...byType].map(([type, marks]) => `${type} [${marks}]`).join(', ')}`);
-        lastProgress = Date.now();
-      }
-      await sleep(IDLE_POLL_MS, undefined, { signal: shutdown.signal }).catch(() => {});
-    }
-  } finally {
-    stop.abort();
-  }
-  const counts = await workers;
-  if (workerError) throw workerError;
-  if (counts) {
-    const sum = (key: keyof (typeof counts)[number]) => counts.reduce((n, c) => n + c[key], 0);
-    log(`${label}: idle (${sum('completed')} completed, ${sum('failed')} failed, ${sum('requeued')} requeued, ${sum('skipped')} skipped here)`);
-  }
-
-  const { data: failed, error } = await db
-    .from('job_queue')
-    .select('id, type, status, error_message')
-    .in('type', types)
-    .eq('status', 'failed')
-    .gte('completed_at', startedAt);
-  if (error) throw error;
-  for (const job of (failed ?? []) as JobRow[]) {
-    console.warn(`[a2] ${label}: FAILED ${job.type} ${job.id.slice(0, 8)}: ${job.error_message?.slice(0, 300)}`);
-  }
-  return (failed ?? []) as JobRow[];
-}
+const { db, shutdown, log, getJob, waitForJob, drainUntilIdle } = createPhase('a2');
 
 // ---------------------------------------------------------------- rows
 

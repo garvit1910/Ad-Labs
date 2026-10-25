@@ -1,6 +1,6 @@
 # Ad Lab — master plan
 
-Last updated Sat Oct 24, 2026, 5:32 PM PT
+Last updated Sat Oct 24, 2026, 6:10 PM PT
 
 Ad Lab tests Magic Spoon ad recipes on Jev-driven shoppers built from real customer voice, then keeps and refines the winners. Person A owns data and agents; Person B owns the simulation. Both halves are planned below, phase by phase, with a ready prompt for every phase in the "Appendix: Phase prompts" at the end of this file.
 
@@ -28,11 +28,11 @@ Everything here is settled. Change a row only by editing this table, so both of 
 
 ## Status
 
-As of Sat Oct 24, 5:30 PM PT.
+As of Sat Oct 24, 6:10 PM PT.
 
 | | Done | In progress | Next |
 | --- | --- | --- | --- |
-| A | A0 setup, A1 Adcero port, A's half of the contract in SpacetimeDB (`tables_a.ts`, `reducers_a.ts`), A2 ingest (`feat/a2-ingest`, PR to `simulation`) | — | A3 distill, then A4 writes the contract rows. A5 and A6 can start in parallel, on fixtures first |
+| A | A0 setup, A1 Adcero port, A's half of the contract in SpacetimeDB (`tables_a.ts`, `reducers_a.ts`), A2 ingest, A3 distill (`feat/a3-distill`, PR to `simulation`) | — | A4 writes the contract rows. A5 and A6 can start in parallel, on fixtures first |
 | B | B0–B4: fixtures, Jev spike, engine, calibration, bandit, learnings, task board and worker | — | B5 live sim views. B4's integration step waits on A4's rows |
 
 **Branches.** `simulation` is the integration branch: B commits there, and every A phase opens its PR against it. `B`, GitHub's default branch, is stale; don't branch from it or target it.
@@ -310,11 +310,29 @@ A turns Magic Spoon's public footprint into the rows the sim needs, writes the a
 ### A3 · Sat 10:30 AM – 1 PM · Distill the brand context
 
 - [x] Let listening drain: relevance → extract → cluster. Done in A2: 0 mentions pending relevance or extraction, and 74 themes from 781 phrases.
-- [ ] Run `brand_object_crawl` with `chain: true`: crawl → identity → promote → market → personas, with chunks after identity, market and personas. Promote is part of the chain. The identity facts (positioning, USPs, proof points such as grams of protein) are what the ads get built from.
-- [ ] Count facts per section, and spot-check 10 VOC facts against their quotes.
-- [ ] Smoke-test `retrieveBrandSlice` with "protein", "taste" and "price".
+- [x] Run `brand_object_crawl` with `chain: true`: crawl → identity → promote → market → personas, with chunks after identity, promote, market and personas. Promote is part of the chain. The identity facts (positioning, USPs, proof points such as grams of protein) are what the ads get built from.
+- [x] Count facts per section, and spot-check 10 VOC facts against their quotes.
+- [x] Smoke-test `retrieveBrandSlice` with "protein", "taste" and "price".
 
 **Done when** brand\_facts holds identity, voc\_\*, market\_prior and 2–4 persona facts, and retrieval returns sensible quotes.
+
+**Result (Oct 24, `npm run a3:distill`, then `npm run a3:report`).** Done in one chain run. It used 2 of the month's 60 LLM calls and one Apify run, and every done-when check passes.
+
+- `brand_facts` holds 96 live facts, each with an embedded chunk:
+  - **Identity**, from 10 crawled pages: positioning 1, usp 9, value\_prop 6, proof\_point 7, voice 1, compliance 8. Every claim is checked against a sentence on magicspoon.com. Proof points the ads can use: 12–14g protein, 0g sugar and 4–5g net carbs per serving; "over 80,000 5-star reviews"; 4.6 out of 5 from 31,095 reviews.
+  - **VOC**, from the 44 brand-scope themes: voc\_pain 12, voc\_praise 12, voc\_objection 10, voc\_desire 4. They carry 85 quotes, each an exact substring of its mention that contains one of its theme's phrases. Only `voc_praise` "stays-crunchy" has no quote.
+  - **market\_prior** 21, from 51 of 194 competitor ads (the winners), in 28 distinct concepts. The top rows: plain\_promotional tone 71%, bold\_claim hook 68%, no people 61%, 9:16 54%, health\_nutrition angle 50%. The sample ads come from GHOST, Quest Nutrition, Seven Sundays and Legendary Foods.
+  - **Personas**, 4 grounded: Macro-Nostalgia Regular (most aware), Low-Carb Skeptical Considerer (product aware), Diet-Restricted Functional Buyer (solution aware), Disappointed Ex-Buyer (most aware). Each has 5 verbatims, all exact substrings of real mentions. A fifth row is the unaware projection, "Convenience-First Classic Cereal Eater". It is extrapolated and has no verbatims.
+- **Retrieval**:
+  - "protein" returns the protein USPs, each backed by its magicspoon.com sentence. Identity facts carry a page sentence, not a customer quote.
+  - "taste" returns the taste and texture complaints and the flavour praise.
+  - "price" returns both price facts, "won't repurchase", and the Skeptical Considerer persona.
+- **One fix to copied code**, in `lib/brand-object/promotion.ts` (`buildVocEvidence`, with a unit test). Promote quoted each member mention's *first* quote, whatever it was about, so only 48 of 99 quotes contained a theme phrase. One Trustpilot review lent the same taste complaint to "dislikes-new-packaging", "double-billing" and "claims-feel-false". Promote now quotes the mention's quote that says the member's phrase, and skips mentions that have none. `npm run a3:distill -- --from=promote` then refreshed the 38 VOC facts in place with no LLM call. Market and personas skipped, because their inputs were unchanged.
+- **For A4:**
+  - Personas link some pains and desires to identity facts, such as positioning `core` and the high-protein value\_prop, as well as to VOC facts. Only VOC facts have a frequency, so compute share from the linked VOC facts.
+  - The `hook_archetype:demo` market\_prior is not producible.
+  - Each market\_prior fact keeps at most 3 sample ads as evidence, not its whole winner set.
+- **Hooks:** now that `brand_object_state` exists, rerunning A2's cluster, sync or label steps queues promote or market with `chain: true`. That refresh makes no LLM calls unless an input changed.
 
 ### A4 · Sat 1 – 2:30 PM · Write the contract rows (2:30 PM integration with B)
 
