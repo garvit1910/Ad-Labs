@@ -1,6 +1,6 @@
 # Ad Lab — master plan
 
-Last updated Sat Oct 24, 2026, 6:10 PM PT
+Last updated Sat Oct 24, 2026, 6:26 PM PT
 
 Ad Lab tests Magic Spoon ad recipes on Jev-driven shoppers built from real customer voice, then keeps and refines the winners. Person A owns data and agents; Person B owns the simulation. Both halves are planned below, phase by phase, with a ready prompt for every phase in the "Appendix: Phase prompts" at the end of this file.
 
@@ -28,12 +28,12 @@ Everything here is settled. Change a row only by editing this table, so both of 
 
 ## Status
 
-As of Sat Oct 24, 6:10 PM PT.
+As of Sat Oct 24, 6:26 PM PT.
 
 | | Done | In progress | Next |
 | --- | --- | --- | --- |
-| A | A0 setup, A1 Adcero port, A's half of the contract in SpacetimeDB (`tables_a.ts`, `reducers_a.ts`), A2 ingest, A3 distill (`feat/a3-distill`, PR to `simulation`) | — | A4 writes the contract rows. A5 and A6 can start in parallel, on fixtures first |
-| B | B0–B4: fixtures, Jev spike, engine, calibration, bandit, learnings, task board and worker | — | B5 live sim views. B4's integration step waits on A4's rows |
+| A | A0 setup, A1 Adcero port, A's half of the contract in SpacetimeDB (`tables_a.ts`, `reducers_a.ts`), A2 ingest, A3 distill (`feat/a3-distill`, PR to `simulation`) | A4 contract rows and A5 creative worker, in parallel. A5 builds on stand-in rows until A4's land (see "Hand-off to A5" under A4) | A6, which can start in parallel on fixtures |
+| B | B0–B5: fixtures, Jev spike, engine, calibration, bandit, learnings, task board, worker, and the live sim views on the local bench | — | B6: the finder script and replay mode on fixtures now, the real run after A5's round 0. B4's integration step and B5's Maincloud check wait on A4's rows |
 
 **Branches.** `simulation` is the integration branch: B commits there, and every A phase opens its PR against it. `B`, GitHub's default branch, is stale; don't branch from it or target it.
 
@@ -49,7 +49,7 @@ How to work with it:
 - **Who publishes.** Only A can: the database belongs to A's SpacetimeDB login. Publish from an up-to-date `simulation` with `npm run spacetime:publish`, which stops instead of breaking clients. `npm run spacetime:publish:clear` wipes both sides' data, so agree first.
 - **Clients.** B's worker and A's agents call reducers and SQL over HTTP. The web app subscribes through the `spacetimedb` SDK, using the generated client in `lib/spacetime/`. After any module change, run `npm run spacetime:generate` and commit the result.
 
-**Supabase.** The 17 Adcero tables, `library_ads_enriched` and `job_queue` are applied (`npm run db:migrate`). A2 filled them: see "A2" for the counts.
+**Supabase.** The 17 Adcero tables, `library_ads_enriched` and `job_queue` are applied (`npm run db:migrate`). A2 filled them and A3 distilled them into 96 brand facts: see "A2" and "A3" for the counts.
 
 **Agents.** Since Oct 24, 4:30 PM, Fetch's agents run the loop as an agent-to-agent system, mirrored in SpacetimeDB: see Locked decisions ("Agents") and A6.
 
@@ -200,8 +200,8 @@ Finish with: what works, what is stubbed or skipped, the command that proves the
 | A1 Port core | The contract, Person A | reuse-export: REUSE\_MANIFEST §0, §8, §12, §13, files.txt, deps.json | Adcero, for `services/job-processor/job-executor.ts` L121–165 (the worker registry) |
 | A2 Ingest | Person A | REUSE\_MANIFEST §1, §2, §3, §10 | Adcero, for `tests/fixtures/ad-library/apify-sample.json` (normalizer smoke test) |
 | A3 Distill | Person A, A2's Result | REUSE\_MANIFEST §4, §5; `scripts/a2-ingest.ts`, `worker/loop.ts` | Adcero, for `scripts/brand-object-{build,promote,distill}.ts`, the in-process run harness that wasn't copied |
-| A4 Contract rows | The contract, Simulation design, Person A | reuse-export `contracts.ts` (PersonaDetails, EnrichedAd); `spacetime/tables_b.ts` | — |
-| A5 Creatives | The contract, Reward bandit and learnings, Person A | CREATIVE\_MANIFEST.md (§1b, §2–§6, §8, §9, Text-only mode, §11.3–§11.5), contracts-creative.ts, the two creative fixtures | Adcero |
+| A4 Contract rows | The contract, Simulation design, Person A, A3's Result | reuse-export `contracts.ts` (PersonaDetails, EnrichedAd); `spacetime/src/tables_a.ts`, `reducers_a.ts` | — |
+| A5 Creatives | The contract, Reward bandit and learnings, Person A (A4's hand-off, A5's "Running alongside A4") | CREATIVE\_MANIFEST.md (§1b, §2–§6, §8, §9, Text-only mode, §11.3–§11.5), contracts-creative.ts, the two creative fixtures; `producibility.ts`; `spacetime/src/tables_a.ts`, `reducers_a.ts` | Adcero |
 | A6 Fetch agents | Locked decisions, How A and B fit together, The contract, A6, Demo | Fetch hackpack requirements; Innovation Lab docs on uAgent-to-uAgent communication, mailbox agents, ASI-compatible agents and Interactive Cards; `agents/hello_agent.py`; B's `sim/SAMPLE_ROUND_SUMMARY.json`; A2's `scripts/a2-ingest.ts` and `worker/loop.ts` | — |
 | A7 Adcero pages | Person A | REUSE\_MANIFEST §5.5 (dashboard rewrite), §7; the two fixtures | Adcero, for the original `app/api/brand-identity/` routes, `design.md`, `.claude/brand-book.md` |
 | B0 Setup | Locked decisions, The contract, Simulation design, The Jev calls | TypeSafe Jev docs (request and response shapes) | — |
@@ -345,11 +345,11 @@ A turns Magic Spoon's public footprint into the rows the sim needs, writes the a
 
 | Segment field | Built from |
 | --- | --- |
-| segment\_id, name | The persona fact's row id and name. The segment id must equal the persona row id the ad compiler uses (`personaRef`) |
+| segment\_id, name | `seg_` + the persona's slug, and the persona fact's name. The slug is `slugify(fact_key)` from `lib/creative-engine/brand-context/ingest.ts`, the same slug as in the ad compiler's persona row id (`personaRef` = `persona_` + slug). So `macro-nostalgia-regular` → `seg_macro_nostalgia_regular` ↔ `persona_macro_nostalgia_regular`. The reducer only accepts `seg_[a-z0-9_]+`, so the fact's uuid can't be the id |
 | description | The persona description, rewritten by the LLM as life context only (situation, routine) with every preference removed. This keeps the single-entry rule |
-| quotes | The persona's verbatims, topped up to 8+ with the best verbatims of its linked pain, desire and objection facts. All are exact substrings of real mentions |
+| quotes | The persona's verbatims, topped up to 8+ with the best verbatims of its linked pain, desire and objection facts. All are exact substrings of real mentions. The unaware projection has no verbatims of its own, so its quotes come only from linked facts; the reducer needs at least 2 |
 | prior\_weights | The LLM maps the persona's pains, desires and objections onto the concept vocabulary as 0..1 weights (strict schema) |
-| share | Each persona's linked-fact frequency ÷ the total. If Adcero emits an "unaware" projection, treat it as one more segment at 10% |
+| share | Each persona's linked VOC-fact frequency ÷ the total (only VOC facts carry a frequency; see A3's Result). A3 emitted an "unaware" projection, so it is one more segment at 10% |
 | budget\_mean\_usd, budget\_sd\_usd | Hand-set for cereal: start near $45 ± $15 a month; B tunes |
 | in\_market\_rate | 0.12 by default; higher for personas whose pains mention running out or restocking |
 
@@ -359,6 +359,7 @@ A turns Magic Spoon's public footprint into the rows the sim needs, writes the a
   - always: problem\_callout, bold\_claim, question, curiosity, pov\_relatable, story\_narrative
   - only with backing: statistic (a numeric fact), social\_proof (a proof\_point or voc\_praise fact), testimonial (persona verbatims), offer\_led (an offer fact)
   - never: demo, comparison, other
+  - These lists are `HOOK_PRODUCIBILITY` in `lib/creative-engine/generation/producibility.ts`, the table A5's copywriter enforces. Read each hook's status and `requires` from there rather than retyping them.
 - **steal (4–5):** the (angle, hook) pairs with the highest winner lift across competitor ads, each backed by at least 2 winning ads. If a pair's hook isn't producible, take the next pair. With fewer than 5 winners in total, use the dashboard's over-index rows instead.
 - **double\_down (2–3):** the (angle, hook) pairs from Magic Spoon's own ads with the longest longevity\_days.
 - **gap (2–3):** voc\_pain and voc\_objection facts that no winning angle addresses. The LLM picks an angle and hook that answer each one, and the rationale cites the fact.
@@ -379,34 +380,73 @@ A turns Magic Spoon's public footprint into the rows the sim needs, writes the a
 
 Keep only ads with body text, active ones first.
 
+**Hand-off to A5 (runs in parallel)**
+
+A5 writes generated creatives against these rows while A4 is still running, so both sides fix the ids in advance:
+
+- **Ids.** Brands are `br_` + `slugify(name)`; Magic Spoon is `br_magic_spoon`, the only `is_client` row. Segments are `seg_` + the persona's slug (table above). Recipes are `arm_<angle>_<hook>`, which is unique because recipes that share an angle use different hooks. The control is `arm_control`.
+- **Order.** Write brand → concept → segment → arm → creative. The live ads go last, so A5 reads "the control arm has at least one brand\_live creative" as A4 having finished.
+- **Reruns.** Upsert by those ids. Never call `reset_a_tables` once A5 may have written: it clears all five A tables, A5's generated creatives included. Upserts never delete, so settle the arm set once; if it must change after A5's round 0, agree it with A5 first.
+- **Hooks.** Only pick hooks whose `HOOK_PRODUCIBILITY` requirement the facts meet. `testimonial` needs persona verbatims, which the unaware segment lacks, so A5 skips that pair by design.
+
 **Done when** B's warm-up round runs on these rows at 2:30 PM.
 
 ### A5 · Sat 2:30 – 5:30 PM · Creative generation worker
 
 A \~200-line orchestrator in `worker/creatives/` that calls Adcero's pure creative stages directly and never enters the image pipeline. It follows CREATIVE\_MANIFEST's "Text-only mode" sequence, with five changes marked **ours**.
 
+A5 runs in parallel with A4. Steps 1–7 need only A3's facts, so A5 builds and tests all of them on stand-in rows. Only writing creatives (step 8) and round 0 wait for A4's rows; see "Running alongside A4" below.
+
 1. **Rows.** Load live brand\_facts. **Ours:** drop `market_prior` facts first, so competitor share statements never become "brand facts" or proof for numbers. Then `buildDesiredRows`. Recompile packs every run; never store them.
 2. **Pack hints.** `derivePackHints(rows)`, the \~15-line rewrite from CREATIVE\_MANIFEST §4.
 3. **Group.** Group the task's recipes by (segment, angle). Each group becomes one brief, and each recipe's hook becomes one copy variant.
 4. **Strategy.** `strategyFromArms`, the \~30-line rewrite from §4. **Ours:** it validates the angle against the food-industry vocabulary instead of the 8 universal angles, and rejects hooks the pack hints can't produce.
 5. **Brief and pack.** `composeBrief` → `canonicalAngleUniversal` → `compile`, with:
-   - `personaRef` = the segment id (the persona row)
+   - `personaRef` = `persona_` + the segment id's slug (`seg_macro_nostalgia_regular` → `persona_macro_nostalgia_regular`, the compiler's persona row id)
    - **ours:** `angleTheme` = the recipe's food token, set directly. That fixes the export's dropped-fact bug, where a universal angle like "health" matched no fact tagged health\_nutrition
    - **ours:** `keyMessageRef` = the strongest proof\_point or usp fact for that angle, when one exists, so the key claim always reaches the copywriter
 6. **Copy.** `renderCopyPrompt`, then `generateBrandCopy` once per hook, in parallel (gpt-4o, with its built-in single retry). **Ours:** a one-file edit to `buildStrategyBlock` in `generation/brand-copy.ts` adds an optional `notes` list, rendered as "Notes from testing" from the learnings' number-free directives. The block sits outside the grounding text, so nothing in it can make a number "grounded".
 7. **Checks.** `composeCopyBlock` → `buildGenome` → `runGates`, with no image and no judge. Any failed gate makes the creative `gated_out`. No ranking: the sim ranks.
-8. **Write.** Creative rows with headline, primary\_text, cta, visual\_description (`visualConcept`, else the variation text), segment\_id, arm\_id, landing\_product\_id, pack\_fingerprint, learning\_ids and status.
-9. **Hand back.** Mark the task done and queue `run_round` for the next round, until rounds\_planned.
+8. **Write.** Creative rows through `upsert_creatives`, with headline, primary\_text, cta, visual\_description (`visualConcept`, else the variation text), segment\_id, arm\_id, landing\_product\_id, pack\_fingerprint, learning\_ids and status.
+9. **Hand back.** Mark the task done and queue `run_round` for the next round (`tsk_run_<run_id>_r<round+1>`, payload `{run_id, round}`), until the run row's rounds\_planned.
+
+**Running alongside A4**
+
+The pipeline reads its inputs through one adapter with two sources, so nothing above changes when A4's rows arrive:
+
+- **Stand-in, until A4 lands:** `br_magic_spoon`; one segment per live persona fact, with ids already in A4's format (`seg_` + slug); and 4–6 hand-written recipes in `worker/creatives/fixtures/arms.json`. The recipes use contract-valid ids, food-token angles and producible hooks, at least one of them conditional, such as `statistic`. These runs are dry: they print the creatives and write nothing, because `upsert_creatives` rejects a creative whose brand, segment or arm doesn't exist.
+- **SpacetimeDB, once A4 lands:** A4's brand, segment and arm rows, and B's product rows, read over HTTP SQL. Use plain HTTP like `scripts/check-connections.mts`, with nothing imported from `sim/`. A4 writes its own client in `scripts/`; merge the two after both land.
+
+**A check command** says whether A4's rows have landed and are usable, listing every failure, and keeps reporting "not yet" until:
+
+- `brand` has exactly one `is_client` row. Read its brand\_id; never assume it.
+- `segment` has at least 2 rows, shares sum to 1, and every `seg_` id maps to a live persona fact.
+- `arm` has 10–12 recipes plus exactly one control. Angles are food tokens, hooks are HOOK\_ARCHETYPES, and every (angle, hook) pair is unique.
+- The control arm has at least one `brand_live` creative, which A4 writes last.
+- `product` is optional. If B has a Magic Spoon product, use its product\_id as landing\_product\_id; otherwise `""`, with a warning.
+
+**Mismatches are logged, never dropped silently.** For each (recipe, segment), the hook's `HOOK_PRODUCIBILITY` requirement must be met by that segment's pack hints. When it isn't, log the arm\_id, hook, segment and missing requirement, and skip the pair. The expected skip is `testimonial` on the unaware segment, which has no verbatims. Round 0 reports its creative count against recipes × segments minus the logged skips.
+
+**Writes.**
+
+- Ids are deterministic and lowercase: `cr_g<round>_<arm id minus arm_>_<segment id minus seg_>_<variant>`, so a rerun updates rows instead of adding them.
+- Empty values are `""`. image\_url is `""` and days\_running is 0.
+- round\_created is 0 for round 0, and r + 1 for creatives written after round r's generate\_creatives; B's world only reads creatives with round\_created ≤ its round.
+- status is `ranked` when every gate passes, else `gated_out`.
+- A5 writes only `generated` creatives and never calls `reset_a_tables`.
+
+**Rounds.** Round 0 is written before anyone queues round 0's run\_round. A5 doesn't queue round 0 or create the run: A6's Strategist or B's `npm --prefix sim run sim:worker -- --enqueue <run_id>` queues it, and B's worker creates the run row. From then on, A5 handles each `tsk_gen_<run_id>_r<round>` task that B's bandit queues.
 
 Also in this phase:
 
 - [ ] **Smoke test first:** run the orchestrator on `fixtures/creative-brief.json` and diff against `creative-output.json` before touching real data.
-- [ ] **Round 0 by about 4 PM:** one creative per (recipe, segment). With 10–12 recipes and 3 segments that's 30–45 creatives, about 2¢ each, written in parallel. B then re-runs the warm-up on real creatives.
+- [ ] **Stand-in dry run:** the whole sequence on A3's real facts and the stand-in rows, before A4 lands.
+- [ ] **Round 0, once the check passes on A4's rows:** one creative per (recipe, segment). With 10–12 recipes and 5 segments (A3's 4 personas plus the unaware projection) that's up to 50–60 creatives, about 2¢ each, written in parallel. B then re-runs the warm-up on real creatives.
 - [ ] Run the worker with `NODE_ENV=production` and `CREATIVE_JUDGE_GATE_MODE=off`.
 - [ ] Export the whole sequence as `runGenerateCreatives(taskId)`. The worker loop and A6's Copywriter agent (through `app/api/agent/creatives`) both call it. The worker claims a `generate_creatives` task only after it has sat unclaimed for 60 seconds, so the Copywriter goes first and a stopped agent never stalls the loop.
 - [ ] **If time remains:** a `competitorReference` for steal recipes (the winning ad's angle, hook and execution notes, competitor names scrubbed with `sanitizeExecutionNotes`), rendered in the same strategy block.
 
-**Done when** a `generate_creatives` task turns into ranked creative rows and a queued `run_round` with nobody touching it.
+**Done when**, before A4 lands, the fixture diff passes and the stand-in dry run turns A3's facts into gated creatives for every stand-in (recipe, segment). After A4 lands, round 0 is in SpacetimeDB and a `generate_creatives` task turns into ranked creative rows and a queued `run_round` with nobody touching it.
 
 ### A6 · Sat 5:30 – 10:30 PM · Fetch agents: A2A orchestration in ASI:One
 
@@ -1020,10 +1060,11 @@ Finish with: the report output, anything skipped and why, and a commit "A3: dist
 
 ```
 Ad Lab, phase A4: write the contract rows into SpacetimeDB. Cal Hacks 13.0; hard deadline Sun Oct 25, 9 AM PT. You are Person A's coding agent.
-Read first: docs/PLAN.md "The contract", "Status" (the shared database), "Simulation design" (the concept vocabulary), and "A4" (segment builder table, arm builder rules, live-ads mapping table).
-Also read: docs/reuse-export/contracts.ts (PersonaDetails, EnrichedAd, CompetitorAd) and contracts-creative.ts (HOOK_ARCHETYPES, producibility lists); spacetime/src/tables_a.ts and spacetime/src/reducers_a.ts (A's published tables, and the checks each upsert reducer enforces).
-Work on a new branch off simulation, and open the PR against simulation.
-Goal: scripts/a4-build-rows.ts that writes, through A's published reducers in order (upsert_brands → upsert_concepts → upsert_segments → upsert_arms → upsert_creatives): 8 brands (Magic Spoon and the seven competitors), the concept vocabulary, one segment per persona (segment_id = the persona row id), 10–12 recipes plus the control per the arm rules, and competitor_live / brand_live creative rows. LLM calls use strict JSON schemas.
+Read first: docs/PLAN.md "The contract", "Status" (the shared database), "Simulation design" (the concept vocabulary), "A3" (its Result, including "For A4"), and "A4" (segment builder table, arm builder rules, live-ads mapping table, "Hand-off to A5").
+Also read: docs/reuse-export/contracts.ts (PersonaDetails, EnrichedAd, CompetitorAd) and contracts-creative.ts (HOOK_ARCHETYPES); lib/creative-engine/generation/producibility.ts (HOOK_PRODUCIBILITY, the hook rules A5's copywriter enforces); spacetime/src/tables_a.ts and spacetime/src/reducers_a.ts (A's published tables, and the checks each upsert reducer enforces); scripts/check-connections.mts (plain-HTTP SpacetimeDB calls).
+Work on a new branch off simulation in its own worktree, and open the PR against simulation.
+A5 runs at the same time in another worktree and writes creatives against your rows as they land. Use the ids, the write order and the upsert-only rule in "Hand-off to A5"; never call reset_a_tables.
+Goal: scripts/a4-build-rows.ts that writes, through A's published reducers in order (upsert_brands → upsert_concepts → upsert_segments → upsert_arms → upsert_creatives): 8 brands (Magic Spoon and the seven competitors), the concept vocabulary, one segment per persona from A3, the unaware projection included (segment_id = "seg_" + the persona's slug), 10–12 recipes plus the control per the arm rules, and competitor_live / brand_live creative rows. LLM calls use strict JSON schemas.
 Done when: the rows are in SpacetimeDB and B's warm-up round runs on them.
 Rules: write only scripts/. A's tables and reducers are already published; stop and ask if a contract field or a reducer must change.
 Finish with: row counts, the recipe list with strategy tags and evidence, and a commit "A4: contract rows".
@@ -1032,16 +1073,22 @@ Finish with: row counts, the recipe list with strategy tags and evidence, and a 
 ### A5 · Creative generation worker
 
 ```
-Ad Lab, phase A5: the text-only creative worker. Cal Hacks 13.0; hard deadline Sun Oct 25, 9 AM PT. You are Person A's coding agent.
-Read first: docs/PLAN.md "The contract", "Reward, bandit and learnings" (the round flow and directive templates), and "A5" (all nine steps and the changes marked ours).
-Also read: CREATIVE_MANIFEST.md §1b, §2–§6, §9, "Text-only mode" and §11.3–§11.5; contracts-creative.ts; fixtures/creative-brief.json and creative-output.json.
+Ad Lab, phase A5: the text-only creative worker, built in parallel with A4. Cal Hacks 13.0; hard deadline Sun Oct 25, 9 AM PT. You are Person A's coding agent.
+Read first: docs/PLAN.md "The contract", "Reward, bandit and learnings" (the round flow and directive templates), "A3" (its Result), "A4" (the arm builder rules and "Hand-off to A5") and "A5" (all nine steps, the changes marked ours, and "Running alongside A4").
+Also read: CREATIVE_MANIFEST.md §1b, §2–§6, §9, "Text-only mode" and §11.3–§11.5; contracts-creative.ts; fixtures/creative-brief.json and creative-output.json; lib/creative-engine/generation/producibility.ts (HOOK_PRODUCIBILITY); spacetime/src/tables_a.ts and reducers_a.ts (what upsert_creatives accepts); scripts/check-connections.mts (plain-HTTP SpacetimeDB calls).
 ../adcero is read-only; arena/driver/operator.ts L73–100 is the model for strategyFromArms.
-Goal: worker/creatives/ that claims generate_creatives tasks and follows the A5 steps exactly: drop market_prior facts, derivePackHints, group by (segment, angle), strategyFromArms accepting the food-industry angle tokens, compile with personaRef = segment id, angleTheme = the food token and keyMessageRef = the strongest proof_point/usp fact, generateBrandCopy per hook in parallel, gates without image or judge, no ranking, write creative rows, then queue run_round. The only edit to copied Adcero code: an optional notes list in buildStrategyBlock (generation/brand-copy.ts) for the learnings' directives.
-Export the sequence as runGenerateCreatives(taskId), called by both the worker loop and A6's Copywriter agent (app/api/agent/creatives). The worker claims a generate_creatives task only after it has sat unclaimed for 60 seconds, so the Copywriter goes first.
-First run it on fixtures/creative-brief.json and diff against creative-output.json. Then generate round 0: one creative per (recipe, segment).
+Work on a new branch off simulation in its own worktree, and open the PR against simulation. A4 runs at the same time in another worktree and is writing the brand, segment and arm rows while you work. Until they land, everything runs on stand-in rows; nothing waits on A4 except writing creatives and round 0.
+Goal, in this order:
+1. worker/creatives/, following the A5 steps exactly: drop market_prior facts, derivePackHints, group by (segment, angle), strategyFromArms accepting the food-industry angle tokens, compile with personaRef = "persona_" + the segment id's slug, angleTheme = the food token and keyMessageRef = the strongest proof_point/usp fact for the angle, generateBrandCopy per hook in parallel, gates without image or judge, no ranking. The only edit to copied Adcero code: an optional notes list in buildStrategyBlock (generation/brand-copy.ts) for the learnings' directives.
+2. The fixture smoke test: run it on fixtures/creative-brief.json and diff against creative-output.json.
+3. One input adapter with the two sources in "Running alongside A4": stand-in (br_magic_spoon, one seg_ segment per live persona fact, 4–6 hand-written recipes in worker/creatives/fixtures/arms.json; dry, writes nothing), and spacetime (A4's brand, segment and arm rows and B's product rows over HTTP SQL, validated before use). Then a stand-in dry run on A3's real facts.
+4. A check command that reports whether A4's rows have landed and are usable, by the rules in "Running alongside A4", listing every failure. Every A4 recipe you can't produce for a segment is logged with its arm_id, hook, segment and missing HOOK_PRODUCIBILITY requirement, never dropped silently.
+5. The task-board worker: export the sequence as runGenerateCreatives(taskId), called by both the worker loop and A6's Copywriter agent (app/api/agent/creatives). The worker claims a generate_creatives task only after it has sat unclaimed for 60 seconds, so the Copywriter goes first. After writing, it completes the task and queues tsk_run_<run_id>_r<round+1> until the run row's rounds_planned.
+6. Once the check passes on A4's rows: round 0, one creative per (recipe, segment) with round_created 0. Report the count against recipes × segments minus the logged skips. Don't queue round 0's run_round or create the run; A6's Strategist or B does.
 Env: NODE_ENV=production, CREATIVE_JUDGE_GATE_MODE=off.
-Done when: a generate_creatives task becomes ranked creative rows plus a queued run_round with nobody touching it.
-Finish with: the fixture diff, round-0 counts (ranked vs gated_out), cost, and a commit "A5: creative worker".
+Done when: before A4 lands, the fixture diff passes and the stand-in dry run turns A3's facts into gated creatives for every stand-in (recipe, segment); after A4 lands, round 0 is in SpacetimeDB and a generate_creatives task becomes ranked creative rows plus a queued run_round with nobody touching it.
+Rules: write only worker/, scripts/ and config, plus the one brand-copy.ts edit. Write only generated creatives, with the deterministic ids in "Running alongside A4", and never call reset_a_tables. Stop and ask if a contract field or a reducer must change.
+Finish with: the fixture diff, the stand-in dry run, the check's verdict on A4's rows, round-0 counts (ranked vs gated_out, and skips with reasons), cost, and a commit "A5: creative worker".
 ```
 
 ### A6 · Fetch agents
