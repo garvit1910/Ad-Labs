@@ -94,6 +94,17 @@ export type ProfileRow = {
   [column: string]: unknown;
 };
 
+/** Every brand profile in the org, most recently updated first. */
+export async function loadProfiles(db: SupabaseClient): Promise<ProfileRow[]> {
+  const { data, error } = await db
+    .from('brand_presence_profiles')
+    .select('*')
+    .eq('organization_id', ADLAB_ORG_ID)
+    .order('updated_at', { ascending: false });
+  if (error) throw dbError('Failed to load brand presence profiles', error);
+  return (data ?? []) as ProfileRow[];
+}
+
 export async function findProfile(db: SupabaseClient, brandProfileId: string): Promise<ProfileRow | null> {
   const { data, error } = await db
     .from('brand_presence_profiles')

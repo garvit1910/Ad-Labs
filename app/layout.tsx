@@ -5,6 +5,7 @@ import { NextIntlClientProvider } from 'next-intl';
 import en from '@/messages/en.json';
 import { formats } from '@/i18n/formats';
 import { geistSans, geistMono, poppins } from '@/lib/fonts-online';
+import { TopNav } from '@/components/adlab/TopNav';
 import { Providers } from './providers';
 
 // Adcero's shell (REUSE_MANIFEST §7.6) without auth, sidebar or section chrome.
@@ -35,7 +36,10 @@ export default function RootLayout({ children }: { children: ReactNode }) {
         <NextIntlClientProvider locale="en" messages={messages} formats={formats} timeZone="UTC">
           <Providers>
             <div className="flex h-full min-h-0 flex-col overflow-y-auto bg-background p-6 sm:p-8">
-              <div className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col gap-6">{children}</div>
+              <div className="mx-auto flex w-full max-w-[1400px] flex-1 flex-col gap-6">
+                <TopNav />
+                {children}
+              </div>
             </div>
           </Providers>
         </NextIntlClientProvider>
