@@ -48,6 +48,7 @@ import ResetATablesReducer from "./reset_a_tables_reducer";
 import StartRoundReducer from "./start_round_reducer";
 import UpsertAgentReducer from "./upsert_agent_reducer";
 import UpsertArmsReducer from "./upsert_arms_reducer";
+import UpsertBrandKitReducer from "./upsert_brand_kit_reducer";
 import UpsertBrandsReducer from "./upsert_brands_reducer";
 import UpsertConceptsReducer from "./upsert_concepts_reducer";
 import UpsertCreativePerceptionsReducer from "./upsert_creative_perceptions_reducer";
@@ -67,6 +68,7 @@ import AgentMessageRow from "./agent_message_table";
 import ArmRow from "./arm_table";
 import ArmStatRow from "./arm_stat_table";
 import BrandRow from "./brand_table";
+import BrandKitRow from "./brand_kit_table";
 import ConceptRow from "./concept_table";
 import CreativeRow from "./creative_table";
 import CreativePerceptionRow from "./creative_perception_table";
@@ -141,6 +143,17 @@ const tablesSchema = __schema({
       { name: 'brand_brand_id_key', constraint: 'unique', columns: ['brandId'] },
     ],
   }, BrandRow),
+  brandKit: __table({
+    name: 'brand_kit',
+    indexes: [
+      { accessor: 'kit_id', name: 'brand_kit_kit_id_idx_btree', algorithm: 'btree', columns: [
+        'kitId',
+      ] },
+    ],
+    constraints: [
+      { name: 'brand_kit_kit_id_key', constraint: 'unique', columns: ['kitId'] },
+    ],
+  }, BrandKitRow),
   concept: __table({
     name: 'concept',
     indexes: [
@@ -307,6 +320,7 @@ const reducersSchema = __reducers(
   __reducerSchema("start_round", StartRoundReducer),
   __reducerSchema("upsert_agent", UpsertAgentReducer),
   __reducerSchema("upsert_arms", UpsertArmsReducer),
+  __reducerSchema("upsert_brand_kit", UpsertBrandKitReducer),
   __reducerSchema("upsert_brands", UpsertBrandsReducer),
   __reducerSchema("upsert_concepts", UpsertConceptsReducer),
   __reducerSchema("upsert_creative_perceptions", UpsertCreativePerceptionsReducer),
@@ -329,6 +343,8 @@ type __SchemaWithTableAccessorAliases = Omit<typeof tablesSchema.schemaType, "ta
     readonly "agent_message": Omit<typeof tablesSchema.schemaType.tables["agentMessage"], "accessorName"> & { readonly accessorName: "agent_message" };
     /** @deprecated Use `armStat` instead. This alias will be removed in the next major version. */
     readonly "arm_stat": Omit<typeof tablesSchema.schemaType.tables["armStat"], "accessorName"> & { readonly accessorName: "arm_stat" };
+    /** @deprecated Use `brandKit` instead. This alias will be removed in the next major version. */
+    readonly "brand_kit": Omit<typeof tablesSchema.schemaType.tables["brandKit"], "accessorName"> & { readonly accessorName: "brand_kit" };
     /** @deprecated Use `creativePerception` instead. This alias will be removed in the next major version. */
     readonly "creative_perception": Omit<typeof tablesSchema.schemaType.tables["creativePerception"], "accessorName"> & { readonly accessorName: "creative_perception" };
     /** @deprecated Use `ingestJob` instead. This alias will be removed in the next major version. */
@@ -353,6 +369,7 @@ const REMOTE_MODULE = {
 const tableAccessorAliases = {
   "agent_message": "agentMessage",
   "arm_stat": "armStat",
+  "brand_kit": "brandKit",
   "creative_perception": "creativePerception",
   "ingest_job": "ingestJob",
 } as const;
@@ -379,6 +396,8 @@ export type DbView = __DbViewBase & {
   readonly "agent_message": __DbViewBase["agentMessage"];
   /** @deprecated Use `armStat` instead. This alias will be removed in the next major version. */
   readonly "arm_stat": __DbViewBase["armStat"];
+  /** @deprecated Use `brandKit` instead. This alias will be removed in the next major version. */
+  readonly "brand_kit": __DbViewBase["brandKit"];
   /** @deprecated Use `creativePerception` instead. This alias will be removed in the next major version. */
   readonly "creative_perception": __DbViewBase["creativePerception"];
   /** @deprecated Use `ingestJob` instead. This alias will be removed in the next major version. */
@@ -391,6 +410,8 @@ export type Tables = __TablesBase & {
   readonly "agent_message": __TablesBase["agentMessage"];
   /** @deprecated Use `armStat` instead. This alias will be removed in the next major version. */
   readonly "arm_stat": __TablesBase["armStat"];
+  /** @deprecated Use `brandKit` instead. This alias will be removed in the next major version. */
+  readonly "brand_kit": __TablesBase["brandKit"];
   /** @deprecated Use `creativePerception` instead. This alias will be removed in the next major version. */
   readonly "creative_perception": __TablesBase["creativePerception"];
   /** @deprecated Use `ingestJob` instead. This alias will be removed in the next major version. */

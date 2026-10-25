@@ -2,11 +2,13 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import {
   type AgentInput,
+  type BrandKitInput,
   type IngestJobInput,
   type IngestReportInput,
   type MessageInput,
   addressProblem,
   agentProblem,
+  brandKitProblem,
   codePoints,
   currentStepProblem,
   ingestJobProblem,
@@ -25,7 +27,7 @@ import {
   utf8Bytes,
 } from '../../../spacetime/src/agent_rules';
 
-// The pure rules behind upsert_agent, log_agent_message, upsert_ingest_job and report_ingest_job
+// The pure rules behind upsert_agent, log_agent_message, upsert_ingest_job, report_ingest_job and upsert_brand_kit
 // (spacetime/src/agent_rules.ts). The reducers and the agent API both use them.
 
 const agent: AgentInput = {
@@ -233,5 +235,37 @@ describe('ingestReportProblem', () => {
       [{ error: 'e'.repeat(1001) }, /error is 1001 characters/],
     ];
     for (const [patch, re] of bad) assert.match(ingestReportProblem({ ...report, ...patch }) ?? '', re, JSON.stringify(patch));
+  });
+});
+
+describe('brandKitProblem', () => {
+  const sha = 'ab12cd34ef56'.padEnd(64, '0');
+  const kit: BrandKitInput = {
+    kit_id: 'kit_default',
+    brand_url: 'https://magicspoon.com/',
+    brand_name: 'Magic Spoon',
+    image_file: 'ab12cd34ef56.png',
+    image_sha: sha,
+  };
+
+  it('accepts a valid kit, including an unmatched brand and a URL with a path', () => {
+    assert.equal(brandKitProblem(kit), null);
+    assert.equal(brandKitProblem({ ...kit, brand_name: '', brand_url: 'http://example.co.uk/shop?x=1', image_file: 'ab12cd34ef56.webp' }), null);
+  });
+
+  it('rejects each bad field, naming it', () => {
+    const bad: [Partial<BrandKitInput>, RegExp][] = [
+      [{ kit_id: 'kit_2' }, /kit_id "kit_2" must be kit_default/],
+      [{ brand_url: '' }, /brand_url is empty/],
+      [{ brand_url: 'magicspoon.com' }, /brand_url "magicspoon.com" must be an http\(s\) address/],
+      [{ brand_url: 'ftp://magicspoon.com' }, /must be an http\(s\) address/],
+      [{ brand_url: `https://a.com/${'x'.repeat(300)}` }, /brand_url is \d+ characters, more than 300/],
+      [{ brand_name: 'Magic\nSpoon' }, /brand_name must be one line/],
+      [{ image_file: '../etc.png' }, /image_file/],
+      [{ image_file: 'ab12cd34ef56.gif' }, /image_file/],
+      [{ image_sha: 'XYZ' }, /image_sha/],
+      [{ image_file: '000000000000.png' }, /image_file must start with image_sha/],
+    ];
+    for (const [patch, re] of bad) assert.match(brandKitProblem({ ...kit, ...patch }) ?? '', re, JSON.stringify(patch));
   });
 });

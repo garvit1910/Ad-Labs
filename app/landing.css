@@ -88,3 +88,25 @@
 
 .lh-title { font-size: 18px; font-weight: 600; letter-spacing: -.01em; color: var(--lh-ink); }
 .lh-desc { font-size: 14.5px; font-weight: 500; line-height: 1.55; color: var(--lh-card-ink-2); }
+
+/* Get started: the one way in, to the brand kit (/start). */
+.lh-cta {
+  display: inline-flex; align-items: center; gap: 10px;
+  margin-top: 36px; padding: 12px 22px;
+  border: 1px solid var(--lh-accent); border-radius: 6px;
+  background: var(--lh-accent); color: #07110c;
+  font-size: 16px; font-weight: 700; letter-spacing: -.005em; text-decoration: none;
+  transition: background-color .15s ease, transform .15s ease;
+}
+.lh-cta:hover { background: #6ee4ad; color: #07110c; text-decoration: none; transform: translateY(-1px); }
+.lh-cta:focus-visible { outline: 2px solid var(--lh-ink); outline-offset: 3px; }
+
+.lh-cards { list-style: none; padding: 0; margin-bottom: 0; }
+.lh-step {
+  font-family: var(--font-geist-mono), ui-monospace, monospace;
+  font-size: 11px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--lh-accent);
+}
+/* Steps after the brand kit: shown in order, opened from /start. */
+.lh-card.is-later { opacity: .62; }
+.lh-card.is-later .lh-step { color: var(--lh-ink-2); }

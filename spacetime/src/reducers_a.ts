@@ -1,7 +1,7 @@
 import { SenderError, t, type Infer, type InferSchema, type ReducerCtx } from 'spacetimedb/server';
 import spacetimedb from './schema';
 import { armRow, brandRow, conceptRow, creativeRow, segmentRow } from './tables_a';
-import { agentProblem, ingestJobProblem, ingestReportProblem, isIngestTerminal, messageProblem } from './agent_rules';
+import { agentProblem, brandKitProblem, ingestJobProblem, ingestReportProblem, isIngestTerminal, messageProblem } from './agent_rules';
 
 // Batch writers for Person A's tables. Each call is one transaction: every row is validated, then
 // upserted by primary key (updated if it exists, inserted if not). Any bad row throws a SenderError
@@ -264,8 +264,8 @@ export const resetATables = spacetimedb.reducer(ctx => {
   ctx.db.brand.clear();
 });
 
-// The agent tables. Over HTTP: upsert_agent, log_agent_message, upsert_ingest_job and
-// report_ingest_job, with positional arguments in the order declared below.
+// The agent tables. Over HTTP: upsert_agent, log_agent_message, upsert_ingest_job,
+// report_ingest_job and upsert_brand_kit, with positional arguments in the order declared below.
 
 // One row per agent, updated whenever its step changes.
 export const upsertAgent = spacetimedb.reducer(
@@ -377,5 +377,17 @@ export const reportIngestJob = spacetimedb.reducer(
       error: r.error,
       updated_at: ctx.timestamp,
     });
+  }
+);
+
+// The brand kit: one row (kit_default), written by the onboarding step each time it is saved.
+export const upsertBrandKit = spacetimedb.reducer(
+  { kit_id: t.string(), brand_url: t.string(), brand_name: t.string(), image_file: t.string(), image_sha: t.string() },
+  (ctx, k) => {
+    const problem = brandKitProblem(k);
+    if (problem) fail(`brand_kit ${k.kit_id}`, problem);
+    const row = { ...k, updated_at: ctx.timestamp };
+    if (ctx.db.brand_kit.kit_id.find(k.kit_id)) ctx.db.brand_kit.kit_id.update(row);
+    else ctx.db.brand_kit.insert(row);
   }
 );

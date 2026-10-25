@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { SPACETIMEDB_DB_NAME, SPACETIMEDB_URI } from '@/lib/spacetime/config';
 import { databaseLabel, isLocalDatabase } from '@/app/sim/_components/SimProvider';
 import { Section } from '@/app/sim/_components/Section';
+import { BrandKitStrip } from './_components/BrandKitStrip';
 import { ChatRoom } from './_components/ChatRoom';
 import { ChatThread, type TypingParty } from './_components/ChatThread';
 import { IngestJobs } from './_components/IngestJobs';
@@ -161,6 +162,8 @@ function AgentsPage() {
           This database has no agent tables (use npm run dev:local or dev:live). The task board below still shows its tasks.
         </div>
       )}
+
+      {!noAgentTables && data.agentTables && <BrandKitStrip kit={data.brandKit} now={now} />}
 
       {!noAgentTables &&
         (data.agentTables && !data.messagesReady ? (

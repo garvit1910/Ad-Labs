@@ -58,6 +58,16 @@ export const ArmStat = __t.object("ArmStat", {
 });
 export type ArmStat = __Infer<typeof ArmStat>;
 
+export const BrandKitRow = __t.object("BrandKitRow", {
+  kitId: __t.string(),
+  brandUrl: __t.string(),
+  brandName: __t.string(),
+  imageFile: __t.string(),
+  imageSha: __t.string(),
+  updatedAt: __t.timestamp(),
+});
+export type BrandKitRow = __Infer<typeof BrandKitRow>;
+
 export const BrandRow = __t.object("BrandRow", {
   brandId: __t.string(),
   name: __t.string(),

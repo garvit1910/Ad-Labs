@@ -81,11 +81,11 @@ describe("the SpacetimeDB module in the official test harness", () => {
 
   test("A's and B's tables and reducers are all in the merged module, and nothing else is exported", () => {
     const { h } = fresh();
-    for (const t of ["brand", "concept", "segment", "arm", "creative", "product", "creative_perception", "run", "round", "shopper", "decision", "arm_stat", "learning", "task", "agent", "agent_message", "ingest_job"]) {
+    for (const t of ["brand", "concept", "segment", "arm", "creative", "product", "creative_perception", "run", "round", "shopper", "decision", "arm_stat", "learning", "task", "agent", "agent_message", "ingest_job", "brand_kit"]) {
       assert.ok(h.db[t], t);
     }
     const reducersB = Object.keys(PARAMS).map((r) => r.replace(/_([a-z])/g, (_, c: string) => c.toUpperCase()));
-    const reducersA = ["upsertBrands", "upsertConcepts", "upsertSegments", "upsertArms", "upsertCreatives", "resetATables", "upsertAgent", "logAgentMessage", "upsertIngestJob", "reportIngestJob"];
+    const reducersA = ["upsertBrands", "upsertConcepts", "upsertSegments", "upsertArms", "upsertCreatives", "resetATables", "upsertAgent", "logAgentMessage", "upsertIngestJob", "reportIngestJob", "upsertBrandKit"];
     assert.deepEqual(Object.keys(exports).sort(), ["default", "ping", ...reducersA, ...reducersB].sort());
   });
 

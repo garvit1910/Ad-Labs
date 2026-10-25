@@ -43,6 +43,14 @@ The HTTP API the four Fetch.ai agents call (`app/api/agent/**`). The agents neve
   - A payload over 4096 bytes becomes `{truncated: true, bytes, keys}`.
 - **POST `/log/status`** `{agent_id, name ≤ 40, role ≤ 80, address: '' | agent1…, status: idle|working|error, current_step ≤ 140}` → `{}`.
 
+### Brand kit
+
+- **GET `/brand-kit`** → `{ready, reason, brand_url, brand_name, image_file, image_path, image_url, updated_at}`.
+  - The onboarding step (`/start`, right after the landing page) writes the one `brand_kit` row: the brand's website and a product reference photo, stored in `data/brand-kit/`.
+  - `ready` is true when the row exists and its photo is on disk. **Ad Lab starts nothing until it is.**
+  - `brand_name` is the onboarded brand the URL matched (else `""`). `image_path` is the app-relative photo URL; `image_url` is absolute only when `ADLAB_PUBLIC_BASE_URL` is set (ASI:One cards can't load localhost).
+  - The app saves the kit through `POST /api/brand-kit` (multipart `url`, `image`; outside this API), which refuses on a database agents may not write.
+
 ### Scout
 
 - **POST `/ingest/refresh`** `{requested_by, dry?, targets?: [{kind: page|source, ref_id}], pages?: 0..4 = 2, sources?: 0..3 = 1}` → `{mode, planned: [{kind, target, actor, job_type, ref_id, last_synced_at|null}], jobs: [{job_id, target, actor, status, dry, deduped}]}`.

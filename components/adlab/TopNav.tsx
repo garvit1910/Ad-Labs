@@ -2,10 +2,12 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Activity, Bot, Fingerprint, FlaskConical, Swords, type LucideIcon } from 'lucide-react';
+import { Activity, Bot, Fingerprint, FlaskConical, ImagePlus, Swords, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+// The brand kit comes first: it's the step right after the landing page, before any other.
 const NAV: { href: string; label: string; icon: LucideIcon }[] = [
+  { href: '/start', label: 'Brand kit', icon: ImagePlus },
   { href: '/brand-identity', label: 'Brand Identity', icon: Fingerprint },
   { href: '/brand-identity/competitor-analysis', label: 'Competitor Analysis', icon: Swords },
   { href: '/sim', label: 'Live sim', icon: Activity },
@@ -19,7 +21,7 @@ function activeHref(pathname: string): string | null {
   return BY_SPECIFICITY.find((item) => pathname === item.href || pathname.startsWith(`${item.href}/`))?.href ?? null;
 }
 
-/** Ad Lab's app shell nav: home plus the four sections, the current one highlighted. */
+/** Ad Lab's app shell nav: home, the brand kit, then the four sections, the current one highlighted. */
 export function TopNav() {
   const active = activeHref(usePathname() ?? '/');
   return (

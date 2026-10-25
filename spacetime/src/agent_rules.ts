@@ -1,4 +1,4 @@
-// Pure validation rules for A's agent tables: agent, agent_message and ingest_job
+// Pure validation rules for A's agent tables: agent, agent_message, ingest_job and brand_kit
 // (docs/PLAN.md "The contract", "Written by A's agents").
 //
 // No imports, so the module's reducers (reducers_a.ts), the Next API and the unit tests all share
@@ -34,6 +34,7 @@ export const LIMITS = {
   target: 120,
   actor: 80,
   error: 1000,
+  url: 300,
 } as const;
 
 export const MESSAGE_ID_RE = /^msg_[a-z0-9_]+$/;
@@ -207,6 +208,32 @@ export function ingestJobProblem(j: IngestJobInput): string | null {
     oneOf('status', j.status, INGEST_STATUSES) ??
     itemsProblem(j.items) ??
     bounded('error', j.error, LIMITS.error, false)
+  );
+}
+
+export const BRAND_KIT_ID = 'kit_default';
+export const BRAND_URL_RE = /^https?:\/\/[^\s/?#]+\.[^\s/?#]+(?:[/?#]\S*)?$/i;
+export const IMAGE_FILE_RE = /^[0-9a-f]{12}\.(?:png|jpg|webp)$/;
+export const IMAGE_SHA_RE = /^[0-9a-f]{64}$/;
+
+export interface BrandKitInput {
+  kit_id: string;
+  brand_url: string;
+  brand_name: string;
+  image_file: string;
+  image_sha: string;
+}
+
+export function brandKitProblem(k: BrandKitInput): string | null {
+  return (
+    (k.kit_id === BRAND_KIT_ID ? null : `kit_id "${k.kit_id}" must be ${BRAND_KIT_ID}`) ??
+    bounded('brand_url', k.brand_url, LIMITS.url, true) ??
+    (BRAND_URL_RE.test(k.brand_url) ? null : `brand_url "${k.brand_url}" must be an http(s) address`) ??
+    bounded('brand_name', k.brand_name, LIMITS.name, false) ??
+    oneLine('brand_name', k.brand_name) ??
+    (IMAGE_FILE_RE.test(k.image_file) ? null : `image_file "${k.image_file}" must look like <12 hex>.png|jpg|webp`) ??
+    (IMAGE_SHA_RE.test(k.image_sha) ? null : 'image_sha must be a sha256 in lowercase hex') ??
+    (k.image_sha.startsWith(k.image_file.slice(0, 12)) ? null : 'image_file must start with image_sha')
   );
 }
 

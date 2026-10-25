@@ -102,6 +102,17 @@ export const ingestJobRow = t.row('IngestJobRow', {
   updated_at: t.timestamp(),
 });
 
+// The brand kit: the one row the onboarding step (/start) writes, read by the agents and /agents.
+// The image itself is a file next to the web app (data/brand-kit/<image_file>); the row names it.
+export const brandKitRow = t.row('BrandKitRow', {
+  kit_id: t.string().primaryKey(), // always kit_default
+  brand_url: t.string(), // the brand's website, http(s)
+  brand_name: t.string(), // the onboarded brand the URL matched; "" when none
+  image_file: t.string(), // <sha first 12>.<png|jpg|webp>
+  image_sha: t.string(), // sha256 of the image bytes, hex
+  updated_at: t.timestamp(),
+});
+
 export const tablesA = {
   brand: table({ name: 'brand', public: true }, brandRow),
   concept: table({ name: 'concept', public: true }, conceptRow),
@@ -111,4 +122,5 @@ export const tablesA = {
   agent: table({ name: 'agent', public: true }, agentRow),
   agent_message: table({ name: 'agent_message', public: true }, agentMessageRow),
   ingest_job: table({ name: 'ingest_job', public: true }, ingestJobRow),
+  brand_kit: table({ name: 'brand_kit', public: true }, brandKitRow),
 };

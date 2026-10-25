@@ -5,7 +5,7 @@ import { useRef } from 'react';
 import { useSpacetimeDB, useTable } from 'spacetimedb/react';
 import { tables } from '@/lib/spacetime/bindings';
 
-// Every live subscription /agents reads, plus the agent API's /health (which database the API
+// Every live subscription /agents reads (the brand kit included), plus the agent API's /health (which database the API
 // writes, and whether it has the agent tables). The agent tables are subscribed only once /health
 // says they exist (or /health can't be read): B's demo database doesn't have them.
 
@@ -44,9 +44,10 @@ export function useAgentsData() {
   const [agents, agentsReady] = useTable(tables.agent, { enabled: agentTables });
   const [messages, messagesReady] = useTable(tables.agentMessage, { enabled: agentTables });
   const [jobs, jobsReady] = useTable(tables.ingestJob, { enabled: agentTables });
+  const [brandKits] = useTable(tables.brandKit, { enabled: agentTables });
   const [tasks, tasksReady] = useTable(tables.task);
   const [runs, runsReady] = useTable(tables.run);
-  return { conn, health, agentTables, agents, agentsReady, messages, messagesReady, jobs, jobsReady, tasks, tasksReady, runs, runsReady };
+  return { conn, health, agentTables, agents, agentsReady, messages, messagesReady, jobs, jobsReady, brandKit: brandKits[0] ?? null, tasks, tasksReady, runs, runsReady };
 }
 
 export type AgentsData = ReturnType<typeof useAgentsData>;
