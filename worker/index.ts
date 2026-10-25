@@ -1,5 +1,6 @@
+import { createIngestMirror } from '@/lib/adlab/ingest-mirror';
 import { serviceSupabase } from '@/lib/adlab/supabase';
-import { PROCESSOR_REGISTRY } from './registry';
+import { FROZEN_BRAND_OBJECT_REASON, isBrandObjectFrozen, PROCESSOR_REGISTRY } from './registry';
 import { resetStaleJobs, runWorker } from './loop';
 
 // npm run worker: the job_queue worker loop (worker/loop.ts) from the command line.
@@ -24,7 +25,10 @@ if (stale > 0) console.log(`[worker] reset ${stale} stale processing job(s) to p
 console.log(
   `[worker] ${WATCH ? 'watching' : 'draining'} job_queue: ${CONCURRENCY} lane(s), ${Object.keys(PROCESSOR_REGISTRY).length} job types`,
 );
-const counts = await runWorker(db, { concurrency: CONCURRENCY, watch: WATCH, signal: shutdown.signal });
+if (isBrandObjectFrozen()) console.log(`[worker] brand_object_* jobs are skipped: ${FROZEN_BRAND_OBJECT_REASON}`);
+// Opt-in (ADLAB_INGEST_MIRROR=1, set by worker:live); prints its target, or why it is off.
+const onTransition = createIngestMirror();
+const counts = await runWorker(db, { concurrency: CONCURRENCY, watch: WATCH, signal: shutdown.signal, onTransition });
 
 const { count: later, error: laterError } = await db
   .from('job_queue')
