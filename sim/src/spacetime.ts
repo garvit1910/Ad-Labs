@@ -78,7 +78,9 @@ export function decodeValue(type: AlgebraicType, value: unknown): unknown {
   if ("Sum" in type) {
     const variants = ((type.Sum as { variants: unknown[] }).variants ?? []) as { algebraic_type: AlgebraicType }[];
     const isOption = variants.length === 2 && variantName(variants[0]) === "some" && variantName(variants[1]) === "none";
-    const [key, inner] = Object.entries(value as Record<string, unknown>)[0] ?? [];
+    // The HTTP SQL API sends a sum as [tag, value] (e.g. an option: [0, 1] is some(1), [1, []]
+    // is none); other encodings use { "<tag or name>": value }.
+    const [key, inner] = Array.isArray(value) ? [String(value[0]), value[1]] : (Object.entries(value as Record<string, unknown>)[0] ?? []);
     const index = key !== undefined && /^\d+$/.test(key) ? Number(key) : variants.findIndex((v) => variantName(v) === key);
     if (isOption) return index === 0 ? decodeValue(variants[0]!.algebraic_type, inner) : null;
     const variant = variants[index];
@@ -228,9 +230,27 @@ export const writer = {
   finishRound: (db: Db, run_id: string, round: number, status: string, summary: unknown) =>
     db.call("finish_round", [run_id, round, status, JSON.stringify(summary)]),
 
-  // End of a sim day: decisions, shoppers and the refreshed arm stats, one call each.
-  async day(db: Db, run_id: string, day: DayResult, shoppers: readonly Shopper[], stateText: (id: string) => string, armStats: ArmStat[]) {
-    await db.call("insert_decisions", [JSON.stringify(day.decisions)]);
+  // End of a sim day: decisions, shoppers and the refreshed arm stats, one call each. A paced
+  // replay (B6) spreads the decisions over pace.ms in slices so the views fill as they arrive;
+  // slices hold whole impressions (each feed row with its page row).
+  async day(
+    db: Db,
+    run_id: string,
+    day: DayResult,
+    shoppers: readonly Shopper[],
+    stateText: (id: string) => string,
+    armStats: ArmStat[],
+    pace?: { ms: number; slices: number },
+  ) {
+    if (!pace || pace.ms <= 0) {
+      await db.call("insert_decisions", [JSON.stringify(day.decisions)]);
+    } else {
+      const size = 2 * Math.max(1, Math.ceil(day.decisions.length / 2 / pace.slices));
+      for (let i = 0; i < day.decisions.length; i += size) {
+        await db.call("insert_decisions", [JSON.stringify(day.decisions.slice(i, i + size))]);
+        await new Promise((r) => setTimeout(r, pace.ms / pace.slices));
+      }
+    }
     const rows = shoppers.map((s) => ({
       shopper_id: s.shopper_id,
       segment_id: s.segment_id,

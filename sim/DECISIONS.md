@@ -813,3 +813,59 @@ lists only `ping` until the merged module is published.
 - **Data volume:** `/sim` subscribes to the selected run's rows only. `/sim/dev` subscribes to
   every table so it can count them; a full run is about 8,700 decision rows and loads in a second
   locally.
+
+## B6: demo run and pinned shopper (the parts possible before A4)
+
+### D76. How the pinned shopper is chosen — `DECIDED`
+- `npm run sim:pin` reads one run's decision rows (read-only SQL, any server) and, through each
+  row's `options.state_hash` (the Jev cache key), the exact feed and page text Jev read.
+- **Candidates:** the same shopper on the same recipe in two different rounds (round ≥ 1).
+- **Reasons, as B6 names them:**
+  - `need`: a new shopping flag, "Not shopping for cereal right now." becoming "Shopping for a new
+    cereal right now…". A flag that ends is left out: the arrival is the story the demo and the
+    what-if toggle tell.
+  - `wear_out`: the client's exposure line went up on the same concept while the tap chance fell.
+- **Other changes** are whatever still differs once the reason line is put back, in any block (the
+  feed's two neighbour posts, their order, memory counts, the page's price line). Comparing only
+  SHOPPER and MEMORY missed these: the first pick (shp_0051, tap ×3.6) turned out to be 72% the
+  different neighbours.
+- **Verification:** the 80 cleanest candidates are re-asked with the reason line put back (2 Jev
+  calls each the first time, about half a cent, cached after). The pick is the biggest change the
+  line explains at least half of.
+- **Bench result (run_local):** Drew F. (shp_0212, Nostalgic adult), the same "taste indulgence ×
+  testimonial" ad in round 2 and round 3. With the new shopping flag, P(tap) 1.79% → 2.66% and
+  P(buy | stay) 4.00% → 9.47%; with the old line put back, exactly 1.79% and 4.00%. The capture is
+  `sim/demo/pinned-shopper.json`; re-run `sim:pin` on the real run once it exists.
+
+### D77. Replay = the worker again, from cache only, off the task board — `DECIDED` (your choice: re-run, paced)
+- `npm run sim:replay -- --from <run> [--day-ms 3000]` runs every round again under a new run id
+  with the source run's seed, population and rounds, writing each sim day in slices over
+  `--day-ms` so /sim fills live.
+- The Jev client is `offline`: a cache miss throws instead of calling Jev, so a replay costs
+  nothing and needs no network beyond the database.
+- Rounds run directly, not through `run_round` tasks, and no `generate_creatives` task is queued
+  (`queueGeneration: false`), so A's agents never act on a replay.
+- It refuses a non-local database unless `--allow-maincloud`, and a source whose config hash
+  differs from the current config. At the end it compares every decision and round summary with
+  the source and exits 1 on any difference. Bench: `run_local` replays identically (8,684
+  decisions, 6 summaries, no Jev calls).
+- **Known limit:** creatives aren't tagged by run, so a db-mode replay is exact only while A's
+  creative rows are as they were; the end check reports it if not.
+
+### D78. The pinned story works offline; "re-ask live" is a bonus — `DECIDED`
+- /sim shows the pinned shopper when the run's decisions at both captured days carry the
+  captured state hashes, so it holds for the source run and every replay of it.
+- Everything in the panel comes from the capture, including both counterfactuals (line put back,
+  line dropped), so it needs no Jev call. "Re-ask live" goes through `/api/sim/whatif`.
+- Jev varies a little between calls for the same request: the live re-ask of the "line dropped"
+  state gave P(tap) 2.36% against 2.45% in the capture (P(buy | stay) matched at 10.20%). The
+  capture is the frozen answer; this is also why replays read the cache.
+- Dropping the shopping line altogether barely moves the chances (2.45%, 10.20%). It's
+  "Not shopping for cereal right now" that holds them down, which the panel's "proof" line shows.
+
+### D79. Option columns over HTTP SQL — `DECIDED` (bug fix)
+- The live server (2.13.0) sends a sum as `[tag, value]` (`[0, 1]` = some(1), `[1, []]` = none).
+  `decodeValue` only handled `{ "0": … }` and `{ some: … }`, so an optional timestamp crashed and
+  an optional number or string came back as the tag (an objection read as `0`). The sim never
+  read option columns until B6 did; the decoder now takes both forms, with a test using the live
+  shape.

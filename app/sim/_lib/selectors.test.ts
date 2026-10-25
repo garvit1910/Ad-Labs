@@ -15,6 +15,7 @@ import {
   withoutLine,
 } from './selectors';
 import { CPM_USD } from './format';
+import { type PinnedCapture, pinnedFor } from './pinned';
 
 const arm = (armId: string, strategy = 'steal', angle = 'taste_indulgence', hook = 'testimonial') =>
   ({ armId, strategy, angle, hook }) as unknown as ArmRow;
@@ -167,4 +168,21 @@ test('headerStats: exact cost for done rounds, an estimate for a running one', (
   assert.ok(Math.abs(h.costUsd - (0.042 + 0.5 + (2 * 700 * 0.042) / 1e6)) < 1e-12);
   assert.deepEqual(h.callsPerDay, [1, 0, 0, 1, 1]);
   assert.equal(h.cacheHitRate, 2 / 3);
+});
+
+test('pinnedFor holds only for a run whose decisions read the captured states', () => {
+  const capture = {
+    shopper: { shopper_id: 'shp_7' },
+    before: { tick: 4, feed: { state_hash: 'hash_before' } },
+    after: { tick: 9, feed: { state_hash: 'hash_after' } },
+  } as unknown as PinnedCapture;
+  const row = (tick: number, hash: string, shopperId = 'shp_7', kind = 'feed') =>
+    ({ shopperId, tick, kind, options: JSON.stringify({ state_hash: hash }) }) as Decision;
+  // The source run, or a replay of it: both days read the captured states.
+  assert.equal(pinnedFor(capture, [row(4, 'hash_before'), row(4, 'p', 'shp_7', 'page'), row(9, 'hash_after')]), capture);
+  // Same ids, different run: a state differs.
+  assert.equal(pinnedFor(capture, [row(4, 'hash_before'), row(9, 'other')]), null);
+  // Mid-replay, before the "after" day is written.
+  assert.equal(pinnedFor(capture, [row(4, 'hash_before')]), null);
+  assert.equal(pinnedFor(null, [row(4, 'hash_before')]), null);
 });

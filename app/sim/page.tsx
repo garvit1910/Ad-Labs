@@ -20,6 +20,8 @@ import {
   ticker,
 } from './_lib/selectors';
 import { parseJson } from './_lib/format';
+import { type PinnedCapture, pinnedFor } from './_lib/pinned';
+import pinnedCapture from '@/sim/demo/pinned-shopper.json';
 import { databaseLabel, isLocalDatabase } from './_components/SimProvider';
 import { HeaderStrip } from './_components/HeaderStrip';
 import AllocationRiver from './_components/AllocationRiver';
@@ -47,9 +49,12 @@ function SimPage() {
     [data.decisions, data.creatives, data.brands, shopperNames],
   );
   const learnings = useMemo(() => learningsFeed(data.learnings, data.creatives), [data.learnings, data.creatives]);
-  // The inspector follows the newest impression until someone picks a shopper.
+  // The pinned shopper (sim:pin) belongs to this run when its captured states are this run's.
+  const pinned = useMemo(() => pinnedFor(pinnedCapture as unknown as PinnedCapture, data.decisions), [data.decisions]);
+  // The inspector opens on the pinned shopper, else follows the newest impression, until someone
+  // picks a shopper.
   const [picked, setPicked] = useState<string | null>(null);
-  const shopperId = picked ?? tickerRows[0]?.shopperId ?? null;
+  const shopperId = picked ?? pinned?.shopper.shopper_id ?? tickerRows[0]?.shopperId ?? null;
   const shopper = data.shoppers.find((s) => s.shopperId === shopperId);
   const steps = useMemo(() => (shopperId ? shopperHistory(data.decisions, shopperId) : []), [data.decisions, shopperId]);
   const offsets = useMemo(() => parseJson<RunCalibration>(run?.calibration, {}).offsets, [run?.calibration]);
@@ -106,7 +111,13 @@ function SimPage() {
           </Section>
           <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <Section title="Decision ticker" hint="latest 50 impressions · calibrated chance and the dice">
-              <DecisionTicker rows={tickerRows} ticksPerRound={ticksPerRound} selected={shopperId} onSelect={setPicked} />
+              <DecisionTicker
+                rows={tickerRows}
+                ticksPerRound={ticksPerRound}
+                selected={shopperId}
+                pinnedId={pinned?.shopper.shopper_id ?? null}
+                onSelect={setPicked}
+              />
             </Section>
             <Section title="Learnings" hint={`${learnings.filter((l) => l.live).length} live · ${learnings.length} written`}>
               <LearningsFeed items={learnings} segments={data.segments} />
@@ -139,6 +150,7 @@ function SimPage() {
               segments={data.segments}
               offsets={offsets}
               ticksPerRound={ticksPerRound}
+              pinned={pinned && pinned.shopper.shopper_id === shopperId ? pinned : null}
             />
           </Section>
         </>

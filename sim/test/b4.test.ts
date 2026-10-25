@@ -53,6 +53,9 @@ describe("SATS-JSON decoding (SQL rows)", () => {
     ]);
     assert.equal(decodeValue(schema.elements[2]!.algebraic_type, { some: [micros] }), "2026-10-24T14:30:00.000Z");
     assert.equal(decodeValue(schema.elements[2]!.algebraic_type, { "1": [] }), null);
+    // What the live server sends (2.13.0): [tag, value].
+    assert.equal(decodeValue(schema.elements[2]!.algebraic_type, [0, [micros]]), "2026-10-24T14:30:00.000Z");
+    assert.equal(decodeValue(schema.elements[2]!.algebraic_type, [1, []]), null);
   });
   test("SQL string literals are escaped", () => {
     assert.equal(sqlString("it's"), "'it''s'");

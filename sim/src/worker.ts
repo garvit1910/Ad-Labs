@@ -33,10 +33,19 @@ export type WorkerOptions = {
   store?: PerceptionStore | null;
   autoNext?: boolean;
   log?: (line: string) => void;
+  // A new run's settings when it has no run row yet (default RUN_DEFAULTS).
+  settings?: RunSettings;
+  // Queue generate_creatives after each round (default true). A replay passes false, so A's
+  // creative worker never acts on it.
+  queueGeneration?: boolean;
+  // Spread each sim day's writes over this many ms (B6 replay); 0 writes at once.
+  dayMs?: number;
 };
 
+export type RunSettings = { seed: number; population: number; roundsPlanned: number };
+
 // A new run's settings; the run row keeps them for later rounds and replays.
-export const RUN_DEFAULTS = { seed: config.run.seed, population: config.run.population, roundsPlanned: config.run.roundsPlanned };
+export const RUN_DEFAULTS: RunSettings = { seed: config.run.seed, population: config.run.population, roundsPlanned: config.run.roundsPlanned };
 
 export class Worker {
   private runs = new Map<string, { run: SimRun; next: number }>();
@@ -95,8 +104,9 @@ export class Worker {
     const { run } = state;
     run.setWorld(world, perceptions);
     await writer.startRound(db, run_id, round);
+    const pace = this.opts.dayMs ? { ms: this.opts.dayMs, slices: 10 } : undefined;
     const r = await run.runRound(round, (day, armStats) =>
-      writer.day(db, run_id, day, run.engine.shoppers, (id) => run.engine.lastState.get(id)?.page ?? "", armStats),
+      writer.day(db, run_id, day, run.engine.shoppers, (id) => run.engine.lastState.get(id)?.page ?? "", armStats, pace),
     );
     await writer.learnings(db, [...r.opened, ...r.closed]);
     // The round row's summary: the run's round report plus the cache hit rate, which the CLI keeps
@@ -110,7 +120,7 @@ export class Worker {
     await writer.finishRound(db, run_id, round, "done", summary);
     state.next = round + 1;
     if (r.generation) {
-      await writer.generation(db, r.generation);
+      if (this.opts.queueGeneration ?? true) await writer.generation(db, r.generation);
       if (this.opts.autoNext) await writer.enqueue(db, `tsk_run_${run_id}_r${round + 1}`, "run_round", { run_id, round: round + 1 });
     } else {
       await writer.run(db, this.runRow(run, "done"));
@@ -121,7 +131,7 @@ export class Worker {
       impressions: summary.impressions,
       buys: summary.buys,
       learnings_opened: r.opened.length,
-      generate_creatives: r.generation ? `tsk_gen_${run_id}_r${round}` : null,
+      generate_creatives: r.generation && (this.opts.queueGeneration ?? true) ? `tsk_gen_${run_id}_r${round}` : null,
     };
   }
 
@@ -137,7 +147,7 @@ export class Worker {
     if (round === 0) {
       const settings = row
         ? { seed: Number(row.seed), population: Number(row.population), roundsPlanned: Number(row.rounds_planned) }
-        : RUN_DEFAULTS;
+        : (this.opts.settings ?? RUN_DEFAULTS);
       const run = new SimRun(world, this.opts.jev, perceptions, { run_id, ...settings, perceiverId: keywordPerceiver.id });
       await run.calibrate();
       await this.opts.db.call("upsert_run", [JSON.stringify(this.runRow(run, "running"))]);

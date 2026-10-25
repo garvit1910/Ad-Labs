@@ -16,23 +16,17 @@ import {
   usd,
   words,
 } from '../_lib/format';
+import { type Asked, ask } from '../_lib/whatif';
+import type { PinnedCapture } from '../_lib/pinned';
+import { PinnedStory } from './PinnedStory';
 
 // One shopper, as Jev saw them. Layout ideas from ShopSim's Inspector (header chips, probability
 // bars, the "need removed → P(buy) ×N" counterfactual line); the data is Ad Lab's: the exact page
 // state from shopper.state_text, the questions, raw and calibrated chances, the dice, and every
 // impression across rounds rebuilt from the decision rows.
 
-type Answers = Record<string, { type: string; noul?: number; probabilities?: Record<string, number> }>;
-type Asked = { answers: Answers; cached: boolean };
 type WhatIf = { status: 'idle' } | { status: 'loading' } | { status: 'error'; message: string } | { status: 'done'; with: Pair; without: Pair };
 type Pair = { feed: Asked | null; page: Asked };
-
-async function ask(state: string, questions: object): Promise<Asked> {
-  const res = await fetch('/api/sim/whatif', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ state, questions }) });
-  const json = (await res.json()) as { answers?: Answers; cached?: boolean; error?: string };
-  if (!res.ok || !json.answers) throw new Error(json.error ?? `HTTP ${res.status}`);
-  return { answers: json.answers, cached: Boolean(json.cached) };
-}
 
 export function ShopperInspector({
   shopper,
@@ -42,6 +36,7 @@ export function ShopperInspector({
   segments,
   offsets,
   ticksPerRound,
+  pinned = null,
 }: {
   shopper: Shopper | undefined;
   steps: ShopperStep[];
@@ -50,6 +45,7 @@ export function ShopperInspector({
   segments: readonly SegmentRow[];
   offsets: Offsets | undefined;
   ticksPerRound: number;
+  pinned?: PinnedCapture | null;
 }) {
   const creative = useMemo(() => new Map(creatives.map((c) => [c.creativeId, c])), [creatives]);
   const brandName = useMemo(() => new Map(brands.map((b) => [b.brandId, b.name])), [brands]);
@@ -107,12 +103,15 @@ export function ShopperInspector({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center gap-2 text-xs">
         <b className="text-base font-semibold text-foreground">{shopper.displayName}</b>
+        {pinned && <Badge className="text-[10px]">pinned</Badge>}
         <Badge variant="outline">{segment?.name ?? shopper.segmentId}</Badge>
         <Badge variant={shopper.inMarket ? 'secondary' : 'outline'}>{shopper.inMarket ? 'in market' : 'not shopping'}</Badge>
         <span className="font-mono text-muted-foreground">budget left {usd(shopper.budgetLeftUsd)}</span>
         <span className="font-mono text-muted-foreground">· {steps.length} impressions · {buys} {buys === 1 ? 'buy' : 'buys'}</span>
         <span className="font-mono text-muted-foreground/70">{shopper.shopperId}</span>
       </div>
+
+      {pinned && <PinnedStory capture={pinned} ticksPerRound={ticksPerRound} />}
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
         <div className="flex flex-col gap-2">

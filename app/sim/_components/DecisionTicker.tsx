@@ -30,11 +30,13 @@ export function DecisionTicker({
   rows,
   ticksPerRound,
   selected,
+  pinnedId = null,
   onSelect,
 }: {
   rows: TickerRow[];
   ticksPerRound: number;
   selected: string | null;
+  pinnedId?: string | null;
   onSelect: (shopperId: string) => void;
 }) {
   if (rows.length === 0) return <p className="py-6 text-center text-sm text-muted-foreground">No decisions yet.</p>;
@@ -59,6 +61,7 @@ export function DecisionTicker({
                 </span>
                 <span className="min-w-0 truncate">
                   <b className="font-medium text-foreground">{r.shopperName}</b>
+                  {r.shopperId === pinnedId && <span className="ml-1 rounded bg-brand/15 px-1 text-[9.5px] font-medium text-brand">pinned</span>}
                   <span className="text-muted-foreground"> saw </span>
                   <span className="text-foreground">{r.headline}</span>
                 </span>
