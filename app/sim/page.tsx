@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useMemo, useState } from 'react';
+import { Suspense, useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Activity } from 'lucide-react';
@@ -33,6 +33,7 @@ import { Leaderboard } from './_components/Leaderboard';
 import { DecisionTicker } from './_components/DecisionTicker';
 import { ShopperInspector } from './_components/ShopperInspector';
 import { LearningsFeed } from './_components/LearningsFeed';
+import { ReplayButton } from './_components/ReplayButton';
 
 function SimPage() {
   const router = useRouter();
@@ -68,6 +69,7 @@ function SimPage() {
   const shopper = data.shoppers.find((s) => s.shopperId === shopperId);
   const steps = useMemo(() => (shopperId ? shopperHistory(data.decisions, shopperId) : []), [data.decisions, shopperId]);
   const offsets = useMemo(() => parseJson<RunCalibration>(run?.calibration, {}).offsets, [run?.calibration]);
+  const watchRun = useCallback((id: string) => router.replace(`/sim?run=${encodeURIComponent(id)}`), [router]);
 
   return (
     <>
@@ -76,7 +78,13 @@ function SimPage() {
         title="Live sim"
         description="Ad recipes tested on Jev-driven shoppers. Every number arrives over a SpacetimeDB subscription as the worker writes each sim day."
         actions={
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            <ReplayButton
+              runId={run?.runId ?? null}
+              runStatus={run?.status ?? null}
+              viewing={params.get('run') ?? run?.runId ?? null}
+              onWatch={watchRun}
+            />
             {runs.length > 0 && (
               <select
                 aria-label="Run"
@@ -84,6 +92,12 @@ function SimPage() {
                 value={run?.runId ?? ''}
                 onChange={(e) => router.replace(`/sim?run=${encodeURIComponent(e.target.value)}`)}
               >
+                {/* While ?run= names a run with no row yet (a replay starting), so any real run can be picked. */}
+                {!run && (
+                  <option value="" disabled>
+                    {params.get('run') ?? 'no run'} · waiting
+                  </option>
+                )}
                 {[...runs]
                   .sort((a, b) => Number(b.createdAt.microsSinceUnixEpoch - a.createdAt.microsSinceUnixEpoch))
                   .map((r) => (
@@ -109,7 +123,9 @@ function SimPage() {
         <Skeleton className="h-64 w-full" />
       ) : !run ? (
         <Card className="items-center px-6 py-12 text-center text-sm text-muted-foreground">
-          No runs yet. The views fill as soon as A starts a run and the sim worker writes its first sim day.
+          {params.get('run')
+            ? `Waiting for ${params.get('run')} to start: the views fill as its first sim day is written.`
+            : 'No runs yet. The views fill as soon as A starts a run and the sim worker writes its first sim day.'}
         </Card>
       ) : (
         <>
